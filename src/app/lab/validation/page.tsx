@@ -1,10 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { ClipboardCheck, CheckCircle, XCircle, Building2 } from 'lucide-react';
 import { revalidatePath } from 'next/cache';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default async function ValidationPage() {
   // Fetch pending doses with worker and company details
@@ -46,9 +42,10 @@ export default async function ValidationPage() {
     // 2. Threshold Check (80% of 1.6mSv monthly limit = 1.28mSv)
     const THRESHOLD = 1.28;
     if (dose.hp10 >= THRESHOLD) {
+      const worker = Array.isArray(dose.toe_workers) ? dose.toe_workers[0] : dose.toe_workers;
       await supabase.from('notifications').insert([{
-        tenant_id: dose.toe_workers.tenant_id,
-        company_id: dose.toe_workers.company_id,
+        tenant_id: worker?.tenant_id,
+        company_id: worker?.company_id,
         type: 'threshold_alert',
         message: `ALERTA CRÍTICA: El trabajador ha superado el 80% del límite mensual permitido (${dose.hp10} mSv).`
       }]);
@@ -64,8 +61,9 @@ export default async function ValidationPage() {
       .eq('id', id);
 
     // 4. Audit Log (Immutable record)
+    const worker = Array.isArray(dose.toe_workers) ? dose.toe_workers[0] : dose.toe_workers;
     await supabase.from('audit_logs').insert([{
-      tenant_id: dose.toe_workers.tenant_id,
+      tenant_id: worker?.tenant_id,
       action: 'APPROVE_DOSE',
       table_name: 'doses',
       record_id: id,
