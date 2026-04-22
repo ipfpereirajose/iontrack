@@ -1,0 +1,61 @@
+/* I.O.N.T.R.A.C.K. DESIGN SYSTEM - CORE TOKENS */
+
+:root {
+  /* Colors */
+  --primary: #1a4ed8;
+  --primary-glow: rgba(26, 78, 216, 0.3);
+  --secondary: #22c55e;
+  --accent: #f59e0b;
+  --danger: #ef4444;
+  
+  /* Backgrounds */
+  --bg-deep: #0a0a0c;
+  --bg-surface: #121214;
+  --bg-glass: rgba(255, 255, 255, 0.03);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  
+  /* Typography */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  
+  /* Effects */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+  --glass-blur: blur(12px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Glassmorphism Utility */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+/* Typography Utilities */
+h1, h2, h3 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #60a5fa, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I.O.N.T.R.A.C.K. | Monitor Local</title>
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --bg: #f8fafc;
+            --text: #0f172a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+        .status-online { background: #dcfce7; color: #166534; }
+        .status-offline { background: #fee2e2; color: #991b1b; }
+        
+        .stat-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+        .stat-item {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        .stat-value { font-size: 1.25rem; font-weight: 800; margin-top: 0.25rem; }
+        
+        .pulse {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">I.O.N.T.R.A.C.K.</h1>
+        <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 0.875rem;">Agente Local de Ingesta</p>
+
+        <div id="status-badge" class="status-badge status-online">
+            <div class="pulse"></div>
+            <span id="status-text">CONECTADO</span>
+        </div>
+
+        <div class="stat-group">
+            <div class="stat-item">
+                <div class="stat-label">Registros Pendientes de Sincronización</div>
+                <div id="pending-count" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">ID del Agente</div>
+                <div id="agent-id" class="stat-value" style="font-size: 0.875rem; font-family: monospace;">LAB-01-CENTRAL</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Ruta de Monitoreo</div>
+                <div id="watch-path" class="stat-value" style="font-size: 0.75rem; color: #64748b;">./input</div>
+            </div>
+        </div>
+
+        <p style="margin-top: 2rem; font-size: 0.75rem; color: #94a3b8;">
+            Tus datos están protegidos localmente incluso si la conexión falla.
+        </p>
+    </div>
+
+    <script>
+        async function updateStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                
+                document.getElementById('pending-count').innerText = data.pending_records;
+                document.getElementById('agent-id').innerText = data.agent_id;
+                document.getElementById('watch-path').innerText = data.watch_path;
+                
+                const badge = document.getElementById('status-badge');
+                const text = document.getElementById('status-text');
+                
+                if (data.is_online) {
+                    badge.className = 'status-badge status-online';
+                    text.innerText = 'CONECTADO';
+                } else {
+                    badge.className = 'status-badge status-offline';
+                    text.innerText = 'OFFLINE (MODO SUPERVIVENCIA)';
+                }
+            } catch (e) {
+                console.error("Error actualizando status", e);
+            }
+        }
+
+        setInterval(updateStatus, 5000);
+        updateStatus();
+    </script>
+</body>
+</html>
