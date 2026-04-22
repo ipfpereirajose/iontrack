@@ -26,11 +26,11 @@ En cada proyecto, configurar:
 - `NEXT_PUBLIC_SUPABASE_URL`: URL de tu instancia de Supabase.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Llave pública anon.
 
-### Dominios Recomendados:
-- `iontrack.com` -> Landing Page
-- `admin.iontrack.com` -> SuperAdmin
-- `lab.iontrack.com` -> Lab Manager
-- `portal.iontrack.com` -> B2B Portal
+### Enlaces de Producción Actuales:
+- **Landing Page**: [https://iontrack.vercel.app](https://iontrack.vercel.app)
+- **SuperAdmin**: [https://superadmin-two-ecru.vercel.app](https://superadmin-two-ecru.vercel.app)
+- **Lab Manager**: [https://lab-manager-six.vercel.app](https://lab-manager-six.vercel.app)
+- **B2B Portal**: [https://b2b-portal-nine-lilac.vercel.app](https://b2b-portal-nine-lilac.vercel.app)
 
 ---
 
