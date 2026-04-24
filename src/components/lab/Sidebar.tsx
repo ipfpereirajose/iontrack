@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Building2, ClipboardCheck, FileText, Settings, LogOut, Activity } from 'lucide-react';
+import { LayoutDashboard, Building2, ClipboardCheck, FileText, Settings, LogOut, Activity, Database } from 'lucide-react';
 import Link from 'next/link';
 import { logout } from '@/app/actions/auth';
 
@@ -11,6 +11,7 @@ export default function Sidebar() {
   const navItems = [
     { name: 'Resumen', href: '/lab', icon: LayoutDashboard },
     { name: 'Empresas Clientes', href: '/lab/companies', icon: Building2 },
+    { name: 'Carga Masiva', href: '/lab/bulk-import', icon: Database },
     { name: 'Validación Dosis', href: '/lab/validation', icon: ClipboardCheck },
     { name: 'Reportes y Certificados', href: '/lab/reports', icon: FileText },
   ];

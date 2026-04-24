@@ -6,10 +6,10 @@ export default async function WorkersListPage({ params }: { params: { id: string
   const { id: companyId } = await params;
   const supabase = await createClient();
 
-  // 1. Fetch Company Info
+  // 1. Fetch Company Info with Lab Code
   const { data: company } = await supabase
     .from('companies')
-    .select('*')
+    .select('*, tenants(lab_code)')
     .eq('id', companyId)
     .single();
 
@@ -18,7 +18,7 @@ export default async function WorkersListPage({ params }: { params: { id: string
     .from('toe_workers')
     .select('*')
     .eq('company_id', companyId)
-    .order('last_name', { ascending: true });
+    .order('worker_code', { ascending: true });
 
   return (
     <div>
@@ -67,6 +67,10 @@ export default async function WorkersListPage({ params }: { params: { id: string
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
+                  <Fingerprint size={12} />
+                  {(company as any)?.tenants?.lab_code || 'LAB'}-{(company as any)?.company_code || 'EMP'}-{(company as any)?.osr_code || 'OSR'}-{worker.worker_code || '000'}
+                </div>
                 <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.25rem' }}>{worker.first_name} {worker.last_name}</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 600 }}>{worker.ci}</p>
               </div>

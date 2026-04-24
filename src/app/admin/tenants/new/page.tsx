@@ -14,6 +14,7 @@ export default function NewTenantPage() {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
+    lab_code: '',
     monthly_fee: 300,
   });
 
@@ -29,6 +30,7 @@ export default function NewTenantPage() {
           {
             name: formData.name,
             slug: formData.slug.toLowerCase(),
+            lab_code: formData.lab_code.toUpperCase(),
             monthly_fee: formData.monthly_fee,
           }
         ]);
@@ -101,6 +103,28 @@ export default function NewTenantPage() {
             />
           </div>
         </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Código del Laboratorio (Trace ID) *</label>
+            <input 
+              required
+              type="text" 
+              placeholder="Ej: LAB-MET"
+              value={formData.lab_code}
+              onChange={(e) => setFormData({...formData, lab_code: e.target.value.toUpperCase()})}
+              style={{ 
+                background: 'rgba(255,255,255,0.05)', 
+                border: '1px solid var(--border-glass)', 
+                borderRadius: '8px', 
+                padding: '0.75rem 1rem', 
+                color: 'white',
+                outline: 'none',
+                fontWeight: 800
+              }}
+            />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Identificador raíz para toda la trazabilidad (Ej: L001)</p>
+          </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '300px' }}>
           <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Cuota Mensual (USD)</label>

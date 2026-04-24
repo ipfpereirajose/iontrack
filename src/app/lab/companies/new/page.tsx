@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, ArrowLeft, Save, Loader2, MapPin, Phone, Mail, User, Info } from 'lucide-react';
+import { Building2, ArrowLeft, Save, Loader2, MapPin, Phone, Mail, User, Info, Fingerprint } from 'lucide-react';
 import Link from 'next/link';
 import { createCompany } from '../actions';
 import { useFormStatus } from 'react-dom';
@@ -159,6 +159,23 @@ export default function NewCompanyPage() {
                 <option value="Mixta">Mixta</option>
                 <option value="ONG">ONG / Sin fines de lucro</option>
               </select>
+            </div>
+          </div>
+
+          {/* TRAZABILIDAD SECTION */}
+          <div style={{ background: 'rgba(6, 182, 212, 0.05)', padding: '1.5rem', borderRadius: '16px', border: '1px dashed rgba(6, 182, 212, 0.3)', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div>
+              <label style={labelStyle}>Código Único de Empresa *</label>
+              <div style={{ position: 'relative' }}>
+                <Fingerprint size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }} />
+                <input required name="company_code" type="text" placeholder="Ej: CLIN-01" style={{ ...inputStyle, paddingLeft: '2.75rem', border: '1px solid rgba(6, 182, 212, 0.3)' }} />
+              </div>
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>Identificador corto para reportes masivos.</p>
+            </div>
+            <div>
+              <label style={labelStyle}>Código OSR (Opcional)</label>
+              <input name="osr_code" type="text" placeholder="Ej: OSR01" defaultValue="OSR01" style={inputStyle} />
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>Identificador del Oficial de Seguridad.</p>
             </div>
           </div>
 

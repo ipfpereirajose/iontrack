@@ -17,6 +17,8 @@ export async function createCompany(formData: FormData) {
   const rif_type = formData.get('rif_type') as string;
   const rif_number = formData.get('rif_number') as string;
   const sector = formData.get('sector') as string;
+  const company_code = formData.get('company_code') as string;
+  const osr_code = formData.get('osr_code') as string;
 
   // 2. Extract Location & Contact
   const state = formData.get('state') as string;
@@ -42,8 +44,6 @@ export async function createCompany(formData: FormData) {
   const contact_phone = mobile_phone;
 
   // 4. Insert into database
-  // Note: We are including all fields. If the table doesn't have these columns yet, 
-  // the user will need to run the migration provided in the summary.
   const { error } = await supabase
     .from('companies')
     .insert([
@@ -69,6 +69,8 @@ export async function createCompany(formData: FormData) {
         osr_id_number,
         osr_phone,
         osr_email,
+        company_code, // New traceability field
+        osr_code,      // New traceability field
       },
     ]);
 

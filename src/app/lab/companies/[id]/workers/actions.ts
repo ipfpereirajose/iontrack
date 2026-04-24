@@ -33,6 +33,7 @@ export async function createWorker(companyId: string, formData: FormData) {
   const ci = formData.get('ci') as string;
   const email = formData.get('email') as string;
   const position = formData.get('position') as string;
+  const worker_code = formData.get('worker_code') as string;
 
   // 3. Insert into database
   const { error } = await supabase
@@ -44,6 +45,7 @@ export async function createWorker(companyId: string, formData: FormData) {
         ci,
         email,
         position,
+        worker_code, // New traceability field
         company_id: companyId,
         status: 'active',
       },
@@ -51,6 +53,9 @@ export async function createWorker(companyId: string, formData: FormData) {
 
   if (error) {
     console.error('Error creating worker:', error);
+    if (error.message.includes('worker_code') && error.message.includes('unique')) {
+      throw new Error('El código de trabajador ya existe para esta empresa. Use uno diferente.');
+    }
     throw new Error(error.message);
   }
 
