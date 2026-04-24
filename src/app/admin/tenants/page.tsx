@@ -16,14 +16,14 @@ export default async function TenantsPage() {
           <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Laboratorios (Tenants)</h1>
           <p style={{ color: 'var(--text-muted)' }}>Gestión global de los centros de dosimetría afiliados.</p>
         </div>
-        <Link href="/admin/tenants/new" className="nav-link active" style={{ padding: '0.75rem 1.5rem' }}>
+        <Link href="/admin/tenants/new" className="btn btn-primary">
           <Plus size={20} />
           Nuevo Laboratorio
         </Link>
       </header>
 
       {error && (
-        <div className="glass-panel" style={{ border: '1px solid var(--danger)', color: 'var(--danger)', marginBottom: '2rem' }}>
+        <div className="badge badge-danger" style={{ width: '100%', padding: '1rem', marginBottom: '2rem', borderRadius: '12px' }}>
           Error al cargar laboratorios: {error.message}
         </div>
       )}
@@ -31,7 +31,7 @@ export default async function TenantsPage() {
       <div className="glass-panel" style={{ padding: '0' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-glass)' }}>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nombre del Laboratorio</th>
               <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>ID / Slug</th>
               <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Estatus</th>
@@ -48,10 +48,10 @@ export default async function TenantsPage() {
               </tr>
             ) : (
               tenants.map((tenant) => (
-                <tr key={tenant.id} style={{ borderBottom: '1px solid var(--border-glass)' }}>
+                <tr key={tenant.id} style={{ borderBottom: '1px solid var(--border)' }}>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div className="glass-panel" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
+                      <div className="glass-panel" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'rgba(255,255,255,0.05)' }}>
                         <Shield size={16} color="var(--primary)" />
                       </div>
                       <span style={{ fontWeight: 600 }}>{tenant.name}</span>
@@ -61,7 +61,7 @@ export default async function TenantsPage() {
                     {tenant.slug}
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <span className={`badge ${tenant.billing_status === 'active' ? 'badge-success' : 'badge-warning'}`}>
+                    <span className={`badge ${tenant.billing_status === 'active' ? 'badge-success' : 'badge-danger'}`}>
                       {tenant.billing_status}
                     </span>
                   </td>
@@ -70,7 +70,7 @@ export default async function TenantsPage() {
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                      <Link href={`/tenants/${tenant.id}`} className="nav-link" style={{ padding: '0.5rem', border: '1px solid var(--border-glass)', background: 'none' }}>
+                      <Link href={`/admin/tenants/${tenant.id}`} className="nav-link" style={{ display: 'inline-flex', padding: '0.5rem', width: 'auto' }}>
                         <Settings size={16} />
                       </Link>
                     </div>

@@ -1,89 +1,105 @@
-import { createClient } from '@supabase/supabase-js';
-import { Search, Filter, ChevronRight, UserCircle } from 'lucide-react';
+import { Search, Filter, ChevronRight, UserCircle, Users, Activity } from 'lucide-react';
+import { createClient } from '@/utils/supabase/server';
+import { getCurrentProfile } from '@/lib/auth';
 import Link from 'next/link';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 export default async function WorkersPage() {
-  // In a real app, company_id would come from the auth context
-  // For this demo, we'll fetch all workers visible to the current RLS
+  const supabase = await createClient();
+  const { user, profile } = await getCurrentProfile();
+  if (!user) return null;
+
+  const companyId = profile?.company_id;
+
+  // 2. Fetch Workers for this company
   const { data: workers, error } = await supabase
     .from('toe_workers')
     .select('*')
+    .eq('company_id', companyId)
     .order('last_name', { ascending: true });
 
   return (
     <div>
       <header style={{ marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Directorio de Personal (TOE)</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Listado de Trabajadores Ocupacionalmente Expuestos y su estatus de vigilancia.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+          <div style={{ background: '#a855f7', color: 'white', padding: '0.75rem', borderRadius: '12px' }}>
+            <Users size={28} />
+          </div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Directorio de Personal (TOE)</h1>
+        </div>
+        <p style={{ color: 'var(--text-muted)' }}>Gestión y vigilancia radiológica de los trabajadores ocupacionalmente expuestos.</p>
       </header>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-        <div className="glass-panel" style={{ flex: 1, padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'white' }}>
+        <div className="glass-panel" style={{ flex: 1, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.03)' }}>
           <Search size={18} color="var(--text-muted)" />
           <input 
             type="text" 
             placeholder="Buscar por nombre o cédula..." 
-            style={{ border: 'none', background: 'none', outline: 'none', width: '100%', fontSize: '0.875rem' }}
+            style={{ border: 'none', background: 'none', outline: 'none', width: '100%', fontSize: '0.875rem', color: 'white' }}
           />
         </div>
-        <button className="glass-panel" style={{ background: 'white', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+        <button className="btn" style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '12px', fontWeight: 600 }}>
           <Filter size={18} />
           Filtrar
         </button>
       </div>
 
-      <div className="glass-panel" style={{ padding: '0', background: 'white', border: 'none', overflow: 'hidden' }}>
+      <div className="glass-panel" style={{ padding: '0', background: 'rgba(255,255,255,0.02)', border: 'none', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Trabajador</th>
-              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Cédula de Identidad</th>
-              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Cargo / Área</th>
-              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Estatus</th>
-              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Historial</th>
+            <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+              <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Trabajador</th>
+              <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Cédula / ID</th>
+              <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Cargo / Área</th>
+              <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Estatus</th>
+              <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {!workers || workers.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  No se han registrado trabajadores todavía.
+                <td colSpan={5} style={{ padding: '5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                      <UserCircle size={48} style={{ opacity: 0.2 }} />
+                      <p>No se han registrado trabajadores todavía.</p>
+                   </div>
                 </td>
               </tr>
             ) : (
               workers.map((worker) => (
-                <tr key={worker.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <UserCircle size={32} color="var(--primary)" style={{ opacity: 0.2 }} />
-                      <span style={{ fontWeight: 600 }}>{worker.first_name} {worker.last_name}</span>
+                <tr key={worker.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '1.5rem 1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7' }}>
+                        <UserCircle size={24} />
+                      </div>
+                      <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{worker.first_name} {worker.last_name}</span>
                     </div>
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
+                  <td style={{ padding: '1.5rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                     {worker.ci}
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.875rem' }}>
+                  <td style={{ padding: '1.5rem 1.5rem', fontSize: '0.875rem' }}>
                     {worker.position || 'No especificado'}
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                  <td style={{ padding: '1.5rem 1.5rem' }}>
                     <span style={{ 
-                      padding: '0.25rem 0.75rem', 
-                      borderRadius: '9999px', 
+                      padding: '0.35rem 0.85rem', 
+                      borderRadius: '8px', 
                       fontSize: '0.75rem', 
-                      fontWeight: 600, 
-                      background: worker.status === 'active' ? '#dcfce7' : '#f1f5f9', 
-                      color: worker.status === 'active' ? '#166534' : '#64748b' 
+                      fontWeight: 700, 
+                      background: worker.status === 'active' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255,255,255,0.05)', 
+                      color: worker.status === 'active' ? '#4ade80' : 'var(--text-muted)',
+                      textTransform: 'uppercase'
                     }}>
                       {worker.status === 'active' ? 'Vigilancia Activa' : 'Inactivo'}
                     </span>
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                    <Link href={`/portal/workers/${worker.id}`} className="nav-link" style={{ display: 'inline-flex', padding: '0.4rem', border: '1px solid #e2e8f0', background: 'none' }}>
-                      <ChevronRight size={18} />
+                  <td style={{ padding: '1.5rem 1.5rem', textAlign: 'right' }}>
+                    <Link href={`/portal/workers/${worker.id}`} className="btn" style={{ display: 'inline-flex', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                      <Activity size={18} />
+                      <span style={{ marginLeft: '0.5rem', fontSize: '0.8125rem' }}>Ver Dosis</span>
+                      <ChevronRight size={16} />
                     </Link>
                   </td>
                 </tr>

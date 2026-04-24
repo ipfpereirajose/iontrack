@@ -5,7 +5,9 @@
   "main": "index.js",
   "bin": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:exe": "pkg . --targets node18-win-x64 --output iontrack-agent.exe"
   },
   "keywords": [],
   "author": "",

@@ -1,13 +1,32 @@
-import { ShieldCheck, Zap, Server, UserCheck, BarChart3, ArrowRight } from 'lucide-react';
+import { ShieldCheck, BarChart3, UserCheck, Server, ArrowRight, Zap, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/server';
+import { getServiceSupabase } from '@/lib/supabase';
 
-export default function LandingPage() {
+export default async function LandingHUB() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const adminSupabase = getServiceSupabase();
+
+  let dashboardUrl = null;
+  if (user) {
+    const { data: profile } = await adminSupabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    if (profile?.role === 'superadmin') dashboardUrl = '/admin';
+    else if (['lab_admin', 'lab_tech'].includes(profile?.role)) dashboardUrl = '/lab';
+    else if (['company_manager', 'toe'].includes(profile?.role)) dashboardUrl = '/portal';
+  }
+
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div className="hero-gradient"></div>
       
       {/* Navbar */}
-      <nav style={{ padding: '2rem 0' }}>
+      <nav style={{ padding: '2rem 0', zIndex: 10 }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ background: 'var(--primary)', padding: '0.5rem', borderRadius: '10px', color: '#000' }}>
@@ -17,118 +36,113 @@ export default function LandingPage() {
               ION<span className="text-gradient">TRACK</span>
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', fontWeight: 600 }}>
-            <Link href="#features" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Características</Link>
-            <Link href="#solutions" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Soluciones</Link>
-            <Link href="#contact" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Contacto</Link>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            SaaS v1.0 • Multi-Tenant
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <header style={{ padding: '6rem 0 4rem 0', textAlign: 'center' }}>
+      {/* Main Content */}
+      <main style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '4rem 0' }}>
         <div className="container">
-          <div style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            background: 'rgba(6, 182, 212, 0.1)', 
-            padding: '0.5rem 1rem', 
-            borderRadius: '9999px',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            color: 'var(--primary)',
-            marginBottom: '2rem',
-            border: '1px solid rgba(6, 182, 212, 0.2)'
-          }}>
-            <Zap size={14} />
-            SaaS DE DOSIMETRÍA DE PRÓXIMA GENERACIÓN
-          </div>
-          
-          <h1 style={{ fontSize: '4.5rem', fontWeight: 900, lineHeight: 1.1, marginBottom: '1.5rem', letterSpacing: '-0.04em' }}>
-            Vigilancia Radiológica<br />
-            <span className="text-gradient">Inmutable y Modular</span>
-          </h1>
-          
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto 3rem auto', lineHeight: 1.6 }}>
-            I.O.N.T.R.A.C.K. centraliza la gestión dosimétrica con aislamiento multi-inquilino, ingesta de datos offline y cumplimiento normativo automatizado.
-          </p>
+          <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              background: 'rgba(6, 182, 212, 0.1)', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '9999px',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              color: 'var(--primary)',
+              marginBottom: '1.5rem',
+              border: '1px solid rgba(6, 182, 212, 0.2)'
+            }}>
+              <Zap size={14} />
+              CENTRO DE ACCESO MODULAR
+            </div>
+            <h1 style={{ fontSize: '4rem', fontWeight: 900, lineHeight: 1, marginBottom: '1.5rem', letterSpacing: '-0.04em' }}>
+              Seleccione su <span className="text-gradient">Puerta de Enlace</span>
+            </h1>
+            <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto', fontSize: '1.125rem', marginBottom: '2.5rem' }}>
+              I.O.N.T.R.A.C.K. garantiza aislamiento total de datos y procesos específicos para cada tipo de usuario.
+            </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-            <Link href="#solutions" className="btn btn-primary" style={{ padding: '1rem 2.5rem' }}>
-              Explorar Portales
-              <ArrowRight size={18} />
+            {dashboardUrl && (
+              <Link href={dashboardUrl} className="btn btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
+                <LayoutDashboard size={22} />
+                Ir a mi Dashboard Personalizado
+                <ArrowRight size={20} />
+              </Link>
+            )}
+          </div>
+
+          <div className="hub-grid">
+            {/* Lab Module Card */}
+            <Link href="/lab/login" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="hub-card">
+                <div className="hub-icon">
+                  <BarChart3 size={32} />
+                </div>
+                <h2 className="hub-title">Laboratorio de Dosimetría</h2>
+                <p className="hub-description">
+                  Gestión operativa de clientes, validación de dosis recibidas por el Agente y emisión de reportes regulatorios.
+                </p>
+                <div className="btn" style={{ background: 'rgba(255,255,255,0.05)', width: '100%', justifyContent: 'center' }}>
+                  Ingresar al Módulo Lab
+                  <ArrowRight size={16} />
+                </div>
+              </div>
             </Link>
-            <Link href="#docs" className="btn" style={{ border: '1px solid var(--border)', background: 'var(--glass)', color: 'white', padding: '1rem 2rem' }}>
-              Documentación Técnica
+
+            {/* B2B Portal Card */}
+            <Link href="/portal/login" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="hub-card">
+                <div className="hub-icon" style={{ color: '#a855f7' }}>
+                  <UserCheck size={32} />
+                </div>
+                <h2 className="hub-title">Entidad de Trabajo (B2B)</h2>
+                <p className="hub-description">
+                  Portal exclusivo para empresas. Monitoreo de trabajadores (TOEs), historial de dosis y cumplimiento normativo.
+                </p>
+                <div className="btn" style={{ background: 'rgba(255,255,255,0.05)', width: '100%', justifyContent: 'center' }}>
+                  Acceso para Empresas
+                  <ArrowRight size={16} />
+                </div>
+              </div>
             </Link>
-          </div>
-        </div>
-      </header>
 
-      {/* Solutions Grid */}
-      <section id="solutions" style={{ padding: '6rem 0' }}>
-        <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '1rem' }}>Ecosistema de Módulos</h2>
-            <p style={{ color: 'var(--text-muted)' }}>Soluciones especializadas para cada actor en la cadena de seguridad radiológica.</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
             {/* SuperAdmin Card */}
-            <div className="glass-card">
-              <div style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
-                <Server size={40} />
+            <Link href="/admin/login" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="hub-card">
+                <div className="hub-icon" style={{ color: '#f59e0b' }}>
+                  <Server size={32} />
+                </div>
+                <h2 className="hub-title">Control de Infraestructura</h2>
+                <p className="hub-description">
+                  Acceso restringido para la administración global del sistema, gestión de laboratorios y facturación SaaS.
+                </p>
+                <div className="btn" style={{ background: 'rgba(255,255,255,0.05)', width: '100%', justifyContent: 'center' }}>
+                  Administración Central
+                  <ArrowRight size={16} />
+                </div>
               </div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>SuperAdmin Console</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-                Centro de comando para la infraestructura global. Gestión de laboratorios (tenants), facturación automatizada y telemetría de servidores.
-              </p>
-              <Link href="/admin" className="btn" style={{ background: 'white', color: 'black', width: '100%', justifyContent: 'center' }}>
-                Acceder al Centro de Comando
-              </Link>
-            </div>
-
-            {/* Lab Card */}
-            <div className="glass-card">
-              <div style={{ color: 'var(--secondary)', marginBottom: '1.5rem' }}>
-                <BarChart3 size={40} />
-              </div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Lab Operations</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-                Motor operativo para laboratorios de dosimetría. Cola de validación, gestión de clientes B2B y automatización de reportes regulatorios.
-              </p>
-              <Link href="/lab" className="btn" style={{ background: 'white', color: 'black', width: '100%', justifyContent: 'center' }}>
-                Entrar al Gestor de Lab
-              </Link>
-            </div>
-
-            {/* B2B Card */}
-            <div className="glass-card">
-              <div style={{ color: '#a855f7', marginBottom: '1.5rem' }}>
-                <UserCheck size={40} />
-              </div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>B2B Client Portal</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-                Portal de autoservicio para empresas. Historial de personal, certificados descargables con validación QR y monitoreo de cumplimiento.
-              </p>
-              <Link href="/portal" className="btn" style={{ background: 'white', color: 'black', width: '100%', justifyContent: 'center' }}>
-                Ingresar al Portal Empresa
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer style={{ padding: '4rem 0', borderTop: '1px solid var(--border)', marginTop: '4rem' }}>
+      <footer style={{ padding: '3rem 0', borderTop: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            © 2026 I.O.N.T.R.A.C.K. Infraestructura Operativa Normativa. Todos los derechos reservados.
+          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+            © 2026 I.O.N.T.R.A.C.K. • Seguridad Radiológica Avanzada
           </div>
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
-             <Link href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.875rem' }}>Términos</Link>
-             <Link href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.875rem' }}>Privacidad</Link>
+          <div style={{ display: 'flex', gap: '2rem', fontSize: '0.8125rem' }}>
+            <Link href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacidad</Link>
+            <Link href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Términos</Link>
+            <Link href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Soporte</Link>
           </div>
         </div>
       </footer>

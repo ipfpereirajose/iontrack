@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Users, CreditCard, Activity, Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { logout } from '@/app/actions/auth';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -42,7 +43,11 @@ export default function Sidebar() {
           <Settings size={20} />
           Configuración
         </Link>
-        <button className="nav-link" style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
+        <button 
+          className="nav-link" 
+          style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', color: 'var(--danger)' }}
+          onClick={() => logout()}
+        >
           <LogOut size={20} />
           Cerrar Sesión
         </button>

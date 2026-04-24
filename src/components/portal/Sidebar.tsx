@@ -3,12 +3,13 @@
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Users, History, Download, Settings, LogOut, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+import { logout } from '@/app/actions/auth';
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Inicio', href: '/portal', icon: LayoutDashboard },
+    { name: 'Dashboard', href: '/portal', icon: LayoutDashboard },
     { name: 'Mi Personal (TOE)', href: '/portal/workers', icon: Users },
     { name: 'Historial de Dosis', href: '/portal/history', icon: History },
     { name: 'Descargas', href: '/portal/downloads', icon: Download },
@@ -16,19 +17,19 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-        <div style={{ background: 'var(--primary)', padding: '0.4rem', borderRadius: '8px', color: 'white' }}>
-          <ShieldCheck size={24} />
+      <Link href="/portal" className="brand" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ background: '#a855f7', padding: '0.5rem', borderRadius: '10px', color: 'white', display: 'flex' }}>
+          <ShieldCheck size={26} />
         </div>
-        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-          ION<span style={{ color: 'var(--primary)' }}>TRACK</span>
+        <span>
+          ION<span style={{ color: '#a855f7' }}>TRACK</span>
         </span>
-      </div>
+      </Link>
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+      <nav className="nav-group">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+          const isActive = pathname === item.href || (item.href !== '/portal' && pathname.startsWith(item.href));
           return (
             <Link 
               key={item.href} 
@@ -42,13 +43,13 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <div className="glass-panel" style={{ padding: '1rem', border: 'none', background: '#f1f5f9', borderRadius: '12px' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            Tu Laboratorio
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="glass-panel" style={{ padding: '1.25rem' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+            Tu Proveedor
           </div>
-          <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-            Lab Dosimetría Central
+          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: 'white' }}>
+            Lab Radioprotección
           </div>
         </div>
         
@@ -56,7 +57,11 @@ export default function Sidebar() {
           <Settings size={20} />
           Configuración
         </Link>
-        <button className="nav-link" style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
+        <button 
+          className="nav-link" 
+          style={{ color: 'var(--danger)' }}
+          onClick={() => logout()}
+        >
           <LogOut size={20} />
           Cerrar Sesión
         </button>

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Building2, ClipboardCheck, FileText, Settings, LogOut, Activity } from 'lucide-react';
 import Link from 'next/link';
+import { logout } from '@/app/actions/auth';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -16,16 +17,14 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-        <Link href="/lab" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white', textDecoration: 'none' }}>
-          I.O.N.<span style={{ color: 'var(--primary)' }}>TRACK</span>
-        </Link>
-        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <Link href="/lab" className="brand">
+        I.O.N.<span className="brand-accent">TRACK</span>
+        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '0.25rem' }}>
           Módulo de Laboratorio
-        </span>
-      </div>
+        </div>
+      </Link>
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <nav className="nav-group">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
@@ -57,7 +56,11 @@ export default function Sidebar() {
           <Settings size={20} />
           Marca Blanca
         </Link>
-        <button className="nav-link" style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
+        <button 
+          className="nav-link" 
+          style={{ color: 'var(--danger)' }}
+          onClick={() => logout()}
+        >
           <LogOut size={20} />
           Cerrar Sesión
         </button>

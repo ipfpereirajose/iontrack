@@ -1,6 +1,50 @@
-import { Building2, Users, ClipboardCheck, AlertTriangle, Download } from 'lucide-react';
+import { Building2, Users, ClipboardCheck, AlertTriangle, Download, CheckCircle } from 'lucide-react';
+import { createClient } from '@/utils/supabase/server';
+import { getCurrentProfile } from '@/lib/auth';
+import Link from 'next/link';
 
-export default function LabHomePage() {
+export default async function LabHomePage() {
+  const supabase = await createClient();
+  const { user, profile } = await getCurrentProfile();
+  if (!user) return null;
+
+  const tenantId = profile?.tenant_id;
+
+  // 2. Fetch Stats
+  // Total Companies
+  const { count: companiesCount } = await supabase
+    .from('companies')
+    .select('*', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId);
+
+  // Total Workers (TOEs)
+  const { count: workersCount } = await supabase
+    .from('toe_workers')
+    .select('*, companies!inner(*)', { count: 'exact', head: true })
+    .eq('companies.tenant_id', tenantId);
+
+  // Pending Doses
+  const { data: pendingDoses, count: pendingCount } = await supabase
+    .from('doses')
+    .select(`
+      id, hp10, month, year,
+      toe_workers!inner (
+        first_name, last_name, ci,
+        companies!inner (name, tenant_id)
+      )
+    `)
+    .eq('status', 'pending')
+    .eq('toe_workers.companies.tenant_id', tenantId)
+    .limit(5);
+
+  // Critical Alerts (80% threshold)
+  const { count: alertsCount } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .eq('type', 'threshold_alert')
+    .eq('is_read', false);
+
   return (
     <div>
       <header style={{ marginBottom: '2.5rem' }}>
@@ -14,8 +58,8 @@ export default function LabHomePage() {
             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Empresas</span>
             <Building2 size={20} color="var(--primary)" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>24</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginTop: '0.5rem' }}>+2 este mes</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{companiesCount || 0}</div>
+          <div className="badge badge-success" style={{ marginTop: '0.5rem' }}>Clientes Activos</div>
         </div>
 
         <div className="glass-panel">
@@ -23,26 +67,30 @@ export default function LabHomePage() {
             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Trabajadores (TOE)</span>
             <Users size={20} color="var(--primary)" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>142</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Promedio 5.9 por empresa</div>
-        </div>
-
-        <div className="glass-panel" style={{ border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pendientes Validar</span>
-            <ClipboardCheck size={20} color="var(--primary)" />
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>12</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '0.5rem', fontWeight: 600 }}>Requiere atención inmediata</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{workersCount || 0}</div>
+          <div className="badge badge-success" style={{ marginTop: '0.5rem' }}>Bajo Vigilancia</div>
         </div>
 
         <div className="glass-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Alertas de Dosis</span>
-            <AlertTriangle size={20} color="var(--danger)" />
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pendientes Validar</span>
+            <ClipboardCheck size={20} color="var(--primary)" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>1</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.5rem' }}>Umbral 80% superado</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{pendingCount || 0}</div>
+          <div className={pendingCount && pendingCount > 0 ? 'badge badge-warning' : 'badge badge-success'} style={{ marginTop: '0.5rem' }}>
+            {pendingCount && pendingCount > 0 ? 'Atención Requerida' : 'Al día'}
+          </div>
+        </div>
+
+        <div className="glass-panel">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Alertas Críticas</span>
+            <AlertTriangle size={20} color={alertsCount && alertsCount > 0 ? 'var(--danger)' : 'var(--text-muted)'} />
+          </div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{alertsCount || 0}</div>
+          <div className={alertsCount && alertsCount > 0 ? 'badge badge-danger' : 'badge badge-success'} style={{ marginTop: '0.5rem' }}>
+            {alertsCount && alertsCount > 0 ? 'Umbral Superado' : 'Sin incidencias'}
+          </div>
         </div>
       </div>
 
@@ -50,34 +98,41 @@ export default function LabHomePage() {
         <section>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Cola de Validación Reciente</h2>
           <div className="glass-panel" style={{ padding: '0' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-glass)' }}>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Trabajador</th>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Empresa</th>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Dosis (mSv)</th>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ borderBottom: '1px solid var(--border-glass)' }}>
-                  <td style={{ padding: '1rem 1.5rem' }}>Juan Pérez</td>
-                  <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem' }}>Hospital Metropolitano</td>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>0.1245</td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    <button style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', background: 'var(--primary)', color: 'white', border: 'none', fontSize: '0.75rem', cursor: 'pointer' }}>Validar</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '1rem 1.5rem' }}>María García</td>
-                  <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem' }}>Clínica Santa Fe</td>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>0.0892</td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    <button style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', background: 'var(--primary)', color: 'white', border: 'none', fontSize: '0.75rem', cursor: 'pointer' }}>Validar</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            {!pendingDoses || pendingDoses.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <CheckCircle size={32} style={{ marginBottom: '1rem', opacity: 0.3 }} />
+                <p>No hay dosis pendientes de validación.</p>
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Trabajador</th>
+                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Empresa</th>
+                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Dosis (mSv)</th>
+                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem', textAlign: 'right' }}>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingDoses.map((dose: any) => (
+                    <tr key={dose.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>
+                        {dose.toe_workers?.first_name} {dose.toe_workers?.last_name}
+                      </td>
+                      <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                        {dose.toe_workers?.companies?.name}
+                      </td>
+                      <td style={{ padding: '1rem 1.5rem', fontWeight: 700 }}>{dose.hp10}</td>
+                      <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                        <Link href="/lab/validation" className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>
+                          Gestionar
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
 
@@ -86,23 +141,27 @@ export default function LabHomePage() {
           <div className="glass-panel" style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--secondary)', boxShadow: '0 0 10px var(--secondary)' }}></div>
-              <span style={{ fontWeight: 600 }}>Agente Online</span>
+              <span style={{ fontWeight: 600 }}>Agente Local</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.875rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Buffer Local:</span>
-                <span>0 registros</span>
+                <span style={{ color: 'var(--text-muted)' }}>ID Agente:</span>
+                <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>AG-7729</code>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Sincronización:</span>
+                <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>Activa (30s)</span>
               </div>
             </div>
           </div>
 
-          <div className="glass-panel" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white', border: 'none' }}>
+          <div className="glass-panel" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'black', border: 'none' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.5rem' }}>Software de Ingesta</h3>
-            <p style={{ fontSize: '0.8125rem', opacity: 0.9, marginBottom: '1.25rem' }}>Descarga el agente oficial para sincronizar dosis offline.</p>
-            <a href="/downloads/iontrack-agent.exe" style={{ background: 'white', color: 'var(--primary)', padding: '0.6rem', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.875rem' }}>
-              <Download size={16} />
+            <p style={{ fontSize: '0.8125rem', opacity: 0.9, marginBottom: '1.25rem', fontWeight: 600 }}>Sincroniza dosis offline de forma segura.</p>
+            <Link href="/downloads/iontrack-agent.exe" className="btn" style={{ background: 'white', color: 'black', width: '100%', justifyContent: 'center' }}>
+              <Download size={18} />
               Descargar .EXE
-            </a>
+            </Link>
           </div>
         </section>
       </div>
