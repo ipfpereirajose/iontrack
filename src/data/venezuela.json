@@ -1,0 +1,17 @@
+﻿[
+    {
+        "iso_31662": "VE-X",
+        "estado": "Amazonas",
+        "capital": "Puerto Ayacucho",
+        "id_estado": 1,
+        "municipios": [
+            {
+                "municipio": "Alto Orinoco",
+                "capital": "La Esmeralda",
+                "parroquias": [
+                    "Alto Orinoco La Esmeralda",
+                    "Huachamacare AcanaÃ±a",
+                    "Marawaka Toky ShamanaÃ±a",
+                    "Mavaka Mavaka",
+                    "Sierra Parima ParimabÃ©"
+                ]
