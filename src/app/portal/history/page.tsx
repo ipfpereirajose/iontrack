@@ -65,7 +65,7 @@ export default async function HistoryPage() {
                   </td>
                 </tr>
               ) : (
-                doses.map((dose) => (
+                doses.map((dose: any) => (
                   <tr key={dose.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '1.5rem 1.5rem', fontWeight: 700, color: 'var(--primary)' }}>
                       {dose.month < 10 ? `0${dose.month}` : dose.month}/{dose.year}
