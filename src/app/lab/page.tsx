@@ -10,40 +10,34 @@ export default async function LabHomePage() {
 
   const tenantId = profile?.tenant_id;
 
-  // 2. Fetch Stats
-  // Total Companies
-  const { count: companiesCount } = await supabase
-    .from('companies')
-    .select('*', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId);
-
-  // Total Workers (TOEs)
-  const { count: workersCount } = await supabase
-    .from('toe_workers')
-    .select('*, companies!inner(*)', { count: 'exact', head: true })
-    .eq('companies.tenant_id', tenantId);
-
-  // Pending Doses
-  const { data: pendingDoses, count: pendingCount } = await supabase
-    .from('doses')
-    .select(`
-      id, hp10, month, year,
-      toe_workers!inner (
-        first_name, last_name, ci,
-        companies!inner (name, tenant_id)
-      )
-    `)
-    .eq('status', 'pending')
-    .eq('toe_workers.companies.tenant_id', tenantId)
-    .limit(5);
-
-  // Critical Alerts (80% threshold)
-  const { count: alertsCount } = await supabase
-    .from('notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
-    .eq('type', 'threshold_alert')
-    .eq('is_read', false);
+  // Run all queries in parallel for maximum performance
+  const [
+    { count: companiesCount },
+    { count: workersCount },
+    { data: pendingDoses, count: pendingCount },
+    { count: alertsCount },
+  ] = await Promise.all([
+    supabase
+      .from('companies')
+      .select('*', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId),
+    supabase
+      .from('toe_workers')
+      .select('*, companies!inner(*)', { count: 'exact', head: true })
+      .eq('companies.tenant_id', tenantId),
+    supabase
+      .from('doses')
+      .select(`id, hp10, month, year, toe_workers!inner(first_name, last_name, ci, companies!inner(name, tenant_id))`)
+      .eq('status', 'pending')
+      .eq('toe_workers.companies.tenant_id', tenantId)
+      .limit(5),
+    supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId)
+      .eq('type', 'threshold_alert')
+      .eq('is_read', false),
+  ]);
 
   return (
     <div>

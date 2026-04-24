@@ -20,15 +20,15 @@ export default function AdminLogin() {
     setError(null);
     
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (authError) {
         setError(authError.message);
         return;
       }
+
+      // Set role hint cookie so middleware never needs a DB call
+      document.cookie = `iontrack_role=superadmin; path=/; max-age=604800; SameSite=Lax`;
 
       router.push('/admin');
       router.refresh();

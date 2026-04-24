@@ -1,12 +1,21 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function updateSession(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  // Skip middleware entirely for static assets — these never need auth
+  if (
+    path.startsWith('/_next') ||
+    path.startsWith('/favicon') ||
+    path.startsWith('/downloads') ||
+    path.includes('.')
+  ) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   });
 
   const supabase = createServerClient(
@@ -14,93 +23,51 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
           response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
+            request,
           });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
     }
   );
 
+  // Refresh session — single lightweight JWT decode, no DB call
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Protect routes and redirect based on role
-  const path = request.nextUrl.pathname;
+  // --- Route protection (no DB call needed, just check if session exists) ---
 
-  if (user) {
-    // If user is logged in, check role and redirect from logins
-    // Use a standard client (not SSR) to avoid cookie configuration requirements for this admin check
-    const adminSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  const isProtectedAdmin = path.startsWith('/admin') && !path.includes('/login');
+  const isProtectedLab = path.startsWith('/lab') && !path.includes('/login');
+  const isProtectedPortal = path.startsWith('/portal') && !path.includes('/login');
 
-    const { data: profile } = await adminSupabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+  if (!user) {
+    // Not logged in → redirect to the corresponding login
+    if (isProtectedAdmin) return NextResponse.redirect(new URL('/admin/login', request.url));
+    if (isProtectedLab) return NextResponse.redirect(new URL('/lab/login', request.url));
+    if (isProtectedPortal) return NextResponse.redirect(new URL('/portal/login', request.url));
+    return response;
+  }
 
-    if (path.includes('/login')) {
-      if (profile?.role === 'superadmin') return NextResponse.redirect(new URL('/admin', request.url));
-      if (['lab_admin', 'lab_tech'].includes(profile?.role)) return NextResponse.redirect(new URL('/lab', request.url));
-      if (['company_manager', 'toe'].includes(profile?.role)) return NextResponse.redirect(new URL('/portal', request.url));
-    }
-
-    // Role-based path protection
-    if (path.startsWith('/admin') && profile?.role !== 'superadmin') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-    if (path.startsWith('/lab') && !['lab_admin', 'lab_tech', 'superadmin'].includes(profile?.role)) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-    if (path.startsWith('/portal') && !['company_manager', 'toe', 'superadmin'].includes(profile?.role)) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-  } else {
-    // If not logged in and trying to access protected routes
-    if (path.startsWith('/admin') && !path.includes('/login')) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-    if (path.startsWith('/lab') && !path.includes('/login')) {
-      return NextResponse.redirect(new URL('/lab/login', request.url));
-    }
-    if (path.startsWith('/portal') && !path.includes('/login')) {
-      return NextResponse.redirect(new URL('/portal/login', request.url));
-    }
+  // Logged in → redirect away from login pages
+  // Role check is intentionally moved to individual layouts (no DB call in middleware)
+  if (path.endsWith('/login')) {
+    // Check cookie-based role hint set at login time (no DB needed)
+    const roleHint = request.cookies.get('iontrack_role')?.value;
+    if (roleHint === 'superadmin') return NextResponse.redirect(new URL('/admin', request.url));
+    if (roleHint === 'lab_admin' || roleHint === 'lab_tech') return NextResponse.redirect(new URL('/lab', request.url));
+    if (roleHint === 'company_manager' || roleHint === 'toe') return NextResponse.redirect(new URL('/portal', request.url));
+    // No hint? Just let them through, the page will redirect
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return response;

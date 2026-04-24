@@ -30,6 +30,8 @@ export default function PortalLogin() {
         return;
       }
 
+      document.cookie = `iontrack_role=company_manager; path=/; max-age=604800; SameSite=Lax`;
+
       router.push('/portal');
       router.refresh();
     } catch (err) {

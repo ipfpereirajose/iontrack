@@ -30,6 +30,8 @@ export default function LabLogin() {
         return;
       }
 
+      document.cookie = `iontrack_role=lab_admin; path=/; max-age=604800; SameSite=Lax`;
+
       router.push('/lab');
       router.refresh();
     } catch (err) {
