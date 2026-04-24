@@ -1,4 +1,4 @@
-import { Users, Plus, ArrowLeft, Mail, Shield, User } from 'lucide-react';
+import { Users, Plus, ArrowLeft, Mail, Shield, User, Fingerprint } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 

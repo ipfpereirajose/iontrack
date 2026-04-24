@@ -125,6 +125,7 @@ export default function NewTenantPage() {
             />
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Identificador raíz para toda la trazabilidad (Ej: L001)</p>
           </div>
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '300px' }}>
           <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Cuota Mensual (USD)</label>
