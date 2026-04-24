@@ -1,4 +1,4 @@
-import { Building2, Users, ClipboardCheck, AlertTriangle, Download, CheckCircle, TrendingUp, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Building2, Users, ClipboardCheck, AlertTriangle, Download, CheckCircle, TrendingUp, ShieldAlert, ArrowRight, Calendar } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import { getCurrentProfile } from '@/lib/auth';
 import Link from 'next/link';
