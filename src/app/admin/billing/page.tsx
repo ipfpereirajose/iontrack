@@ -1,6 +1,8 @@
 import { CreditCard, DollarSign, Clock, Download, CheckCircle, AlertTriangle } from 'lucide-react';
 import { getServiceSupabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export default async function BillingPage() {
   const supabase = getServiceSupabase();
   const { data: tenants } = await supabase.from('tenants').select('*');
