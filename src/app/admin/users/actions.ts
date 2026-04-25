@@ -72,6 +72,51 @@ export async function updateAdminUser(userId: string, data: {
   }
 }
 
+export async function createAdminUser(data: { 
+  email: string, 
+  role: string, 
+  password?: string,
+  firstName: string,
+  lastName: string
+}) {
+  const supabase = getServiceSupabase();
+  
+  try {
+    // 1. Create Auth User
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: data.email,
+      password: data.password || 'Temp12345!', // Provide default temp password if none
+      email_confirm: true,
+      user_metadata: {
+        first_name: data.firstName,
+        last_name: data.lastName
+      }
+    });
+
+    if (authError) return { success: false, error: authError.message };
+    if (!authData.user) return { success: false, error: 'No se pudo crear el usuario' };
+
+    // 2. Create Profile Data (usually triggers would do this, but we force it for admins)
+    // We do an upsert in case a trigger already created it
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: authData.user.id,
+        role: data.role,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        status: 'active'
+      });
+
+    if (profileError) return { success: false, error: profileError.message };
+
+    revalidatePath('/admin/users');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Error al crear usuario' };
+  }
+}
+
 export async function resetUserPassword(email: string) {
   const supabase = getServiceSupabase();
   

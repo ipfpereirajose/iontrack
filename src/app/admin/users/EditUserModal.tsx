@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { X, Save, Mail, Shield, Lock, User } from 'lucide-react';
-import { updateAdminUser } from './actions';
+import { X, Save, Mail, Shield, Lock, User, UserPlus } from 'lucide-react';
+import { updateAdminUser, createAdminUser } from './actions';
 
 export default function EditUserModal({ users }: { users: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
+  const isNew = searchParams.get('new') === 'true';
   
   const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     email: '',
-    role: '',
+    role: 'lab_admin',
     password: '',
     firstName: '',
     lastName: ''
@@ -29,16 +30,25 @@ export default function EditUserModal({ users }: { users: any[] }) {
           email: targetUser.email,
           role: targetUser.role,
           password: '',
-          firstName: targetUser.first_name,
-          lastName: targetUser.last_name
+          firstName: targetUser.first_name || '',
+          lastName: targetUser.last_name || ''
         });
       }
+    } else if (isNew) {
+      setUser(null);
+      setFormData({
+        email: '',
+        role: 'lab_admin',
+        password: '',
+        firstName: '',
+        lastName: ''
+      });
     } else {
       setUser(null);
     }
-  }, [editId, users]);
+  }, [editId, isNew, users]);
 
-  if (!user) return null;
+  if (!editId && !isNew) return null;
 
   const handleClose = () => {
     router.push('/admin/users');
@@ -48,7 +58,13 @@ export default function EditUserModal({ users }: { users: any[] }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const result = await updateAdminUser(user.id, formData);
+      let result;
+      if (isNew) {
+        result = await createAdminUser(formData);
+      } else {
+        result = await updateAdminUser(user.id, formData);
+      }
+      
       if (result && !result.success) {
         alert('Error: ' + result.error);
       } else {
@@ -56,7 +72,7 @@ export default function EditUserModal({ users }: { users: any[] }) {
       }
     } catch (err: any) {
       console.error(err);
-      alert('Error crítico: ' + (err.message || 'Error desconocido al actualizar'));
+      alert('Error crítico: ' + (err.message || 'Error desconocido al guardar'));
     } finally {
       setLoading(false);
     }
@@ -83,8 +99,10 @@ export default function EditUserModal({ users }: { users: any[] }) {
         </button>
 
         <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>Editar Administrador</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>ID: {user.id}</p>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>
+            {isNew ? 'Nuevo Administrador' : 'Editar Administrador'}
+          </h2>
+          {editId && <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>ID: {editId}</p>}
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -95,6 +113,7 @@ export default function EditUserModal({ users }: { users: any[] }) {
               </label>
               <input 
                 type="text" 
+                required
                 className="input-field" 
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -106,6 +125,7 @@ export default function EditUserModal({ users }: { users: any[] }) {
               </label>
               <input 
                 type="text" 
+                required
                 className="input-field" 
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
@@ -119,6 +139,7 @@ export default function EditUserModal({ users }: { users: any[] }) {
             </label>
             <input 
               type="email" 
+              required
               className="input-field" 
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -142,18 +163,26 @@ export default function EditUserModal({ users }: { users: any[] }) {
 
           <div className="form-group" style={{ background: 'rgba(0,0,0,0.03)', padding: '1rem', borderRadius: '12px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-              <Lock size={14} /> CAMBIAR CONTRASEÑA (Opcional)
+              <Lock size={14} /> {isNew ? 'CONTRASEÑA INICIAL' : 'CAMBIAR CONTRASEÑA (Opcional)'}
             </label>
             <input 
               type="password" 
-              placeholder="Nueva contraseña personalizada" 
+              required={isNew}
+              placeholder={isNew ? "Mínimo 6 caracteres" : "Nueva contraseña personalizada"} 
               className="input-field" 
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-              Dejar en blanco si no desea cambiar la contraseña actual.
-            </p>
+            {!isNew && (
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                Dejar en blanco si no desea cambiar la contraseña actual.
+              </p>
+            )}
+            {isNew && (
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                El usuario podrá cambiarla posteriormente.
+              </p>
+            )}
           </div>
 
           <button 
@@ -162,7 +191,9 @@ export default function EditUserModal({ users }: { users: any[] }) {
             className="btn btn-primary" 
             style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}
           >
-            {loading ? 'Guardando...' : <><Save size={20} /> Guardar Cambios</>}
+            {loading ? 'Guardando...' : (
+              isNew ? <><UserPlus size={20} /> Crear Administrador</> : <><Save size={20} /> Guardar Cambios</>
+            )}
           </button>
         </form>
       </div>

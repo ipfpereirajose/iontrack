@@ -59,7 +59,7 @@ export default async function AdminManagement() {
             Administre los niveles de privilegio y acceso de los usuarios del sistema.
           </p>
         </div>
-        <Link href="/admin/tenants/new" className="btn btn-primary" style={{ background: '#f59e0b' }}>
+        <Link href="?new=true" className="btn btn-primary" style={{ background: '#f59e0b' }}>
           <UserPlus size={20} />
           Nuevo Administrador
         </Link>
