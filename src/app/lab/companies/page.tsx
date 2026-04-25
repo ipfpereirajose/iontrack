@@ -3,24 +3,27 @@ import { createClient } from '@/utils/supabase/server';
 import { getCurrentProfile } from '@/lib/auth';
 import Link from 'next/link';
 import DoseChart from '@/components/lab/DoseChart';
+import { getServiceSupabase } from '@/lib/supabase';
 
 export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ year?: string }> }) {
   const { year: selectedYear = new Date().getFullYear().toString() } = await searchParams;
   const supabase = await createClient();
+  const adminSupabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) return null;
 
   const tenantId = profile?.tenant_id;
+  if (!tenantId) return <div style={{ padding: '2rem', textAlign: 'center' }}>No tienes un laboratorio asignado.</div>;
 
   // 1. Fetch Companies
-  const companiesQuery = supabase
+  const companiesQuery = adminSupabase
     .from('companies')
     .select('*, toe_workers(count)')
     .eq('tenant_id', tenantId)
     .order('name', { ascending: true });
 
   // 2. Fetch Doses for Chart (Current Year)
-  const chartQuery = supabase
+  const chartQuery = adminSupabase
     .from('doses')
     .select(`
       hp10, month, year,
@@ -33,7 +36,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
     .eq('status', 'approved');
 
   // 3. Fetch Alerts (Overexposure > 1.66 or Warning >= 1.328)
-  const alertsQuery = supabase
+  const alertsQuery = adminSupabase
     .from('doses')
     .select(`
       id, hp10, month, year,
