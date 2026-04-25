@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, CreditCard, Activity, Settings, LogOut, ShieldAlert, GitBranch, History } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, CreditCard, Activity, Settings, LogOut, ShieldAlert, GitBranch, History } from 'lucide-react';
 import Link from 'next/link';
 import { logout } from '@/app/actions/auth';
 
@@ -12,6 +12,7 @@ export default function Sidebar() {
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Infraestructura', href: '/admin/infrastructure', icon: GitBranch },
     { name: 'Laboratorios', href: '/admin/tenants', icon: Users },
+    { name: 'Administradores', href: '/admin/users', icon: UserCog },
     { name: 'Facturación', href: '/admin/billing', icon: CreditCard },
     { name: 'Solicitudes', href: '/admin/requests', icon: History },
     { name: 'Historial Nacional', href: '/admin/national-history', icon: History },
