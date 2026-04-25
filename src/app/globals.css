@@ -170,8 +170,6 @@ body {
 .input-field::placeholder {
   color: #94A3B8;
 }
-  border-color: var(--border);
-}
 
 .btn-secondary:hover {
   background: #f8fafc;
