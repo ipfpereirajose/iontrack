@@ -1,6 +1,8 @@
-import { ShieldCheck, UserCog, Mail, Calendar, Shield, Trash2, UserPlus, Lock, Activity } from 'lucide-react';
+import { getServiceSupabase } from '@/lib/supabase';
+import { ShieldCheck, UserCog, Mail, Calendar, Shield, Trash2, UserPlus, Lock, Activity, Edit3 } from 'lucide-react';
 import { updateUserRole, deleteUser, updateUserStatus, resetUserPassword } from './actions';
 import Link from 'next/link';
+import EditUserModal from './EditUserModal';
 
 export default async function AdminManagement() {
   const supabase = getServiceSupabase();
@@ -123,6 +125,15 @@ export default async function AdminManagement() {
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <Link 
+                      href={`/admin/users?edit=${user.id}`}
+                      className="btn btn-secondary" 
+                      style={{ padding: '0.5rem' }} 
+                      title="Editar Usuario"
+                    >
+                      <Edit3 size={18} />
+                    </Link>
+
                     <form action={async () => {
                       'use server';
                       await resetUserPassword(user.email);
@@ -141,15 +152,6 @@ export default async function AdminManagement() {
                       </button>
                     </form>
 
-                    <form action={async () => {
-                      'use server';
-                      await updateUserRole(user.id, user.role === 'superadmin' ? 'lab_admin' : 'superadmin');
-                    }}>
-                      <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Cambiar Rol">
-                        <ShieldCheck size={18} />
-                      </button>
-                    </form>
-                    
                     <form action={async () => {
                       'use server';
                       await deleteUser(user.id);
@@ -195,6 +197,8 @@ export default async function AdminManagement() {
           </p>
         </div>
       </div>
+
+      <EditUserModal users={users} />
     </div>
   );
 }
