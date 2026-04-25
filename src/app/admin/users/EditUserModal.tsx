@@ -48,10 +48,15 @@ export default function EditUserModal({ users }: { users: any[] }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateAdminUser(user.id, formData);
-      handleClose();
-    } catch (err) {
-      alert('Error al actualizar usuario');
+      const result = await updateAdminUser(user.id, formData);
+      if (result && !result.success) {
+        alert('Error: ' + result.error);
+      } else {
+        handleClose();
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Error crítico: ' + (err.message || 'Error desconocido al actualizar'));
     } finally {
       setLoading(false);
     }
