@@ -60,8 +60,8 @@ export default function LabLogin() {
           }}>
             <ShieldCheck size={32} />
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>Acceso Laboratorio</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>Ingrese sus credenciales de oficial de seguridad.</p>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem', color: 'var(--text-main)' }}>Acceso Laboratorio</h1>
+          <p style={{ color: 'var(--text-main)', fontSize: '0.9375rem', fontWeight: 600 }}>Ingrese sus credenciales de oficial de seguridad.</p>
         </div>
 
         {error && (
@@ -94,12 +94,13 @@ export default function LabLogin() {
               style={{ 
                 width: '100%', 
                 padding: '1rem 1rem 1rem 3.5rem', 
-                background: 'rgba(255,255,255,0.03)', 
-                border: '1px solid var(--border)', 
+                background: '#fff', 
+                border: '2px solid var(--border)', 
                 borderRadius: '12px',
-                color: 'white',
+                color: 'var(--text-main)',
+                fontWeight: 700,
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: 'all 0.2s'
               }}
               onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
               onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
@@ -117,12 +118,13 @@ export default function LabLogin() {
               style={{ 
                 width: '100%', 
                 padding: '1rem 1rem 1rem 3.5rem', 
-                background: 'rgba(255,255,255,0.03)', 
-                border: '1px solid var(--border)', 
+                background: '#fff', 
+                border: '2px solid var(--border)', 
                 borderRadius: '12px',
-                color: 'white',
+                color: 'var(--text-main)',
+                fontWeight: 700,
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: 'all 0.2s'
               }}
               onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
               onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
@@ -149,7 +151,7 @@ export default function LabLogin() {
         </form>
 
         <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <Link href="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none' }}>
+          <Link href="/" style={{ color: 'var(--text-main)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 700 }}>
             ← Volver al HUB Principal
           </Link>
         </div>

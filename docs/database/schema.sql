@@ -224,13 +224,13 @@ CREATE POLICY "Worker access" ON public.toe_workers
             WHERE tenant_id = (SELECT tenant_id FROM public.profiles WHERE id = auth.uid())
         )
         OR company_id = (SELECT company_id FROM public.profiles WHERE id = auth.uid())
-        OR is_superadmin()
+        OR check_is_superadmin()
     );
 
 -- Doses: Multi-layer protection
 CREATE POLICY "Dose access" ON public.doses
     FOR ALL USING (
-        worker_id IN (
+        toe_worker_id IN (
             SELECT id FROM public.toe_workers 
             WHERE company_id IN (
                 SELECT id FROM public.companies 
@@ -238,5 +238,5 @@ CREATE POLICY "Dose access" ON public.doses
             )
             OR company_id = (SELECT company_id FROM public.profiles WHERE id = auth.uid())
         )
-        OR is_superadmin()
+        OR check_is_superadmin()
     );
