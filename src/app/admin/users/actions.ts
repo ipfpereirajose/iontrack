@@ -88,11 +88,28 @@ export async function resetUserPassword(email: string) {
 export async function deleteUser(userId: string) {
   const supabase = getServiceSupabase();
   
-  // This deletes from Auth, which triggers profile deletion via cascade (if configured)
-  const { error } = await supabase.auth.admin.deleteUser(userId);
+  try {
+    // Attempt to delete from Auth (this usually cascades to profiles)
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
-  if (error) throw new Error(error.message);
-  
-  revalidatePath('/admin/users');
-  return { success: true };
+    // If auth throws an error (e.g. User not found), we STILL want to delete the ghost profile
+    if (authError && authError.message !== 'User not found') {
+      return { success: false, error: authError.message };
+    }
+
+    // Force delete from profiles just in case cascade is not set up or it was a ghost profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+      
+    if (profileError) {
+      console.error("Profile deletion error:", profileError);
+    }
+
+    revalidatePath('/admin/users');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Error al eliminar usuario' };
+  }
 }
