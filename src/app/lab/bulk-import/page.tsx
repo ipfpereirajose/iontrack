@@ -163,12 +163,12 @@ export default function BulkImportPage() {
                 <h3 style={{ fontSize: '1rem', fontWeight: 800 }}>Pre-visualización de Datos</h3>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>MUESTRA INICIAL</span>
               </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table>
+              <div style={{ overflowX: 'auto', paddingBottom: '1rem' }}>
+                <table style={{ minWidth: '100%', whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr>
                       {Object.keys(preview[0]).map((key) => (
-                        <th key={key}>{key}</th>
+                        <th key={key} style={{ padding: '1rem 1.5rem' }}>{key}</th>
                       ))}
                     </tr>
                   </thead>
@@ -176,7 +176,7 @@ export default function BulkImportPage() {
                     {preview.map((row, i) => (
                       <tr key={i}>
                         {Object.values(row).map((val: any, j) => (
-                          <td key={j} style={{ fontWeight: 600 }}>{val}</td>
+                          <td key={j} style={{ fontWeight: 600, padding: '1rem 1.5rem' }}>{val}</td>
                         ))}
                       </tr>
                     ))}

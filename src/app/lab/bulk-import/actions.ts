@@ -193,7 +193,7 @@ export async function bulkImportAction(type: string, data: any[]) {
           state,
           municipality,
           parish,
-          email: item.EMAIL || item.email,
+          email: item['EMAIL EMPRESA'] || item.EMAIL || item.email,
           phone_local: item['TELF LOCAL'] || item.telf_local,
           phone_mobile: item['TELF MÓVIL'] || item.telf_movil,
           rep_first_name: item['OSR NOM'] || item.osr_nom,
