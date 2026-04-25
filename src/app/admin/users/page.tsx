@@ -1,6 +1,5 @@
-import { getServiceSupabase } from '@/lib/supabase';
-import { ShieldCheck, UserCog, Mail, Calendar, Shield, Trash2, UserPlus } from 'lucide-react';
-import { updateUserRole, deleteUser } from './actions';
+import { ShieldCheck, UserCog, Mail, Calendar, Shield, Trash2, UserPlus, Lock, Activity } from 'lucide-react';
+import { updateUserRole, deleteUser, updateUserStatus, resetUserPassword } from './actions';
 import Link from 'next/link';
 
 export default async function AdminManagement() {
@@ -68,6 +67,7 @@ export default async function AdminManagement() {
               <th>Usuario</th>
               <th>Rol / Privilegio</th>
               <th>Entidad / Laboratorio</th>
+              <th>Estatus</th>
               <th>Último Acceso</th>
               <th style={{ textAlign: 'right' }}>Acciones</th>
             </tr>
@@ -111,6 +111,11 @@ export default async function AdminManagement() {
                   )}
                 </td>
                 <td>
+                  <span className={`badge ${user.status === 'inactive' ? 'badge-warning' : 'badge-success'}`}>
+                    {user.status?.toUpperCase() || 'ACTIVE'}
+                  </span>
+                </td>
+                <td>
                   <div style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
                     <Calendar size={14} />
                     {user.lastSignIn ? new Date(user.lastSignIn).toLocaleDateString() : 'Nunca'}
@@ -118,6 +123,24 @@ export default async function AdminManagement() {
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <form action={async () => {
+                      'use server';
+                      await resetUserPassword(user.email);
+                    }}>
+                      <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Reiniciar Contraseña">
+                        <Lock size={18} />
+                      </button>
+                    </form>
+
+                    <form action={async () => {
+                      'use server';
+                      await updateUserStatus(user.id, user.status === 'inactive' ? 'active' : 'inactive');
+                    }}>
+                      <button className="btn btn-secondary" style={{ padding: '0.5rem', color: user.status === 'inactive' ? '#10b981' : '#f59e0b' }} title="Cambiar Estatus">
+                        <Activity size={18} />
+                      </button>
+                    </form>
+
                     <form action={async () => {
                       'use server';
                       await updateUserRole(user.id, user.role === 'superadmin' ? 'lab_admin' : 'superadmin');
@@ -141,8 +164,6 @@ export default async function AdminManagement() {
             ))}
           </tbody>
         </table>
-      </div>
-
       <div style={{ 
         background: 'rgba(245, 158, 11, 0.05)', 
         border: '1px border var(--state-warning)', 
