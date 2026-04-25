@@ -83,17 +83,21 @@ export default function NewCompanyPage() {
     display: 'block'
   };
 
-  const inputStyle = { 
-    width: '100%', 
-    background: 'rgba(255,255,255,0.03)', 
-    border: '1px solid var(--border)', 
-    borderRadius: '10px', 
-    padding: '0.75rem 1rem', 
-    color: 'white',
-    outline: 'none',
+  const inputStyle = {
+    width: '100%',
+    background: '#FFFFFF',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '0.875rem 1rem',
+    color: 'var(--text-main)',
     fontSize: '0.9375rem',
-    transition: 'all 0.2s'
-  };
+    outline: 'none',
+    transition: 'all 0.2s',
+    '&:focus': {
+      borderColor: 'var(--primary)',
+      boxShadow: '0 0 0 3px rgba(0, 168, 181, 0.1)'
+    }
+  } as any;
 
   const sectionHeaderStyle = {
     fontSize: '1.1rem',

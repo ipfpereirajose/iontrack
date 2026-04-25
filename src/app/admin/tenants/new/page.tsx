@@ -125,16 +125,16 @@ export default function NewTenantPage() {
 
 const inputStyle = {
   width: '100%',
-  background: 'rgba(255,255,255,0.05)',
+  background: '#FFFFFF',
   border: '1px solid var(--border)',
-  borderRadius: '12px',
-  padding: '1rem',
-  color: 'white',
-  fontSize: '1rem',
+  borderRadius: '10px',
+  padding: '0.875rem 1rem',
+  color: 'var(--text-main)',
+  fontSize: '0.9375rem',
   outline: 'none',
   transition: 'all 0.2s',
   '&:focus': {
     borderColor: 'var(--primary)',
-    background: 'rgba(255,255,255,0.08)'
+    boxShadow: '0 0 0 3px rgba(0, 168, 181, 0.1)'
   }
 } as any;
