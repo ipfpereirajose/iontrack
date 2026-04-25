@@ -149,9 +149,11 @@ export async function bulkImportAction(type: string, data: any[]) {
         };
 
         if (existingWorker) {
-          await supabase.from('toe_workers').update(workerData).eq('id', existingWorker.id);
+          const { error: updErr } = await supabase.from('toe_workers').update(workerData).eq('id', existingWorker.id);
+          if (updErr) throw new Error(`Error actualizando TOE: ${updErr.message}`);
         } else {
-          await supabase.from('toe_workers').insert(workerData);
+          const { error: insErr } = await supabase.from('toe_workers').insert(workerData);
+          if (insErr) throw new Error(`Error insertando TOE: ${insErr.message}`);
         }
 
         // AUDIT LOG
@@ -206,10 +208,12 @@ export async function bulkImportAction(type: string, data: any[]) {
         };
 
         if (existingBranch) {
-          await supabase.from('companies').update(companyData).eq('id', existingBranch.id);
+          const { error: updErr } = await supabase.from('companies').update(companyData).eq('id', existingBranch.id);
+          if (updErr) throw new Error(`Error al actualizar empresa: ${updErr.message}`);
         } else {
           const companyCode = item.codigo || `EMP-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-          await supabase.from('companies').insert({ ...companyData, company_code: companyCode });
+          const { error: insErr } = await supabase.from('companies').insert({ ...companyData, company_code: companyCode });
+          if (insErr) throw new Error(`Error al insertar empresa: ${insErr.message}`);
         }
 
         // AUDIT LOG
