@@ -1,12 +1,15 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { getServiceSupabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { triggerDoseAlerts } from '@/lib/notifications';
 import standards from '@/data/professional_standards.json';
 
 export async function bulkImportAction(type: string, data: any[]) {
   const supabase = await createClient();
+  const adminSupabase = getServiceSupabase();
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No autenticado');
 
@@ -89,7 +92,7 @@ export async function bulkImportAction(type: string, data: any[]) {
         );
 
         // AUDIT LOG
-        await supabase.from('audit_logs').insert({
+        await adminSupabase.from('audit_logs').insert({
           user_id: user.id,
           tenant_id: tenantId,
           action: 'bulk_import_dose',
@@ -149,15 +152,15 @@ export async function bulkImportAction(type: string, data: any[]) {
         };
 
         if (existingWorker) {
-          const { error: updErr } = await supabase.from('toe_workers').update(workerData).eq('id', existingWorker.id);
+          const { error: updErr } = await adminSupabase.from('toe_workers').update(workerData).eq('id', existingWorker.id);
           if (updErr) throw new Error(`Error actualizando TOE: ${updErr.message}`);
         } else {
-          const { error: insErr } = await supabase.from('toe_workers').insert(workerData);
+          const { error: insErr } = await adminSupabase.from('toe_workers').insert(workerData);
           if (insErr) throw new Error(`Error insertando TOE: ${insErr.message}`);
         }
 
         // AUDIT LOG
-        await supabase.from('audit_logs').insert({
+        await adminSupabase.from('audit_logs').insert({
           user_id: user.id,
           tenant_id: tenantId,
           action: 'bulk_import_worker',
@@ -173,7 +176,7 @@ export async function bulkImportAction(type: string, data: any[]) {
         const parish = item.PARROQUIA || item.parroquia || item.parish;
 
         // Check if this exact branch exists
-        const { data: existingBranch } = await supabase
+        const { data: existingBranch } = await adminSupabase
           .from('companies')
           .select('id')
           .eq('tax_id', taxId)
@@ -208,16 +211,16 @@ export async function bulkImportAction(type: string, data: any[]) {
         };
 
         if (existingBranch) {
-          const { error: updErr } = await supabase.from('companies').update(companyData).eq('id', existingBranch.id);
+          const { error: updErr } = await adminSupabase.from('companies').update(companyData).eq('id', existingBranch.id);
           if (updErr) throw new Error(`Error al actualizar empresa: ${updErr.message}`);
         } else {
           const companyCode = item.codigo || `EMP-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-          const { error: insErr } = await supabase.from('companies').insert({ ...companyData, company_code: companyCode });
+          const { error: insErr } = await adminSupabase.from('companies').insert({ ...companyData, company_code: companyCode });
           if (insErr) throw new Error(`Error al insertar empresa: ${insErr.message}`);
         }
 
         // AUDIT LOG
-        await supabase.from('audit_logs').insert({
+        await adminSupabase.from('audit_logs').insert({
           user_id: user.id,
           tenant_id: tenantId,
           action: 'bulk_import_company',
