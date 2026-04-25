@@ -164,6 +164,8 @@ export default async function AdminManagement() {
             ))}
           </tbody>
         </table>
+      </div>
+
       <div style={{ 
         background: 'rgba(245, 158, 11, 0.05)', 
         border: '1px border var(--state-warning)', 
