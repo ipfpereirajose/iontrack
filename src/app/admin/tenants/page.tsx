@@ -1,6 +1,7 @@
 import { getServiceSupabase } from '@/lib/supabase';
 import { Plus, Shield, Settings } from 'lucide-react';
 import Link from 'next/link';
+import ResetPasswordButton from '@/components/admin/ResetPasswordButton';
 
 export default async function TenantsPage() {
   const supabase = getServiceSupabase();
@@ -33,7 +34,7 @@ export default async function TenantsPage() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Nombre del Laboratorio</th>
-              <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>ID / Slug</th>
+              <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Contacto / Email</th>
               <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Estatus</th>
               <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Tarifa</th>
               <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem', textAlign: 'right' }}>Acciones</th>
@@ -57,8 +58,9 @@ export default async function TenantsPage() {
                       <span style={{ fontWeight: 600 }}>{tenant.name}</span>
                     </div>
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem', fontFamily: 'monospace', fontSize: '0.8125rem' }}>
-                    {tenant.slug}
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{tenant.email}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tenant.rep_first_name} {tenant.rep_last_name}</div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <span className={`badge ${tenant.billing_status === 'active' ? 'badge-success' : 'badge-danger'}`}>
@@ -70,6 +72,7 @@ export default async function TenantsPage() {
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <ResetPasswordButton email={tenant.email} />
                       <Link href={`/admin/tenants/${tenant.id}`} className="nav-link" style={{ display: 'inline-flex', padding: '0.5rem', width: 'auto' }}>
                         <Settings size={16} />
                       </Link>

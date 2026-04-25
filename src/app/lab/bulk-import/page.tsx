@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react';
 import { Upload, FileText, CheckCircle2, AlertCircle, Database, ArrowRight, Loader2, Fingerprint, Shield, Users, ClipboardList } from 'lucide-react';
 import * as XLSX from 'xlsx';
-
 import { bulkImportAction } from './actions';
+import RegulatoryReportButton from '@/components/lab/RegulatoryReportButton';
 
 type ImportType = 'companies' | 'workers' | 'doses';
 
@@ -53,8 +53,8 @@ export default function BulkImportPage() {
     borderRadius: '16px',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    background: importType === type ? 'rgba(6, 182, 212, 0.1)' : 'rgba(255,255,255,0.02)',
-    border: `2px solid ${importType === type ? 'var(--primary)' : 'transparent'}`,
+    background: importType === type ? 'rgba(0, 168, 181, 0.05)' : 'white',
+    border: `2px solid ${importType === type ? 'var(--primary-teal)' : 'var(--border)'}`,
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '1rem',
@@ -73,28 +73,28 @@ export default function BulkImportPage() {
         
         {/* LEFT PANEL: CONFIGURATION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <section className="glass-panel" style={{ padding: '2rem' }}>
+          <section className="clean-panel">
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Database size={20} color="var(--primary)" />
+              <Database size={20} color="var(--primary-teal)" />
               1. Seleccione Instancia
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div onClick={() => setImportType('companies')} style={cardStyle('companies')}>
-                <Shield size={24} color={importType === 'companies' ? 'var(--primary)' : 'var(--text-muted)'} />
+                <Shield size={24} color={importType === 'companies' ? 'var(--primary-teal)' : 'var(--text-muted)'} />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Empresas / OSR</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Carga de entidades y responsables.</div>
                 </div>
               </div>
               <div onClick={() => setImportType('workers')} style={cardStyle('workers')}>
-                <Users size={24} color={importType === 'workers' ? 'var(--primary)' : 'var(--text-muted)'} />
+                <Users size={24} color={importType === 'workers' ? 'var(--primary-teal)' : 'var(--text-muted)'} />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Trabajadores (TOE)</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Carga masiva de personal expuesto.</div>
                 </div>
               </div>
               <div onClick={() => setImportType('doses')} style={cardStyle('doses')}>
-                <ClipboardList size={24} color={importType === 'doses' ? 'var(--primary)' : 'var(--text-muted)'} />
+                <ClipboardList size={24} color={importType === 'doses' ? 'var(--primary-teal)' : 'var(--text-muted)'} />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Reportes de Dosis</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Carga de lecturas mensuales por ID.</div>
@@ -103,21 +103,39 @@ export default function BulkImportPage() {
             </div>
           </section>
 
-          <section className="glass-panel" style={{ padding: '2rem' }}>
+          <section className="clean-panel">
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Fingerprint size={20} color="var(--primary)" />
+              <FileText size={20} color="var(--primary-teal)" />
+              2. Descargar Plantillas
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <a href="/templates/plantilla_empresas_osr.csv" download className="btn" style={{ background: '#f1f5f9', fontSize: '0.8rem', justifyContent: 'flex-start' }}>
+                <FileText size={16} /> Plantilla Empresas y OSR
+              </a>
+              <a href="/templates/plantilla_trabajadores.csv" download className="btn" style={{ background: '#f1f5f9', fontSize: '0.8rem', justifyContent: 'flex-start' }}>
+                <FileText size={16} /> Plantilla Trabajadores TOE
+              </a>
+              <a href="/templates/plantilla_dosis.csv" download className="btn" style={{ background: '#f1f5f9', fontSize: '0.8rem', justifyContent: 'flex-start' }}>
+                <FileText size={16} /> Plantilla Reporte de Dosis
+              </a>
+            </div>
+          </section>
+
+          <section className="clean-panel">
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Fingerprint size={20} color="var(--primary-teal)" />
               Lógica de Asociación
             </h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
               El sistema utilizará el <strong>RIF</strong> o <strong>Cédula</strong> para verificar si la entidad o persona ya existe. 
-              Si hay coincidencia, se permitirá la asociación a la instalación actual manteniendo el historial auditado.
+              Se mantendrá el historial auditado en todo momento.
             </p>
           </section>
         </div>
 
         {/* RIGHT PANEL: UPLOAD & PREVIEW */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', border: '2px dashed var(--border)', background: 'rgba(255,255,255,0.01)' }}>
+          <div className="clean-panel" style={{ padding: '3rem', textAlign: 'center', border: '2px dashed var(--border)', background: 'var(--bg-main)' }}>
             <input 
               type="file" 
               id="file-upload" 
@@ -126,7 +144,7 @@ export default function BulkImportPage() {
               onChange={handleFileUpload}
             />
             <label htmlFor="file-upload" style={{ cursor: 'pointer' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(6, 182, 212, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--primary)' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(0, 168, 181, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--primary-teal)' }}>
                 <Upload size={32} />
               </div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>
@@ -140,32 +158,32 @@ export default function BulkImportPage() {
           </div>
 
           {preview.length > 0 && (
-            <div className="glass-panel" style={{ padding: '0', overflow: 'hidden' }}>
-              <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="clean-panel" style={{ padding: '0', overflow: 'hidden' }}>
+              <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 800 }}>Pre-visualización de Datos</h3>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>Mostrando primeras 5 filas</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>MUESTRA INICIAL</span>
               </div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8125rem' }}>
+                <table>
                   <thead>
-                    <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border)' }}>
+                    <tr>
                       {Object.keys(preview[0]).map((key) => (
-                        <th key={key} style={{ padding: '1rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{key}</th>
+                        <th key={key}>{key}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {preview.map((row, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <tr key={i}>
                         {Object.values(row).map((val: any, j) => (
-                          <td key={j} style={{ padding: '1rem', fontWeight: 600 }}>{val}</td>
+                          <td key={j} style={{ fontWeight: 600 }}>{val}</td>
                         ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'flex-end', background: 'rgba(255,255,255,0.01)' }}>
+              <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'flex-end', background: '#f8fafc', borderTop: '1px solid var(--border)' }}>
                 <button 
                   onClick={processImport}
                   disabled={loading}
@@ -181,29 +199,34 @@ export default function BulkImportPage() {
 
           {results && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="glass-panel" style={{ padding: '2rem', background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+              <div className="clean-panel" style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid var(--state-safe)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <CheckCircle2 size={32} color="#22c55e" />
+                  <CheckCircle2 size={32} color="var(--state-safe)" />
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#22c55e' }}>Procesamiento Finalizado</h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Se han procesado {results.success} registros correctamente.</p>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--state-safe)' }}>Procesamiento Finalizado</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 600 }}>Se han procesado {results.success} registros correctamente.</p>
                   </div>
                 </div>
+                <RegulatoryReportButton 
+                  month={new Date().getMonth() + 1} 
+                  year={new Date().getFullYear()} 
+                  tenantName="Laboratorio Central"
+                />
               </div>
 
               {results.errors.length > 0 && (
-                <div className="glass-panel" style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                <div className="clean-panel" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid var(--state-danger)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <AlertCircle size={32} color="#f87171" />
+                    <AlertCircle size={32} color="var(--state-danger)" />
                     <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f87171' }}>Errores Detectados ({results.errors.length})</h3>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--state-danger)' }}>Errores Detectados ({results.errors.length})</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Los siguientes registros no pudieron ser procesados:</p>
                     </div>
                   </div>
                   <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {results.errors.map((err, idx) => (
-                      <div key={idx} style={{ fontSize: '0.8125rem', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
-                        <span style={{ color: '#f87171', fontWeight: 700 }}>Fila {idx + 1}:</span> {err.message}
+                      <div key={idx} style={{ fontSize: '0.8125rem', padding: '1rem', background: 'white', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                        <span style={{ color: 'var(--state-danger)', fontWeight: 800 }}>Fila {idx + 1}:</span> {err.message}
                       </div>
                     ))}
                   </div>

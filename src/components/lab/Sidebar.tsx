@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Building2, ClipboardCheck, FileText, Settings, LogOut, Activity, Database } from 'lucide-react';
 import Link from 'next/link';
 import { logout } from '@/app/actions/auth';
+import NotificationBell from './NotificationBell';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -18,12 +19,15 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <Link href="/lab" className="brand">
-        I.O.N.<span className="brand-accent">TRACK</span>
-        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '0.25rem' }}>
-          Módulo de Laboratorio
-        </div>
-      </Link>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+        <Link href="/lab" className="brand" style={{ marginBottom: 0 }}>
+          I.O.N.<span className="brand-accent">TRACK</span>
+          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '0.25rem' }}>
+            Módulo de Laboratorio
+          </div>
+        </Link>
+        <NotificationBell />
+      </div>
       
       <nav className="nav-group">
         {navItems.map((item) => {
@@ -59,7 +63,7 @@ export default function Sidebar() {
         </Link>
         <button 
           className="nav-link" 
-          style={{ color: 'var(--danger)' }}
+          style={{ color: '#f87171' }}
           onClick={() => logout()}
         >
           <LogOut size={20} />

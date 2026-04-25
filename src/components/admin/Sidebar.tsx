@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, CreditCard, Activity, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Activity, Settings, LogOut, ShieldAlert, GitBranch, History } from 'lucide-react';
 import Link from 'next/link';
 import { logout } from '@/app/actions/auth';
 
@@ -10,8 +10,12 @@ export default function Sidebar() {
 
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Infraestructura', href: '/admin/infrastructure', icon: GitBranch },
     { name: 'Laboratorios', href: '/admin/tenants', icon: Users },
     { name: 'Facturación', href: '/admin/billing', icon: CreditCard },
+    { name: 'Solicitudes', href: '/admin/requests', icon: History },
+    { name: 'Historial Nacional', href: '/admin/national-history', icon: History },
+    { name: 'Ciberseguridad', href: '/admin/security', icon: ShieldAlert },
     { name: 'Telemetría', href: '/admin/telemetry', icon: Activity },
   ];
 
@@ -45,7 +49,7 @@ export default function Sidebar() {
         </Link>
         <button 
           className="nav-link" 
-          style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', color: 'var(--danger)' }}
+          style={{ color: '#f87171' }}
           onClick={() => logout()}
         >
           <LogOut size={20} />

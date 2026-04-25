@@ -1,0 +1,33 @@
+{
+  "cargos": [
+    "Radiólogo",
+    "Técnico Radiólogo",
+    "Oncólogo Radioterapeuta",
+    "Físico Médico",
+    "Médico Nuclear",
+    "Técnico en Medicina Nuclear",
+    "Odontólogo",
+    "Asistente Dental",
+    "Cardiólogo Intervencionista",
+    "Enfermero/a Radio-oncológico",
+    "Oficial de Seguridad Radiológica (OSR)",
+    "Operador de Gammagrafía",
+    "Ayudante de Gammagrafía",
+    "Supervisor de Radiografía Industrial",
+    "Técnico de Mantenimiento (Rayos X)"
+  ],
+  "practicas": [
+    "Radiodiagnóstico Médico",
+    "Radiodiagnóstico Dental",
+    "Radiología Intervencionista",
+    "Radioterapia (Teleterapia)",
+    "Braquiterapia",
+    "Medicina Nuclear (Diagnóstico)",
+    "Medicina Nuclear (Terapia)",
+    "Radiografía Industrial (Gammagrafía)",
+    "Radiografía Industrial (Rayos X)",
+    "Perfilaje de Pozos",
+    "Irradiación de Sangre",
+    "Docencia e Investigación"
+  ]
+}

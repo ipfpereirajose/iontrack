@@ -1,0 +1,5 @@
+trace_id,"Mes Hp(10) (mSv)","Mes Hp(0,07) (mSv)","Mes Hp(0,07) (mSv) Extremidades","Mes Hp(3) (mSv)","Mes Hp(10) (mSv) Neutrones",Periodo,Observación
+LAB-EMP01-OSR-TOE001,0.4500,0.1200,0.0500,0.0200,0.0000,01-2024,Control rutinario
+LAB-EMP01-OSR-TOE002,1.3500,0.4500,0.1000,0.0800,0.0100,01-2024,Advertencia de nivel
+LAB-EMP02-OSR-TOE005,0.1200,0.0500,0.0000,0.0100,0.0000,01-2024,Fondo natural
+LAB-EMP02-OSR-TOE008,1.6800,0.8500,0.3000,0.1500,0.0500,01-2024,Sobre-exposicion detectada

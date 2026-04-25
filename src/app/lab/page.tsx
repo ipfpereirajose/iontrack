@@ -79,42 +79,42 @@ export default async function LabHomePage() {
 
       {/* STATS OVERVIEW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+        <div className="clean-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Empresas</span>
-            <Building2 size={18} color="var(--primary)" />
+            <Building2 size={18} color="var(--primary-teal)" />
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 900 }}>{companiesCount || 0}</div>
-          <p style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.5rem', fontWeight: 700 }}>● Clientes Activos</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--state-safe)', marginTop: '0.5rem', fontWeight: 700 }}>● Clientes Activos</p>
         </div>
 
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+        <div className="clean-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Personal TOE</span>
-            <Users size={18} color="var(--primary)" />
+            <Users size={18} color="var(--primary-teal)" />
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 900 }}>{workersCount || 0}</div>
-          <p style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.5rem', fontWeight: 700 }}>● Vigilancia Activa</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--state-safe)', marginTop: '0.5rem', fontWeight: 700 }}>● Vigilancia Activa</p>
         </div>
 
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+        <div className="clean-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pendientes</span>
-            <ClipboardCheck size={18} color="var(--primary)" />
+            <ClipboardCheck size={18} color="var(--primary-teal)" />
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 900 }}>{pendingCount || 0}</div>
-          <p style={{ fontSize: '0.75rem', color: pendingCount && pendingCount > 0 ? '#fbbf24' : '#4ade80', marginTop: '0.5rem', fontWeight: 700 }}>
+          <p style={{ fontSize: '0.75rem', color: pendingCount && pendingCount > 0 ? 'var(--state-warning)' : 'var(--state-safe)', marginTop: '0.5rem', fontWeight: 700 }}>
             {pendingCount && pendingCount > 0 ? '⚠️ Acción Requerida' : '✓ Al día'}
           </p>
         </div>
 
-        <div className="glass-panel" style={{ padding: '1.5rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+        <div className="clean-panel" style={{ borderLeft: `4px solid ${criticalAlerts?.length ? 'var(--state-danger)' : 'var(--state-safe)'}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Alertas Críticas</span>
-            <AlertTriangle size={18} color={criticalAlerts?.length ? '#f87171' : 'var(--text-muted)'} />
+            <AlertTriangle size={18} color={criticalAlerts?.length ? 'var(--state-danger)' : 'var(--text-muted)'} />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 900, color: criticalAlerts?.length ? '#f87171' : 'inherit' }}>{criticalAlerts?.length || 0}</div>
-          <p style={{ fontSize: '0.75rem', color: criticalAlerts?.length ? '#f87171' : '#4ade80', marginTop: '0.5rem', fontWeight: 700 }}>
+          <div style={{ fontSize: '2.25rem', fontWeight: 900, color: criticalAlerts?.length ? 'var(--state-danger)' : 'inherit' }}>{criticalAlerts?.length || 0}</div>
+          <p style={{ fontSize: '0.75rem', color: criticalAlerts?.length ? 'var(--state-danger)' : 'var(--state-safe)', marginTop: '0.5rem', fontWeight: 700 }}>
             {criticalAlerts?.length ? '🚨 Sobre-exposición' : '✓ Sin incidencias'}
           </p>
         </div>
@@ -124,10 +124,10 @@ export default async function LabHomePage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '2rem' }}>
         
         {/* CHART SECTION */}
-        <div className="glass-panel" style={{ padding: '2rem' }}>
+        <div className="clean-panel" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', fontWeight: 800 }}>
-              <TrendingUp size={20} color="var(--primary)" />
+              <TrendingUp size={20} color="var(--primary-teal)" />
               Tendencia de Carga Dosimétrica
             </h3>
           </div>
@@ -138,24 +138,24 @@ export default async function LabHomePage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <section>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.25rem' }}>
-              <ShieldAlert size={20} color="#f87171" />
+              <ShieldAlert size={20} color="var(--state-danger)" />
               Notificaciones Críticas
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {!criticalAlerts || criticalAlerts.length === 0 ? (
-                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                <div className="clean-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                   No hay alertas registradas.
                 </div>
               ) : (
                 criticalAlerts.map((alert: any) => (
-                  <div key={alert.id} className="glass-panel" style={{ 
+                  <div key={alert.id} className="clean-panel" style={{ 
                     padding: '1rem', 
-                    borderLeft: `4px solid ${alert.hp10 >= 1.66 ? '#ef4444' : '#f59e0b'}`,
+                    borderLeft: `4px solid ${alert.hp10 >= 1.66 ? 'var(--state-danger)' : 'var(--state-warning)'}`,
                     background: alert.hp10 >= 1.66 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(245, 158, 11, 0.05)'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 900, color: alert.hp10 >= 1.66 ? '#f87171' : '#fbbf24' }}>
-                        {alert.hp10 >= 1.66 ? 'SOBRE-EXPOSICIÓN' : 'ADVERTENCIA (80%)'}
+                      <span style={{ fontSize: '0.7rem', fontWeight: 900, color: alert.hp10 >= 1.66 ? 'var(--state-danger)' : 'var(--state-warning)' }}>
+                        {alert.hp10 >= 1.66 ? 'SOBRE-EXPOSICIÓN (NIVEL ROJO)' : 'ADVERTENCIA 80% (NIVEL AMARILLO)'}
                       </span>
                     </div>
                     <p style={{ fontSize: '0.9rem', fontWeight: 700 }}>{alert.toe_workers.first_name} {alert.toe_workers.last_name}</p>
@@ -171,10 +171,10 @@ export default async function LabHomePage() {
           </section>
 
           {/* QUICK LINKS / INFRASTRUCTURE */}
-          <div className="glass-panel" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'black', border: 'none' }}>
+          <div className="clean-panel" style={{ background: 'var(--primary-dark)', color: 'white', border: 'none' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '0.5rem' }}>Agente de Ingesta</h3>
             <p style={{ fontSize: '0.8rem', opacity: 0.9, marginBottom: '1.25rem', fontWeight: 600 }}>Descarga la última versión para sincronización offline.</p>
-            <Link href="/downloads/iontrack-agent.exe" className="btn" style={{ background: 'white', color: 'black', width: '100%', justifyContent: 'center', fontWeight: 700 }}>
+            <Link href="/downloads/iontrack-agent.exe" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
               <Download size={18} />
               Descargar Agente
             </Link>
@@ -186,38 +186,38 @@ export default async function LabHomePage() {
       <section style={{ marginTop: '3rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Pendientes de Validación</h2>
-          <Link href="/lab/validation" style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <Link href="/lab/validation" style={{ fontSize: '0.875rem', color: 'var(--primary-teal)', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             Ver todos <ArrowRight size={14} />
           </Link>
         </div>
-        <div className="glass-panel" style={{ padding: '0', overflow: 'hidden' }}>
+        <div className="clean-panel" style={{ padding: '0', overflow: 'hidden' }}>
           {!pendingDoses || pendingDoses.length === 0 ? (
             <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
               <CheckCircle size={48} style={{ marginBottom: '1rem', opacity: 0.2 }} />
               <p style={{ fontWeight: 600 }}>No hay dosis pendientes. Todo al día.</p>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <table>
               <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Trabajador</th>
-                  <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Institución</th>
-                  <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Periodo</th>
-                  <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Dosis</th>
-                  <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', textAlign: 'right' }}>Acción</th>
+                <tr>
+                  <th>Trabajador</th>
+                  <th>Institución</th>
+                  <th>Periodo</th>
+                  <th>Dosis</th>
+                  <th style={{ textAlign: 'right' }}>Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {pendingDoses.map((dose: any) => (
-                  <tr key={dose.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '1.25rem 1.5rem', fontWeight: 700 }}>{dose.toe_workers.first_name} {dose.toe_workers.last_name}</td>
-                    <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>{dose.toe_workers.companies.name}</td>
-                    <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.875rem' }}>{dose.month}/{dose.year}</td>
-                    <td style={{ padding: '1.25rem 1.5rem' }}>
+                  <tr key={dose.id}>
+                    <td style={{ fontWeight: 700 }}>{dose.toe_workers.first_name} {dose.toe_workers.last_name}</td>
+                    <td style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{dose.toe_workers.companies.name}</td>
+                    <td style={{ fontSize: '0.875rem' }}>{dose.month}/{dose.year}</td>
+                    <td>
                       <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>{dose.hp10}</span>
                       <span style={{ fontSize: '0.7rem', marginLeft: '0.2rem', color: 'var(--text-muted)' }}>mSv</span>
                     </td>
-                    <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                    <td style={{ textAlign: 'right' }}>
                       <Link href="/lab/validation" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', borderRadius: '8px' }}>
                         Gestionar
                       </Link>

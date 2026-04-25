@@ -1,0 +1,4 @@
+ENTIDAD,TIPO RIF,RIF,TIPO,SECTOR,ESTADO,MUNICIPIO,PARROQUIA,DIRECCIÓN,EMAIL,TELF LOCAL,TELF MÓVIL,OSR NOM,OSR APE,OSR NAC,OSR CI,OSR EMAIL,OSR TELF
+Hospital Central Universitario,J,12345678-0,Publico,Salud,Distrito Capital,Libertador,Altagracia,"Av. Universidad, Edif A",contacto@hcu.com.ve,0212-5551234,0414-0001122,Carlos,Mendoza,V,10223344,c.mendoza@hcu.com.ve,0414-1112233
+Clinica de Occidente,J,87654321-0,Privado,Salud,Zulia,Maracaibo,Olegario Villalobos,"Calle 72 con Av 15",admin@cloccidente.com,0261-7778899,0412-1112233,Elena,Rivas,V,15667788,e.rivas@cloccidente.com,0412-9998877
+Radiologia Industrial S.A.,G,11223344-5,Privado,Industrial,Lara,Iribarren,Union,"Zona Industrial I",info@radind.com,0251-4443322,0424-1112233,Miguel,Torres,V,12889900,m.torres@radind.com,0424-5554433

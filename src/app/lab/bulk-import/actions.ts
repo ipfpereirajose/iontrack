@@ -2,6 +2,8 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { triggerDoseAlerts } from '@/lib/notifications';
+import standards from '@/data/professional_standards.json';
 
 export async function bulkImportAction(type: string, data: any[]) {
   const supabase = await createClient();
@@ -35,26 +37,56 @@ export async function bulkImportAction(type: string, data: any[]) {
         // Find worker by code and company code
         const { data: worker } = await supabase
           .from('toe_workers')
-          .select('id, first_name, last_name, company_id, companies!inner(company_code)')
+          .select('id, first_name, last_name, company_id, companies!inner(name, company_code)')
           .eq('worker_code', workerCode)
           .eq('companies.company_code', companyCode)
           .eq('companies.tenant_id', tenantId)
-          .single();
+          .maybeSingle();
 
         if (!worker) throw new Error(`Trabajador con ID ${traceId} no encontrado`);
+
+        const hp10 = parseFloat(item['Mes Hp(10) (mSv)'] || item.hp10 || 0);
+        const hp007 = parseFloat(item['Mes Hp(0,07) (mSv)'] || item.hp007 || 0);
+        const hp007_ext = parseFloat(item['Mes Hp(0,07) (mSv) Extremidades'] || item.hp007_ext || 0);
+        const hp3 = parseFloat(item['Mes Hp(3) (mSv)'] || item.hp3 || 0);
+        const hp10_neu = parseFloat(item['Mes Hp(10) (mSv) Neutrones'] || item.hp10_neu || 0);
+
+        const monthStr = item.month || item.mes || (item.Periodo ? item.Periodo.split('-')[0] : '0');
+        const yearStr = item.year || item.anio || (item.Periodo ? item.Periodo.split('-')[1] : '0');
+        
+        const month = parseInt(monthStr);
+        const year = parseInt(yearStr);
 
         // Insert Dose
         const { error: doseError } = await supabase
           .from('doses')
           .insert({
             toe_worker_id: worker.id,
-            hp10: parseFloat(item.hp10 || item.dosis || 0),
-            month: parseInt(item.month || item.mes),
-            year: parseInt(item.year || item.anio || item.año),
+            hp10,
+            hp007,
+            hp007_ext,
+            hp3,
+            hp10_neu,
+            month,
+            year,
+            periodo: item.Periodo || `${month}-${year}`,
+            observacion: item.Observación || item.observacion,
             status: 'pending'
           });
 
         if (doseError) throw doseError;
+
+        // TRIGGER AUTOMATED ALERTS
+        await triggerDoseAlerts(
+          tenantId,
+          worker.company_id,
+          worker.id,
+          hp10,
+          month,
+          year,
+          `${worker.first_name} ${worker.last_name}`,
+          Array.isArray(worker.companies) ? worker.companies[0].name : (worker.companies as any).name
+        );
 
         // AUDIT LOG
         await supabase.from('audit_logs').insert({
@@ -67,43 +99,59 @@ export async function bulkImportAction(type: string, data: any[]) {
         });
 
       } else if (type === 'workers') {
-        // Link by RIF/CI if exists, else create
-        const ci = item.ci || item.cedula;
-        const companyCode = item.company_code;
+        const ci = item.CI || item.ci || item.cedula;
+        const companyCode = item.company_code || item.codigo_empresa || item.codigo;
+        const firstName = item.Nombre || item.nombre || item.first_name;
+        const lastName = item.Apellido || item.apellido || item.last_name;
+        const sex = item.Sexo || item.sexo || item.sex;
+        const birthYear = item['Año de nacimiento'] || item.birth_year || item.anio_nacimiento;
+        const position = (item.Cargo || item.cargo || '').trim();
+        const practice = (item.Practica || item.practica || item['practica que realiza'] || '').trim();
+
+        // VALIDATION: Positions & Practices
+        const isValidPosition = standards.cargos.some(c => c.toLowerCase() === position.toLowerCase());
+        const isValidPractice = standards.practicas.some(p => p.toLowerCase() === practice.toLowerCase());
+
+        if (!isValidPosition) {
+          throw new Error(`Cargo "${position}" no reconocido. Use valores como: ${standards.cargos.slice(0, 3).join(', ')}...`);
+        }
+        if (!isValidPractice) {
+          throw new Error(`Práctica "${practice}" no reconocida. Use valores como: ${standards.practicas.slice(0, 3).join(', ')}...`);
+        }
 
         const { data: company } = await supabase
           .from('companies')
           .select('id')
           .eq('company_code', companyCode)
           .eq('tenant_id', tenantId)
-          .single();
+          .maybeSingle();
 
-        if (!company) throw new Error(`Empresa ${companyCode} no encontrada`);
+        if (!company) throw new Error(`Empresa con código ${companyCode} no encontrada`);
 
         const { data: existingWorker } = await supabase
           .from('toe_workers')
           .select('id')
           .eq('ci', ci)
-          .single();
+          .eq('company_id', company.id)
+          .maybeSingle();
+
+        const workerData = {
+          company_id: company.id,
+          first_name: firstName,
+          last_name: lastName,
+          ci,
+          sex,
+          birth_year: parseInt(birthYear),
+          position,
+          practice,
+          worker_code: item.worker_code || item.codigo_toe,
+          status: 'active'
+        };
 
         if (existingWorker) {
-          // Re-associate or update
-          await supabase.from('toe_workers').update({
-            company_id: company.id,
-            worker_code: item.worker_code || item.codigo
-          }).eq('id', existingWorker.id);
+          await supabase.from('toe_workers').update(workerData).eq('id', existingWorker.id);
         } else {
-          // Create new
-          await supabase.from('toe_workers').insert({
-            first_name: item.first_name || item.nombres,
-            last_name: item.last_name || item.apellidos,
-            ci,
-            email: item.email,
-            position: item.position || item.cargo,
-            company_id: company.id,
-            worker_code: item.worker_code || item.codigo,
-            status: 'active'
-          });
+          await supabase.from('toe_workers').insert(workerData);
         }
 
         // AUDIT LOG
@@ -113,6 +161,64 @@ export async function bulkImportAction(type: string, data: any[]) {
           action: 'bulk_import_worker',
           entity_type: 'toe_workers',
           details: { ci, company_code: companyCode }
+        });
+      } else if (type === 'companies') {
+        const taxId = item.RIF || item.rif || item.tax_id;
+        const name = item.ENTIDAD || item.entidad || item.name;
+        const address = item.DIRECCIÓN || item.direccion || item.address;
+        const state = item.ESTADO || item.estado || item.state;
+        const municipality = item.MUNICIPIO || item.municipio || item.municipality;
+        const parish = item.PARROQUIA || item.parroquia || item.parish;
+
+        // Check if this exact branch exists
+        const { data: existingBranch } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('tax_id', taxId)
+          .eq('address', address)
+          .eq('state', state)
+          .eq('municipality', municipality)
+          .eq('parish', parish)
+          .eq('tenant_id', tenantId)
+          .maybeSingle();
+
+        const companyData = {
+          tenant_id: tenantId,
+          name,
+          tipo_rif: item['TIPO RIF'] || item.tipo_rif,
+          tax_id: taxId,
+          tipo: item.TIPO || item.tipo,
+          sector: item.SECTOR || item.sector,
+          address,
+          state,
+          municipality,
+          parish,
+          email: item.EMAIL || item.email,
+          phone_local: item['TELF LOCAL'] || item.telf_local,
+          phone_mobile: item['TELF MÓVIL'] || item.telf_movil,
+          rep_first_name: item['OSR NOM'] || item.osr_nom,
+          rep_last_name: item['OSR APE'] || item.osr_ape,
+          osr_nac: item['OSR NAC'] || item.osr_nac,
+          rep_ci: item['OSR CI'] || item.osr_ci,
+          rep_email: item['OSR EMAIL'] || item.osr_email,
+          rep_phone: item['OSR TELF'] || item.osr_telf,
+          status: 'active'
+        };
+
+        if (existingBranch) {
+          await supabase.from('companies').update(companyData).eq('id', existingBranch.id);
+        } else {
+          const companyCode = item.codigo || `EMP-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+          await supabase.from('companies').insert({ ...companyData, company_code: companyCode });
+        }
+
+        // AUDIT LOG
+        await supabase.from('audit_logs').insert({
+          user_id: user.id,
+          tenant_id: tenantId,
+          action: 'bulk_import_company',
+          entity_type: 'companies',
+          details: { name, tax_id: taxId, branch: address }
         });
       }
 

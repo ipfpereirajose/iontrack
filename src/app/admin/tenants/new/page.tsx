@@ -1,179 +1,140 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Shield, ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { Building2, User, MapPin, Phone, Mail, ShieldCheck, ArrowLeft, Save, Info } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { createTenantAction } from '../actions';
+import TerritorialSelector from '@/components/admin/TerritorialSelector';
 
 export default function NewTenantPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    lab_code: '',
-    monthly_fee: 300,
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { error: insertError } = await supabase
-        .from('tenants')
-        .insert([
-          {
-            name: formData.name,
-            slug: formData.slug.toLowerCase(),
-            lab_code: formData.lab_code.toUpperCase(),
-            monthly_fee: formData.monthly_fee,
-          }
-        ]);
-
-      if (insertError) throw insertError;
-
-      router.push('/tenants');
-      router.refresh();
-    } catch (err) {
-      setError((err as Error).message || 'Error al crear el laboratorio');
-    } finally {
-      setLoading(false);
+  const handleSubmit = async (formData: FormData) => {
+    const result = await createTenantAction(formData);
+    if (result?.error) {
+      alert(result.error);
     }
   };
 
   return (
-    <div style={{ maxWidth: '800px' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <header style={{ marginBottom: '2.5rem' }}>
-        <Link href="/admin/tenants" className="nav-link" style={{ display: 'inline-flex', width: 'auto', marginBottom: '1rem', padding: '0.5rem 0' }}>
-          <ArrowLeft size={18} />
-          Volver a la lista
+        <Link href="/admin/tenants" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '1rem', fontSize: '0.875rem', fontWeight: 600 }}>
+          <ArrowLeft size={16} />
+          Volver a Laboratorios
         </Link>
-        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Nuevo Laboratorio</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Configura una nueva instancia de I.O.N.T.R.A.C.K. para un laboratorio asociado.</p>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Registrar Nuevo Laboratorio</h1>
+        <p style={{ color: 'var(--text-muted)' }}>Complete todos los campos para dar de alta una nueva entidad en la infraestructura nacional.</p>
       </header>
 
-      {error && (
-        <div className="glass-panel" style={{ border: '1px solid var(--danger)', color: 'var(--danger)', marginBottom: '2rem' }}>
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Nombre Comercial</label>
-            <input 
-              required
-              type="text" 
-              placeholder="Ej: Laboratorio Central"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              style={{ 
-                background: 'rgba(255,255,255,0.05)', 
-                border: '1px solid var(--border-glass)', 
-                borderRadius: '8px', 
-                padding: '0.75rem 1rem', 
-                color: 'white',
-                outline: 'none'
-              }}
-            />
+      <form action={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        
+        {/* SECCION 1: DATOS DEL LABORATORIO */}
+        <section className="glass-panel" style={{ padding: '2.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+            <Building2 size={24} color="var(--primary)" />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Información del Laboratorio</h2>
           </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Identificador (Slug)</label>
-            <input 
-              required
-              type="text" 
-              placeholder="ej: lab-central"
-              value={formData.slug}
-              onChange={(e) => setFormData({...formData, slug: e.target.value.replace(/\s+/g, '-').toLowerCase()})}
-              style={{ 
-                background: 'rgba(255,255,255,0.05)', 
-                border: '1px solid var(--border-glass)', 
-                borderRadius: '8px', 
-                padding: '0.75rem 1rem', 
-                color: 'white',
-                outline: 'none'
-              }}
-            />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Nombre del Laboratorio</label>
+              <input name="name" required placeholder="Ej: Laboratorio Central de Dosimetría" style={inputStyle} />
+            </div>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>RIF</label>
+              <input name="rif" required placeholder="Ej: J-12345678-9" style={inputStyle} />
+            </div>
+            <div className="input-group" style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Dirección Fiscal</label>
+              <textarea name="address" required placeholder="Dirección completa detallada..." style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
+            </div>
+            
+            <TerritorialSelector inputStyle={inputStyle} />
           </div>
-        </div>
+        </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Código del Laboratorio (Trace ID) *</label>
-            <input 
-              required
-              type="text" 
-              placeholder="Ej: LAB-MET"
-              value={formData.lab_code}
-              onChange={(e) => setFormData({...formData, lab_code: e.target.value.toUpperCase()})}
-              style={{ 
-                background: 'rgba(255,255,255,0.05)', 
-                border: '1px solid var(--border-glass)', 
-                borderRadius: '8px', 
-                padding: '0.75rem 1rem', 
-                color: 'white',
-                outline: 'none',
-                fontWeight: 800
-              }}
-            />
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Identificador raíz para toda la trazabilidad (Ej: L001)</p>
+        {/* SECCION 2: REPRESENTANTE LEGAL */}
+        <section className="glass-panel" style={{ padding: '2.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+            <User size={24} color="var(--primary)" />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Representante Legal</h2>
           </div>
-        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '300px' }}>
-          <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Cuota Mensual (USD)</label>
-          <input 
-            required
-            type="number" 
-            value={formData.monthly_fee}
-            onChange={(e) => setFormData({...formData, monthly_fee: parseInt(e.target.value)})}
-            style={{ 
-              background: 'rgba(255,255,255,0.05)', 
-              border: '1px solid var(--border-glass)', 
-              borderRadius: '8px', 
-              padding: '0.75rem 1rem', 
-              color: 'white',
-              outline: 'none'
-            }}
-          />
-        </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Nombres</label>
+              <input name="rep_first_name" required placeholder="Nombres del representante" style={inputStyle} />
+            </div>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Apellidos</label>
+              <input name="rep_last_name" required placeholder="Apellidos del representante" style={inputStyle} />
+            </div>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>CI del Representante</label>
+              <input name="rep_ci" required placeholder="V-12.345.678" style={inputStyle} />
+            </div>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Teléfono del Representante</label>
+              <input name="rep_phone" required placeholder="Ej: 0414-1234567" style={inputStyle} />
+            </div>
+            <div className="input-group" style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Correo del Representante</label>
+              <input name="rep_email" required type="email" placeholder="correo.representante@ejemplo.com" style={inputStyle} />
+            </div>
+          </div>
+        </section>
 
-        <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-          <button 
-            disabled={loading}
-            type="submit" 
-            className="nav-link active" 
-            style={{ 
-              padding: '0.75rem 2rem', 
-              border: 'none', 
-              cursor: loading ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-            {loading ? 'Guardando...' : 'Crear Laboratorio'}
+        {/* SECCION 3: CONTACTO Y ACCESO */}
+        <section className="glass-panel" style={{ padding: '2.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+            <ShieldCheck size={24} color="var(--primary)" />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Contacto y Credenciales de Acceso</h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Teléfono Móvil (Laboratorio)</label>
+              <input name="mobile_phone" required placeholder="Ej: 0412-1234567" style={inputStyle} />
+            </div>
+            <div className="input-group">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Teléfono Oficina (Opcional)</label>
+              <input name="office_phone" placeholder="Ej: 0212-1234567" style={inputStyle} />
+            </div>
+            <div className="input-group" style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Correo Electrónico de Acceso</label>
+              <input name="email" required type="email" placeholder="admin@laboratorio.com" style={inputStyle} />
+              <p style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
+                <Info size={14} />
+                Se enviará un enlace de verificación y asignación de contraseña a esta dirección.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem', marginBottom: '4rem' }}>
+          <Link href="/admin/tenants" className="btn btn-secondary" style={{ padding: '1rem 2rem' }}>
+            Cancelar
+          </Link>
+          <button type="submit" className="btn btn-primary" style={{ padding: '1rem 3rem' }}>
+            <Save size={20} />
+            Registrar Laboratorio e Invitar
           </button>
         </div>
       </form>
-      
-      <style jsx>{`
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
+
+const inputStyle = {
+  width: '100%',
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid var(--border)',
+  borderRadius: '12px',
+  padding: '1rem',
+  color: 'white',
+  fontSize: '1rem',
+  outline: 'none',
+  transition: 'all 0.2s',
+  '&:focus': {
+    borderColor: 'var(--primary)',
+    background: 'rgba(255,255,255,0.08)'
+  }
+} as any;
