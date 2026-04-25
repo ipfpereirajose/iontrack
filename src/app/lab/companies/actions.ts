@@ -17,8 +17,9 @@ export async function createCompany(formData: FormData) {
   const rif_type = formData.get('rif_type') as string;
   const rif_number = formData.get('rif_number') as string;
   const sector = formData.get('sector') as string;
-  const company_code = formData.get('company_code') as string;
-  const osr_code = formData.get('osr_code') as string;
+  // Generate a random 6-character alphanumeric code for traceability
+  const company_code = 'EMP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const osr_code = null; // Can be filled later during bulk import if needed
 
   // 2. Extract Location & Contact
   const state = formData.get('state') as string;
