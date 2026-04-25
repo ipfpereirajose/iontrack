@@ -1,8 +1,11 @@
+import { Suspense } from 'react';
 import { getServiceSupabase } from '@/lib/supabase';
 import { ShieldCheck, UserCog, Mail, Calendar, Shield, Trash2, UserPlus, Lock, Activity, Edit3 } from 'lucide-react';
 import { updateUserRole, deleteUser, updateUserStatus, resetUserPassword } from './actions';
 import Link from 'next/link';
 import EditUserModal from './EditUserModal';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminManagement() {
   const supabase = getServiceSupabase();
@@ -197,8 +200,9 @@ export default async function AdminManagement() {
           </p>
         </div>
       </div>
-
-      <EditUserModal users={users} />
+      <Suspense fallback={null}>
+        <EditUserModal users={users} />
+      </Suspense>
     </div>
   );
 }
