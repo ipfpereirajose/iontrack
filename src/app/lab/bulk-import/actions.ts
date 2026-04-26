@@ -28,77 +28,80 @@ export async function bulkImportAction(type: string, data: any[]) {
   for (const item of data) {
     try {
       if (type === 'doses') {
-        // Traceability ID: LAB-EMP-OSR-TOE
-        // We assume the Excel column is 'trace_id' or we parse it
-        const traceId = item.trace_id || item.ID;
-        if (!traceId) throw new Error('ID de trazabilidad faltante');
+        const ci = item['CI TRABAJADOR'] || item.ci_trabajador || item.CI || item.ci || item.cedula || item.CEDULA;
+        const rif = item['RIF EMPRESA'] || item.rif_empresa || item.RIF || item.rif;
+        const month = parseInt(item.Mes || item.mes || item.month || '0');
+        const year = parseInt(item.Año || item.año || item.year || '0');
+        
+        if (!ci || !rif) {
+          throw new Error("Faltan campos críticos: se requiere 'RIF EMPRESA' y 'CI TRABAJADOR'.");
+        }
 
-        const parts = traceId.split('-');
-        const workerCode = parts[parts.length - 1];
-        const companyCode = parts[1];
+        const hp10 = parseFloat(item.Hp10 || item.hp10 || item.HP10 || '0');
+        const hp007 = parseFloat(item.Hp007 || item.hp007 || item.HP007 || item['Hp0.07'] || '0');
+        const hp3 = parseFloat(item.Hp3 || item.hp3 || item.HP3 || item['Hp0.3'] || '0');
+        const hp10_neu = parseFloat(item.Hp10_Neutrones || item.hp10_neu || item.neutrones || '0');
+        const hp007_ext = parseFloat(item.Hp007_Extremidades || item.hp007_ext || item.extremidades || '0');
 
-        // Find worker by code and company code
-        const { data: worker } = await supabase
-          .from('toe_workers')
-          .select('id, first_name, last_name, company_id, companies!inner(name, company_code)')
-          .eq('worker_code', workerCode)
-          .eq('companies.company_code', companyCode)
-          .eq('companies.tenant_id', tenantId)
+        // 1. Find the company
+        const { data: company } = await adminSupabase
+          .from('companies')
+          .select('id, name')
+          .eq('tax_id', rif)
+          .eq('tenant_id', tenantId)
           .maybeSingle();
 
-        if (!worker) throw new Error(`Trabajador con ID ${traceId} no encontrado`);
+        if (!company) throw new Error(`Empresa con RIF ${rif} no encontrada.`);
 
-        const hp10 = parseFloat(item['Mes Hp(10) (mSv)'] || item.hp10 || 0);
-        const hp007 = parseFloat(item['Mes Hp(0,07) (mSv)'] || item.hp007 || 0);
-        const hp007_ext = parseFloat(item['Mes Hp(0,07) (mSv) Extremidades'] || item.hp007_ext || 0);
-        const hp3 = parseFloat(item['Mes Hp(3) (mSv)'] || item.hp3 || 0);
-        const hp10_neu = parseFloat(item['Mes Hp(10) (mSv) Neutrones'] || item.hp10_neu || 0);
+        // 2. Find the worker
+        const { data: worker } = await adminSupabase
+          .from('toe_workers')
+          .select('id, first_name, last_name')
+          .eq('ci', ci)
+          .eq('company_id', company.id)
+          .maybeSingle();
 
-        const monthStr = item.month || item.mes || (item.Periodo ? item.Periodo.split('-')[0] : '0');
-        const yearStr = item.year || item.anio || (item.Periodo ? item.Periodo.split('-')[1] : '0');
-        
-        const month = parseInt(monthStr);
-        const year = parseInt(yearStr);
+        if (!worker) throw new Error(`Trabajador con CI ${ci} no encontrado en la empresa con RIF ${rif}.`);
 
-        // Insert Dose
-        const { error: doseError } = await supabase
+        // 3. Insert Dose
+        const { error: doseError, data: doseData } = await adminSupabase
           .from('doses')
           .insert({
             toe_worker_id: worker.id,
-            hp10,
-            hp007,
-            hp007_ext,
-            hp3,
-            hp10_neu,
             month,
             year,
-            periodo: item.Periodo || `${month}-${year}`,
-            observacion: item.Observación || item.observacion,
-            status: 'pending'
-          });
+            hp10,
+            hp007,
+            hp3,
+            hp10_neu,
+            hp007_ext,
+            status: 'approved'
+          })
+          .select()
+          .single();
 
-        if (doseError) throw doseError;
+        if (doseError) throw new Error(doseError.message);
 
-        // TRIGGER AUTOMATED ALERTS
+        // 4. Trigger Alerts
         await triggerDoseAlerts(
           tenantId,
-          worker.company_id,
+          company.id,
           worker.id,
           hp10,
           month,
           year,
           `${worker.first_name} ${worker.last_name}`,
-          Array.isArray(worker.companies) ? worker.companies[0].name : (worker.companies as any).name
+          company.name
         );
 
-        // AUDIT LOG
+        // 5. Audit Log
         await adminSupabase.from('audit_logs').insert({
           user_id: user.id,
           tenant_id: tenantId,
           action: 'bulk_import_dose',
           entity_type: 'doses',
-          entity_id: worker.id,
-          details: { trace_id: traceId, hp10: item.hp10, month: item.month, year: item.year }
+          entity_id: doseData.id,
+          details: { ci, rif, hp10, month, year }
         });
 
       } else if (type === 'workers') {
