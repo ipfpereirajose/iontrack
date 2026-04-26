@@ -70,7 +70,7 @@ export default async function WorkersListPage({
   }
 
   // 2. Fetch Workers
-  const { data: workers, error } = await adminSupabase
+  const { data: workers, error: workersError } = await adminSupabase
     .from("toe_workers")
     .select("*")
     .eq("company_id", companyId)
@@ -78,6 +78,22 @@ export default async function WorkersListPage({
 
   return (
     <div>
+      {/* DEBUG HEADER */}
+      <div
+        style={{
+          background: "#000",
+          color: "#4ade80",
+          padding: "0.5rem 1rem",
+          fontSize: "0.7rem",
+          fontFamily: "monospace",
+          marginBottom: "1rem",
+          borderRadius: "8px",
+          border: "1px solid #22c55e",
+        }}
+      >
+        [DEBUG] Company ID: {companyId} | Workers Count: {workers?.length || 0}{" "}
+        {workersError ? `| Error: ${workersError.message}` : ""}
+      </div>
       <header style={{ marginBottom: "2.5rem" }}>
         <Link
           href="/lab/companies"
