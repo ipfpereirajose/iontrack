@@ -14,14 +14,23 @@ export default async function WorkersListPage({ params }: { params: { id: string
   const adminSupabase = getServiceSupabase();
 
   // 1. Fetch Company Info with Lab Code, ensuring it belongs to the tenant
-  const { data: company } = await adminSupabase
+  const { data: company, error: companyError } = await adminSupabase
     .from('companies')
     .select('*, tenants(lab_code)')
     .eq('id', companyId)
     .eq('tenant_id', tenantId)
     .single();
 
-  if (!company) return <div>Empresa no encontrada o no pertenece a su laboratorio.</div>;
+  if (!company) {
+    return (
+      <div style={{ padding: '2rem', color: 'white' }}>
+        <h2>Error al cargar la empresa</h2>
+        <p>ID Buscado: {companyId}</p>
+        <p>Tenant ID: {tenantId}</p>
+        <pre>{JSON.stringify(companyError, null, 2)}</pre>
+      </div>
+    );
+  }
 
   // 2. Fetch Workers
   const { data: workers, error } = await adminSupabase
