@@ -31,10 +31,14 @@ export default function BulkImportPage() {
       let data: any[];
 
       if (isCSV) {
-        // Auto-detect encoding: check for UTF-8 BOM (EF BB BF)
+        // Auto-detect encoding: prefer UTF-8, but check for BOM
         const bytes = new Uint8Array(arrayBuffer.slice(0, 3));
         const hasUtf8Bom = bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF;
-        const encoding = hasUtf8Bom ? 'utf-8' : 'windows-1252';
+        
+        // Use UTF-8 by default for CSVs. Most modern tools use it.
+        // If it was windows-1252, we might see issues, but the user's current issues
+        // (Ã³) clearly indicate the source is UTF-8 being misread.
+        const encoding = hasUtf8Bom ? 'utf-8' : 'utf-8'; 
         const text = new TextDecoder(encoding).decode(arrayBuffer);
         const wb = XLSX.read(text, { type: 'string' });
         const wsname = wb.SheetNames[0];
