@@ -102,8 +102,13 @@ export async function bulkImportAction(type: string, data: any[]) {
         });
 
       } else if (type === 'workers') {
-        const ci = item.CI || item.ci || item.cedula;
-        const companyRif = item['RIF EMPRESA'] || item.rif_empresa || item.rif || item.company_code || item.codigo_empresa;
+        const ci = item.CI || item.ci || item.cedula || item.CEDULA || item['Cédula'];
+        
+        // Robust RIF pickup (checks common header names)
+        const companyRif = item['RIF EMPRESA'] || item['rif empresa'] || item['RIF_EMPRESA'] || 
+                          item.rif_empresa || item.RIF || item.rif || item.tax_id || 
+                          item.company_code || item.codigo_empresa;
+
         const firstName = item.Nombre || item.nombre || item.first_name;
         const lastName = item.Apellido || item.apellido || item.last_name;
         const sex = item.Sexo || item.sexo || item.sex;
@@ -117,6 +122,10 @@ export async function bulkImportAction(type: string, data: any[]) {
         }
         if (!practice) {
           throw new Error(`Falta el campo "Practica" en la fila.`);
+        }
+
+        if (!companyRif) {
+          throw new Error("No se detectó la columna de RIF. Asegúrese de que su archivo tenga una columna llamada 'RIF' o 'RIF EMPRESA'.");
         }
 
         const { data: company } = await adminSupabase
@@ -165,12 +174,17 @@ export async function bulkImportAction(type: string, data: any[]) {
           details: { ci, company_rif: companyRif }
         });
       } else if (type === 'companies') {
-        const taxId = item.RIF || item.rif || item.tax_id;
+        const taxId = item.RIF || item.rif || item['RIF EMPRESA'] || item.tax_id || item.rif_empresa;
+
         const name = item.ENTIDAD || item.entidad || item.name;
         const address = item.DIRECCIÓN || item.direccion || item.address;
         const state = item.ESTADO || item.estado || item.state;
         const municipality = item.MUNICIPIO || item.municipio || item.municipality;
         const parish = item.PARROQUIA || item.parroquia || item.parish;
+
+        if (!taxId) {
+          throw new Error("No se detectó la columna de RIF. Asegúrese de que su archivo tenga una columna llamada 'RIF'.");
+        }
 
         // Check if this exact branch exists
         const { data: existingBranch } = await adminSupabase
