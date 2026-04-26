@@ -1,86 +1,153 @@
-import { Building2, Plus, Phone, Users, AlertTriangle, ShieldAlert, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
-import { createClient } from '@/utils/supabase/server';
-import { getCurrentProfile } from '@/lib/auth';
-import Link from 'next/link';
-import DoseChart from '@/components/lab/DoseChart';
-import { getServiceSupabase } from '@/lib/supabase';
+import {
+  Building2,
+  Plus,
+  Phone,
+  Users,
+  AlertTriangle,
+  ShieldAlert,
+  TrendingUp,
+  Calendar,
+  ArrowRight,
+} from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
+import { getCurrentProfile } from "@/lib/auth";
+import Link from "next/link";
+import DoseChart from "@/components/lab/DoseChart";
+import { getServiceSupabase } from "@/lib/supabase";
 
-export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ year?: string }> }) {
-  const { year: selectedYear = new Date().getFullYear().toString() } = await searchParams;
+export default async function CompaniesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string }>;
+}) {
+  const { year: selectedYear = new Date().getFullYear().toString() } =
+    await searchParams;
   const supabase = await createClient();
   const adminSupabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) return null;
 
   const tenantId = profile?.tenant_id;
-  if (!tenantId) return <div style={{ padding: '2rem', textAlign: 'center' }}>No tienes un laboratorio asignado.</div>;
+  if (!tenantId)
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        No tienes un laboratorio asignado.
+      </div>
+    );
 
   // 1. Fetch Companies
   const companiesQuery = adminSupabase
-    .from('companies')
-    .select('*, toe_workers(count)')
-    .eq('tenant_id', tenantId)
-    .order('name', { ascending: true });
+    .from("companies")
+    .select("*, toe_workers(count)")
+    .eq("tenant_id", tenantId)
+    .order("name", { ascending: true });
 
   // 2. Fetch Doses for Chart (Current Year)
   const chartQuery = adminSupabase
-    .from('doses')
-    .select(`
+    .from("doses")
+    .select(
+      `
       hp10, month, year,
       toe_workers!inner (
         companies!inner (tenant_id)
       )
-    `)
-    .eq('toe_workers.companies.tenant_id', tenantId)
-    .eq('year', parseInt(selectedYear))
-    .eq('status', 'approved');
+    `,
+    )
+    .eq("toe_workers.companies.tenant_id", tenantId)
+    .eq("year", parseInt(selectedYear))
+    .eq("status", "approved");
 
   // 3. Fetch Alerts (Overexposure > 1.66 or Warning >= 1.328)
   const alertsQuery = adminSupabase
-    .from('doses')
-    .select(`
+    .from("doses")
+    .select(
+      `
       id, hp10, month, year,
       toe_workers!inner (
         first_name, last_name,
         companies!inner (name, tenant_id)
       )
-    `)
-    .eq('toe_workers.companies.tenant_id', tenantId)
-    .gte('hp10', 1.328)
-    .order('created_at', { ascending: false })
+    `,
+    )
+    .eq("toe_workers.companies.tenant_id", tenantId)
+    .gte("hp10", 1.328)
+    .order("created_at", { ascending: false })
     .limit(5);
 
-  const [
-    { data: companies },
-    { data: doses },
-    { data: alerts }
-  ] = await Promise.all([companiesQuery, chartQuery, alertsQuery]);
+  const [{ data: companies }, { data: doses }, { data: alerts }] =
+    await Promise.all([companiesQuery, chartQuery, alertsQuery]);
 
   // Process Chart Data
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const months = [
+    "Ene",
+    "Feb",
+    "Mar",
+    "Abr",
+    "May",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dic",
+  ];
   const chartData = months.map((name, index) => {
-    const monthDoses = doses?.filter(d => d.month === index + 1) || [];
+    const monthDoses = doses?.filter((d) => d.month === index + 1) || [];
     const totalDose = monthDoses.reduce((acc, curr) => acc + curr.hp10, 0);
     return { name, value: parseFloat(totalDose.toFixed(4)) };
   });
 
   return (
     <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
+      <header
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          marginBottom: "2.5rem",
+        }}
+      >
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Dashboard de Empresas</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Monitoreo dosimétrico y gestión de entidades clientes.</p>
+          <h1
+            style={{
+              fontSize: "2.5rem",
+              fontWeight: 900,
+              marginBottom: "0.5rem",
+            }}
+          >
+            Dashboard de Empresas
+          </h1>
+          <p style={{ color: "var(--text-muted)" }}>
+            Monitoreo dosimétrico y gestión de entidades clientes.
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <select 
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <select
             defaultValue={selectedYear}
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem 1rem', color: 'white', fontWeight: 600, outline: 'none' }}
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+              padding: "0.75rem 1rem",
+              color: "white",
+              fontWeight: 600,
+              outline: "none",
+            }}
             // We'll use a simple form/anchor pattern for year selection
           >
             <option value="2026">Año 2026</option>
             <option value="2025">Año 2025</option>
           </select>
-          <Link href="/lab/companies/new" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 700 }}>
+          <Link
+            href="/lab/companies/new"
+            className="btn btn-primary"
+            style={{
+              padding: "0.75rem 1.5rem",
+              borderRadius: "12px",
+              fontWeight: 700,
+            }}
+          >
             <Plus size={20} />
             Nueva Empresa
           </Link>
@@ -88,16 +155,46 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
       </header>
 
       {/* TOP DASHBOARD GRID */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
-        
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr",
+          gap: "2rem",
+          marginBottom: "3rem",
+        }}
+      >
         {/* CHART SECTION */}
-        <div className="glass-panel" style={{ padding: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', fontWeight: 800 }}>
+        <div className="glass-panel" style={{ padding: "2rem" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1rem",
+            }}
+          >
+            <h3
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                fontSize: "1.1rem",
+                fontWeight: 800,
+              }}
+            >
               <TrendingUp size={20} color="var(--primary)" />
               Carga Dosimétrica Anual ({selectedYear})
             </h3>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.25rem 0.75rem', borderRadius: '20px' }}>
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "var(--text-muted)",
+                background: "rgba(255,255,255,0.05)",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "20px",
+              }}
+            >
               mSv Totales por Mes
             </span>
           </div>
@@ -105,35 +202,102 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         </div>
 
         {/* ALERTS SECTION */}
-        <div className="glass-panel" style={{ padding: '2rem' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>
+        <div className="glass-panel" style={{ padding: "2rem" }}>
+          <h3
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              fontSize: "1.1rem",
+              fontWeight: 800,
+              marginBottom: "1.5rem",
+            }}
+          >
             <ShieldAlert size={20} color="#f87171" />
             Alertas Críticas
           </h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
             {!alerts || alerts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                <p style={{ fontSize: '0.875rem' }}>No se han detectado sobre-exposiciones en este periodo.</p>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "3rem 1rem",
+                  color: "var(--text-muted)",
+                }}
+              >
+                <p style={{ fontSize: "0.875rem" }}>
+                  No se han detectado sobre-exposiciones en este periodo.
+                </p>
               </div>
             ) : (
               alerts.map((alert: any) => (
-                <div key={alert.id} style={{ 
-                  background: alert.hp10 >= 1.66 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                  borderLeft: `4px solid ${alert.hp10 >= 1.66 ? '#ef4444' : '#f59e0b'}`,
-                  padding: '1rem',
-                  borderRadius: '0 12px 12px 0'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                    <span style={{ fontWeight: 800, fontSize: '0.9rem', color: alert.hp10 >= 1.66 ? '#f87171' : '#fbbf24' }}>
-                      {alert.hp10 >= 1.66 ? 'SOBRE-EXPOSICIÓN' : 'ADVERTENCIA 80%'}
+                <div
+                  key={alert.id}
+                  style={{
+                    background:
+                      alert.hp10 >= 1.66
+                        ? "rgba(239, 68, 68, 0.1)"
+                        : "rgba(245, 158, 11, 0.1)",
+                    borderLeft: `4px solid ${alert.hp10 >= 1.66 ? "#ef4444" : "#f59e0b"}`,
+                    padding: "1rem",
+                    borderRadius: "0 12px 12px 0",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: 800,
+                        fontSize: "0.9rem",
+                        color: alert.hp10 >= 1.66 ? "#f87171" : "#fbbf24",
+                      }}
+                    >
+                      {alert.hp10 >= 1.66
+                        ? "SOBRE-EXPOSICIÓN"
+                        : "ADVERTENCIA 80%"}
                     </span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{alert.month}/{alert.year}</span>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {alert.month}/{alert.year}
+                    </span>
                   </div>
-                  <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: '0.25rem 0' }}>{alert.toe_workers.first_name} {alert.toe_workers.last_name}</p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{alert.toe_workers.companies.name}</p>
-                  <div style={{ marginTop: '0.5rem', fontWeight: 900, fontSize: '1.1rem' }}>
-                    {alert.hp10} <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>mSv</span>
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      margin: "0.25rem 0",
+                    }}
+                  >
+                    {alert.toe_workers.first_name} {alert.toe_workers.last_name}
+                  </p>
+                  <p
+                    style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}
+                  >
+                    {alert.toe_workers.companies.name}
+                  </p>
+                  <div
+                    style={{
+                      marginTop: "0.5rem",
+                      fontWeight: 900,
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    {alert.hp10}{" "}
+                    <span style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                      mSv
+                    </span>
                   </div>
                 </div>
               ))
@@ -144,50 +308,163 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
 
       {/* COMPANY REGISTRY SECTION */}
       <section>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <h2
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: 800,
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+          }}
+        >
           <Building2 size={24} color="var(--primary)" />
           Registro de Empresas
         </h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "1.5rem",
+          }}
+        >
           {!companies || companies.length === 0 ? (
-            <div className="glass-panel" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem', background: 'rgba(255,255,255,0.02)' }}>
-              <Building2 size={64} color="var(--text-muted)" style={{ marginBottom: '1.5rem', opacity: 0.2 }} />
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Sin empresas registradas</h3>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Comienza registrando tu primera empresa cliente.</p>
-              <Link href="/lab/companies/new" className="btn btn-primary">Registrar Empresa</Link>
+            <div
+              className="glass-panel"
+              style={{
+                gridColumn: "1 / -1",
+                textAlign: "center",
+                padding: "5rem",
+                background: "rgba(255,255,255,0.02)",
+              }}
+            >
+              <Building2
+                size={64}
+                color="var(--text-muted)"
+                style={{ marginBottom: "1.5rem", opacity: 0.2 }}
+              />
+              <h3 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>
+                Sin empresas registradas
+              </h3>
+              <p style={{ color: "var(--text-muted)", marginBottom: "2rem" }}>
+                Comienza registrando tu primera empresa cliente.
+              </p>
+              <Link href="/lab/companies/new" className="btn btn-primary">
+                Registrar Empresa
+              </Link>
             </div>
           ) : (
             companies.map((company) => (
-              <div key={company.id} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '0.6rem', borderRadius: '10px', color: 'var(--primary)' }}>
+              <div
+                key={company.id}
+                className="glass-panel"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1.25rem",
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "rgba(6, 182, 212, 0.1)",
+                      padding: "0.6rem",
+                      borderRadius: "10px",
+                      color: "var(--primary)",
+                    }}
+                  >
                     <Building2 size={20} />
                   </div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.5rem', borderRadius: '6px' }}>
+                  <span
+                    style={{
+                      fontSize: "0.7rem",
+                      color: "var(--text-muted)",
+                      fontWeight: 800,
+                      background: "rgba(255,255,255,0.05)",
+                      padding: "0.2rem 0.5rem",
+                      borderRadius: "6px",
+                    }}
+                  >
                     {company.tax_id}
                   </span>
                 </div>
 
                 <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.25rem' }}>{company.name}</h3>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <h3
+                    style={{
+                      fontSize: "1.25rem",
+                      fontWeight: 800,
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    {company.name}
+                  </h3>
+                  <div style={{ display: "flex", gap: "1rem" }}>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "var(--text-muted)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.3rem",
+                      }}
+                    >
                       <Users size={12} />
-                      {Array.isArray(company.toe_workers) ? company.toe_workers[0].count : 0} TOEs
+                      {Array.isArray(company.toe_workers)
+                        ? company.toe_workers[0].count
+                        : 0}{" "}
+                      TOEs
                     </span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "var(--text-muted)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.3rem",
+                      }}
+                    >
                       <Calendar size={12} />
-                      {company.sector || 'General'}
+                      {company.sector || "General"}
                     </span>
                   </div>
                 </div>
-                
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: 'auto' }}>
-                  <Link href={`/lab/companies/${company.id}/workers`} className="btn" style={{ flex: 1, background: 'rgba(255,255,255,0.05)', justifyContent: 'center', fontSize: '0.8rem', padding: '0.5rem' }}>
+
+                <div
+                  style={{ display: "flex", gap: "0.75rem", marginTop: "auto" }}
+                >
+                  <Link
+                    href={`/lab/companies/${company.id}/workers`}
+                    className="btn"
+                    style={{
+                      flex: 1,
+                      background: "rgba(255,255,255,0.05)",
+                      justifyContent: "center",
+                      fontSize: "0.8rem",
+                      padding: "0.5rem",
+                    }}
+                  >
                     Trabajadores
                   </Link>
-                  <Link href={`/lab/companies/${company.id}`} className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', fontSize: '0.8rem', padding: '0.5rem' }}>
+                  <Link
+                    href={`/lab/companies/${company.id}`}
+                    className="btn btn-primary"
+                    style={{
+                      flex: 1,
+                      justifyContent: "center",
+                      fontSize: "0.8rem",
+                      padding: "0.5rem",
+                    }}
+                  >
                     Ver Detalles
                   </Link>
                 </div>

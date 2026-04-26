@@ -1,34 +1,36 @@
-'use server';
+"use server";
 
-import { createClient } from '@/utils/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function requestLabUpdateAction(formData: FormData) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("No autenticado");
 
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('tenant_id')
-    .eq('id', user.id)
+    .from("profiles")
+    .select("tenant_id")
+    .eq("id", user.id)
     .single();
 
-  if (!profile) throw new Error('Perfil no encontrado');
+  if (!profile) throw new Error("Perfil no encontrado");
 
   const newData = {
-    name: formData.get('name'),
-    rif: formData.get('rif'),
-    address: formData.get('address'),
-    state: formData.get('state'),
-    municipality: formData.get('municipality'),
-    parish: formData.get('parish'),
+    name: formData.get("name"),
+    rif: formData.get("rif"),
+    address: formData.get("address"),
+    state: formData.get("state"),
+    municipality: formData.get("municipality"),
+    parish: formData.get("parish"),
   };
 
   const { data: tenant } = await supabase
-    .from('tenants')
-    .select('*')
-    .eq('id', profile.tenant_id)
+    .from("tenants")
+    .select("*")
+    .eq("id", profile.tenant_id)
     .single();
 
   const oldData = {
@@ -40,49 +42,48 @@ export async function requestLabUpdateAction(formData: FormData) {
     parish: tenant.parish,
   };
 
-  const { error } = await supabase
-    .from('change_requests')
-    .insert({
-      tenant_id: profile.tenant_id,
-      requested_by: user.id,
-      old_data: oldData,
-      new_data: newData,
-      status: 'pending'
-    });
+  const { error } = await supabase.from("change_requests").insert({
+    tenant_id: profile.tenant_id,
+    requested_by: user.id,
+    old_data: oldData,
+    new_data: newData,
+    status: "pending",
+  });
 
   if (error) throw error;
 
   // Also create a notification for SuperAdmin
   const { data: superadmins } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('role', 'superadmin');
+    .from("profiles")
+    .select("id")
+    .eq("role", "superadmin");
 
   if (superadmins) {
-    const notifications = superadmins.map(sa => ({
+    const notifications = superadmins.map((sa) => ({
       user_id: sa.id,
-      type: 'system',
-      message: `El laboratorio ${tenant.name} ha solicitado una actualización de datos.`
+      type: "system",
+      message: `El laboratorio ${tenant.name} ha solicitado una actualización de datos.`,
     }));
-    await supabase.from('notifications').insert(notifications);
+    await supabase.from("notifications").insert(notifications);
   }
 
-  revalidatePath('/lab/settings');
+  revalidatePath("/lab/settings");
   return { success: true };
 }
 
 export async function updatePasswordAction(formData: FormData) {
   const supabase = await createClient();
-  const password = formData.get('password') as string;
-  const confirm = formData.get('confirm') as string;
+  const password = formData.get("password") as string;
+  const confirm = formData.get("confirm") as string;
 
-  if (password !== confirm) return { error: 'Las contraseñas no coinciden.' };
-  if (password.length < 6) return { error: 'La contraseña debe tener al menos 6 caracteres.' };
+  if (password !== confirm) return { error: "Las contraseñas no coinciden." };
+  if (password.length < 6)
+    return { error: "La contraseña debe tener al menos 6 caracteres." };
 
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) return { error: error.message };
 
-  revalidatePath('/lab/settings');
+  revalidatePath("/lab/settings");
   return { success: true };
 }

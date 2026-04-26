@@ -1,11 +1,12 @@
-import './globals.css';
-import { Inter } from 'next/font/google';
+import "./globals.css";
+import { Inter } from "next/font/google";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: 'I.O.N.T.R.A.C.K. | Infraestructura Operativa de Dosimetría',
-  description: 'Plataforma SaaS para la gestión integral y normativa de seguridad radiológica.',
+  title: "I.O.N.T.R.A.C.K. | Infraestructura Operativa de Dosimetría",
+  description:
+    "Plataforma SaaS para la gestión integral y normativa de seguridad radiológica.",
 };
 
 export default function RootLayout({
@@ -14,7 +15,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" style={{ scrollBehavior: 'smooth' }} suppressHydrationWarning>
+    <html
+      lang="es"
+      style={{ scrollBehavior: "smooth" }}
+      suppressHydrationWarning
+    >
       <body className={inter.className} suppressHydrationWarning>
         {children}
       </body>

@@ -3,22 +3,22 @@
 
 :root {
   /* Primary Colors */
-  --primary-dark: #1A365D;    /* Azul Corporativo Profundo */
-  --primary-teal: #00A8B5;    /* Cian Médico */
+  --primary-dark: #1a365d; /* Azul Corporativo Profundo */
+  --primary-teal: #00a8b5; /* Cian Médico */
   --primary: var(--primary-teal);
-  
+
   /* Neutral Colors */
-  --bg-app: #F4F7F6;          /* Fondo de la Aplicación */
-  --surface: #FFFFFF;         /* Superficies y Tarjetas */
-  --text-main: #1E293B;       /* Slate 800 */
-  --text-muted: #64748B;      /* Slate 500 */
-  --border: #E2E8F0;          /* Slate 200 */
-  
+  --bg-app: #f4f7f6; /* Fondo de la Aplicación */
+  --surface: #ffffff; /* Superficies y Tarjetas */
+  --text-main: #1e293b; /* Slate 800 */
+  --text-muted: #64748b; /* Slate 500 */
+  --border: #e2e8f0; /* Slate 200 */
+
   /* Industrial & Status Accents */
-  --safety-orange: #FF7A00;   /* Acento Industrial */
-  --state-safe: #10B981;      /* Emerald Green (Normal) */
-  --state-warning: #F59E0B;   /* Amber (80%) */
-  --state-danger: #EF4444;    /* Red (Sobreexposición) */
+  --safety-orange: #ff7a00; /* Acento Industrial */
+  --state-safe: #10b981; /* Emerald Green (Normal) */
+  --state-warning: #f59e0b; /* Amber (80%) */
+  --state-danger: #ef4444; /* Red (Sobreexposición) */
 }
 
 * {
@@ -30,7 +30,11 @@
 body {
   background-color: var(--bg-app);
   color: var(--text-main);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -57,7 +61,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
   z-index: 50;
 }
 
@@ -86,7 +90,7 @@ body {
   gap: 1rem;
   padding: 0.875rem 1.25rem;
   border-radius: 10px;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 600;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -115,7 +119,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* UTILITIES */
@@ -152,7 +156,7 @@ body {
 
 .input-field {
   width: 100%;
-  background: #FFFFFF;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.875rem 1rem;
@@ -168,7 +172,7 @@ body {
 }
 
 .input-field::placeholder {
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .btn-secondary:hover {
@@ -260,7 +264,11 @@ tr:hover td {
   left: 0;
   right: 0;
   height: 500px;
-  background: radial-gradient(circle at 50% 0%, rgba(0, 168, 181, 0.08) 0%, transparent 70%);
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(0, 168, 181, 0.08) 0%,
+    transparent 70%
+  );
   pointer-events: none;
   z-index: 0;
 }
