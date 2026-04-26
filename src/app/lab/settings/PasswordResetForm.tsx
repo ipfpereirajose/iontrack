@@ -1,13 +1,22 @@
 "use client";
 
 import { Lock, AlertCircle, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updatePasswordAction } from "./actions";
 
 export default function PasswordResetForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,7 +55,6 @@ export default function PasswordResetForm() {
         <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
           Cerrando sesión...
         </p>
-        {setTimeout(() => (window.location.href = "/login"), 2000) && null}
       </div>
     );
   }
