@@ -29,25 +29,35 @@ export async function bulkImportAction(type: string, data: any[]) {
 
   for (const item of data) {
     try {
+      // Helper for case-insensitive column access
+      const getVal = (keys: string[]) => {
+        for (const k of keys) {
+          const foundKey = Object.keys(item).find(
+            (key) => key.toLowerCase() === k.toLowerCase(),
+          );
+          if (foundKey) return item[foundKey];
+        }
+        return null;
+      };
+
       if (type === "doses") {
-        const ci =
-          item["CI TRABAJADOR"] ||
-          item.ci_trabajador ||
-          item.CI ||
-          item.ci ||
-          item.cedula ||
-          item.CEDULA;
-        const tipoRif =
-          item["tipo de rif"] || item.tipo_rif || item["TIPO RIF"] || "";
-        let rif =
-          item["RIF EMPRESA"] || item.rif_empresa || item.RIF || item.rif;
+        const ci = getVal([
+          "CI TRABAJADOR",
+          "ci_trabajador",
+          "CI",
+          "cedula",
+          "CEDULA",
+        ]);
+        const tipoRif = getVal(["tipo de rif", "tipo_rif", "TIPO RIF"]) || "";
+        let rif = getVal(["RIF EMPRESA", "rif_empresa", "RIF", "rif"]);
 
         // If tipoRif is provided separately and not already in the RIF, combine them
         if (tipoRif && rif && !rif.toString().startsWith(tipoRif)) {
           rif = `${tipoRif}${rif}`;
         }
 
-        const monthInput = item.Mes || item.mes || item.month || "0";
+        const monthInput =
+          getVal(["Mes", "month", "mes"]) || item.month || "0";
         let month = parseInt(monthInput);
 
         if (isNaN(month) || month === 0) {
@@ -80,7 +90,7 @@ export async function bulkImportAction(type: string, data: any[]) {
           month = monthsMap[monthInput.toString().toLowerCase()] || 0;
         }
 
-        const year = parseInt(item.Año || item.año || item.year || "0");
+        const year = parseInt(getVal(["Año", "año", "year"]) || "0");
 
         if (!ci || !rif) {
           throw new Error(
@@ -88,18 +98,16 @@ export async function bulkImportAction(type: string, data: any[]) {
           );
         }
 
-        const hp10 = parseFloat(item.Hp10 || item.hp10 || item.HP10 || "0");
+        const hp10 = parseFloat(getVal(["Hp10", "HP10"]) || "0");
         const hp007 = parseFloat(
-          item.Hp007 || item.hp007 || item.HP007 || item["Hp0.07"] || "0",
+          getVal(["Hp007", "HP007", "Hp0.07"]) || "0",
         );
-        const hp3 = parseFloat(
-          item.Hp3 || item.hp3 || item.HP3 || item["Hp0.3"] || "0",
-        );
+        const hp3 = parseFloat(getVal(["Hp3", "HP3", "Hp0.3"]) || "0");
         const hp10_neu = parseFloat(
-          item.Hp10_Neutrones || item.hp10_neu || item.neutrones || "0",
+          getVal(["Hp10_Neutrones", "hp10_neu", "neutrones"]) || "0",
         );
         const hp007_ext = parseFloat(
-          item.Hp007_Extremidades || item.hp007_ext || item.extremidades || "0",
+          getVal(["Hp007_Extremidades", "hp007_ext", "extremidades"]) || "0",
         );
 
         // 1. Find the company (Try exact match first, then normalized)
