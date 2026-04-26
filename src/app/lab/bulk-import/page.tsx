@@ -23,15 +23,35 @@ export default function BulkImportPage() {
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const bstr = evt.target?.result;
-      const wb = XLSX.read(bstr, { type: 'binary' });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws);
+      const arrayBuffer = evt.target?.result as ArrayBuffer;
+
+      // Detect if CSV or Excel
+      const isCSV = file.name.toLowerCase().endsWith('.csv');
+
+      let data: any[];
+
+      if (isCSV) {
+        // Auto-detect encoding: check for UTF-8 BOM (EF BB BF)
+        const bytes = new Uint8Array(arrayBuffer.slice(0, 3));
+        const hasUtf8Bom = bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF;
+        const encoding = hasUtf8Bom ? 'utf-8' : 'windows-1252';
+        const text = new TextDecoder(encoding).decode(arrayBuffer);
+        const wb = XLSX.read(text, { type: 'string' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        data = XLSX.utils.sheet_to_json(ws);
+      } else {
+        // For Excel: use array buffer directly (xlsx handles encoding internally)
+        const wb = XLSX.read(arrayBuffer, { type: 'array', codepage: 65001 });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        data = XLSX.utils.sheet_to_json(ws);
+      }
+
       setRawData(data);
-      setPreview(data.slice(0, 5)); // Show first 5 rows
+      setPreview(data.slice(0, 5));
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   const processImport = async () => {
