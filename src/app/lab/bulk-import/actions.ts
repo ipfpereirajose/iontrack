@@ -118,20 +118,21 @@ export async function bulkImportAction(type: string, data: any[]) {
             .select("id, name, tax_id")
             .eq("tenant_id", tenantId);
 
-          company = allCompanies?.find(
-            (c) => c.tax_id.replace(/[-\s]/g, "") === normalizedRif,
-          );
+          company =
+            allCompanies?.find(
+              (c) => c.tax_id.replace(/[-\s]/g, "") === normalizedRif,
+            ) || null;
         }
 
         if (!company) throw new Error(`Empresa con RIF ${rif} no encontrada.`);
 
         // 2. Find the worker (Also try exact then normalized CI)
-        let { data: worker } = await adminSupabase
+        let { data: worker } = (await adminSupabase
           .from("toe_workers")
           .select("id, first_name, last_name, ci")
           .eq("ci", ci)
           .eq("company_id", company.id)
-          .maybeSingle();
+          .maybeSingle()) as any;
 
         if (!worker) {
           const normalizedCi = ci.toString().replace(/[-\s.]/g, "");
@@ -140,9 +141,10 @@ export async function bulkImportAction(type: string, data: any[]) {
             .select("id, first_name, last_name, ci")
             .eq("company_id", company.id);
 
-          worker = allWorkers?.find(
-            (w) => w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi,
-          );
+          worker =
+            allWorkers?.find(
+              (w) => w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi,
+            ) || null;
         }
 
         if (!worker)
