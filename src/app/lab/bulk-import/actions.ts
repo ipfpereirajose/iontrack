@@ -47,7 +47,39 @@ export async function bulkImportAction(type: string, data: any[]) {
           rif = `${tipoRif}${rif}`;
         }
 
-        const month = parseInt(item.Mes || item.mes || item.month || "0");
+        const monthInput = item.Mes || item.mes || item.month || "0";
+        let month = parseInt(monthInput);
+
+        if (isNaN(month) || month === 0) {
+          const monthsMap: { [key: string]: number } = {
+            enero: 1,
+            febrero: 2,
+            marzo: 3,
+            abril: 4,
+            mayo: 5,
+            junio: 6,
+            julio: 7,
+            agosto: 8,
+            septiembre: 9,
+            octubre: 10,
+            noviembre: 11,
+            diciembre: 12,
+            january: 1,
+            february: 2,
+            march: 3,
+            april: 4,
+            may: 5,
+            june: 6,
+            july: 7,
+            august: 8,
+            september: 9,
+            october: 10,
+            november: 11,
+            december: 12,
+          };
+          month = monthsMap[monthInput.toString().toLowerCase()] || 0;
+        }
+
         const year = parseInt(item.Año || item.año || item.year || "0");
 
         if (!ci || !rif) {
@@ -70,27 +102,52 @@ export async function bulkImportAction(type: string, data: any[]) {
           item.Hp007_Extremidades || item.hp007_ext || item.extremidades || "0",
         );
 
-        // 1. Find the company
-        const { data: company } = await adminSupabase
+        // 1. Find the company (Try exact match first, then normalized)
+        let { data: company } = await adminSupabase
           .from("companies")
-          .select("id, name")
+          .select("id, name, tax_id")
           .eq("tax_id", rif)
           .eq("tenant_id", tenantId)
           .maybeSingle();
 
+        if (!company) {
+          // Normalization: Remove dashes and spaces
+          const normalizedRif = rif.toString().replace(/[-\s]/g, "");
+          const { data: allCompanies } = await adminSupabase
+            .from("companies")
+            .select("id, name, tax_id")
+            .eq("tenant_id", tenantId);
+
+          company = allCompanies?.find(
+            (c) => c.tax_id.replace(/[-\s]/g, "") === normalizedRif,
+          );
+        }
+
         if (!company) throw new Error(`Empresa con RIF ${rif} no encontrada.`);
 
-        // 2. Find the worker
-        const { data: worker } = await adminSupabase
+        // 2. Find the worker (Also try exact then normalized CI)
+        let { data: worker } = await adminSupabase
           .from("toe_workers")
-          .select("id, first_name, last_name")
+          .select("id, first_name, last_name, ci")
           .eq("ci", ci)
           .eq("company_id", company.id)
           .maybeSingle();
 
+        if (!worker) {
+          const normalizedCi = ci.toString().replace(/[-\s.]/g, "");
+          const { data: allWorkers } = await adminSupabase
+            .from("toe_workers")
+            .select("id, first_name, last_name, ci")
+            .eq("company_id", company.id);
+
+          worker = allWorkers?.find(
+            (w) => w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi,
+          );
+        }
+
         if (!worker)
           throw new Error(
-            `Trabajador con CI ${ci} no encontrado en la empresa con RIF ${rif}.`,
+            `Trabajador con CI ${ci} no encontrado en la empresa ${company.name}.`,
           );
 
         // 3. Insert Dose
