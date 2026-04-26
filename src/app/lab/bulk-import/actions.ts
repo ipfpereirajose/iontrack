@@ -37,8 +37,16 @@ export async function bulkImportAction(type: string, data: any[]) {
           item.ci ||
           item.cedula ||
           item.CEDULA;
-        const rif =
+        const tipoRif =
+          item["tipo de rif"] || item.tipo_rif || item["TIPO RIF"] || "";
+        let rif =
           item["RIF EMPRESA"] || item.rif_empresa || item.RIF || item.rif;
+
+        // If tipoRif is provided separately and not already in the RIF, combine them
+        if (tipoRif && rif && !rif.toString().startsWith(tipoRif)) {
+          rif = `${tipoRif}${rif}`;
+        }
+
         const month = parseInt(item.Mes || item.mes || item.month || "0");
         const year = parseInt(item.Año || item.año || item.year || "0");
 
