@@ -1,4 +1,4 @@
-import { Search, Filter, ChevronRight, UserCircle, Users, Activity } from 'lucide-react';
+import { Search, Filter, ChevronRight, UserCircle, Users, Activity, UserPlus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import { getCurrentProfile } from '@/lib/auth';
 import Link from 'next/link';
@@ -19,14 +19,20 @@ export default async function WorkersPage() {
 
   return (
     <div>
-      <header style={{ marginBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-          <div style={{ background: '#a855f7', color: 'white', padding: '0.75rem', borderRadius: '12px' }}>
-            <Users size={28} />
+      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ background: '#a855f7', color: 'white', padding: '0.75rem', borderRadius: '12px' }}>
+              <Users size={28} />
+            </div>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Directorio de Personal (TOE)</h1>
           </div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Directorio de Personal (TOE)</h1>
+          <p style={{ color: 'var(--text-muted)' }}>Gestión y vigilancia radiológica de los trabajadores ocupacionalmente expuestos.</p>
         </div>
-        <p style={{ color: 'var(--text-muted)' }}>Gestión y vigilancia radiológica de los trabajadores ocupacionalmente expuestos.</p>
+        <Link href="/portal/workers/new" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', background: 'var(--primary)', color: 'white', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>
+          <UserPlus size={18} />
+          Registrar TOE
+        </Link>
       </header>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
