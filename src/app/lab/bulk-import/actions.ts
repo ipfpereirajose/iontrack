@@ -165,7 +165,7 @@ export async function bulkImportAction(type: string, data: any[]) {
           tenant_id: tenantId,
           action: 'bulk_import_worker',
           entity_type: 'toe_workers',
-          details: { ci, company_code: companyCode }
+          details: { ci, company_rif: companyRif }
         });
       } else if (type === 'companies') {
         const taxId = item.RIF || item.rif || item.tax_id;
