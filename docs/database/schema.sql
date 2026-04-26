@@ -141,6 +141,21 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 8.5 INCIDENTS (Radiological overexposure tickets)
+CREATE TABLE IF NOT EXISTS public.incidents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
+    company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
+    toe_worker_id UUID REFERENCES public.toe_workers(id) ON DELETE CASCADE,
+    dose_id UUID REFERENCES public.doses(id) ON DELETE CASCADE,
+    severity VARCHAR(20) CHECK (severity IN ('warning', 'critical')),
+    status VARCHAR(20) DEFAULT 'open' CHECK (status IN ('open', 'under_review', 'closed')),
+    corrective_action_text TEXT,
+    closed_by UUID REFERENCES public.profiles(id),
+    closed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 9. CHANGE REQUESTS (For Lab/Company Updates)
 CREATE TABLE IF NOT EXISTS public.change_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -192,6 +207,7 @@ ALTER TABLE public.doses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.change_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
 -- Helper function to break recursion
 CREATE OR REPLACE FUNCTION public.get_auth_tenant()
@@ -238,5 +254,13 @@ CREATE POLICY "Dose access" ON public.doses
             )
             OR company_id = (SELECT company_id FROM public.profiles WHERE id = auth.uid())
         )
+        OR check_is_superadmin()
+    );
+
+-- Incidents: Access by tenant (Lab) and company (B2B)
+CREATE POLICY "Incident access" ON public.incidents
+    FOR ALL USING (
+        tenant_id = (SELECT tenant_id FROM public.profiles WHERE id = auth.uid())
+        OR company_id = (SELECT company_id FROM public.profiles WHERE id = auth.uid())
         OR check_is_superadmin()
     );

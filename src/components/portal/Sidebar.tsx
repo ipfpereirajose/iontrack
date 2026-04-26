@@ -12,6 +12,7 @@ export default function Sidebar() {
     { name: 'Dashboard', href: '/portal', icon: LayoutDashboard },
     { name: 'Mi Personal (TOE)', href: '/portal/workers', icon: Users },
     { name: 'Historial de Dosis', href: '/portal/history', icon: History },
+    { name: 'Incidencias', href: '/portal/incidents', icon: ShieldCheck },
     { name: 'Descargas', href: '/portal/downloads', icon: Download },
   ];
 

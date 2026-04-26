@@ -91,7 +91,8 @@ export async function bulkImportAction(type: string, data: any[]) {
           month,
           year,
           `${worker.first_name} ${worker.last_name}`,
-          company.name
+          company.name,
+          doseData.id
         );
 
         // 5. Audit Log

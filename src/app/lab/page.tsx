@@ -17,7 +17,8 @@ export default async function LabHomePage() {
     { count: workersCount },
     { data: pendingDoses, count: pendingCount },
     { data: recentDoses },
-    { data: criticalAlerts }
+    { data: criticalAlerts },
+    { data: allYearDoses }
   ] = await Promise.all([
     supabase
       .from('companies')
@@ -51,7 +52,19 @@ export default async function LabHomePage() {
       .eq('toe_workers.companies.tenant_id', tenantId)
       .gte('hp10', 1.328) // 80% of 1.66
       .order('created_at', { ascending: false })
-      .limit(3)
+      .limit(3),
+    supabase
+      .from('doses')
+      .select(`
+        hp10, month,
+        toe_workers!inner (
+          id, first_name, last_name, ci,
+          companies!inner (name)
+        )
+      `)
+      .eq('toe_workers.companies.tenant_id', tenantId)
+      .eq('year', new Date().getFullYear())
+      .eq('status', 'approved')
   ]);
 
   // Process Chart Data
@@ -61,6 +74,26 @@ export default async function LabHomePage() {
     const totalDose = monthDoses.reduce((acc, curr) => acc + curr.hp10, 0);
     return { name, value: parseFloat(totalDose.toFixed(4)) };
   });
+
+  // Calculate Projections
+  const workerDosesMap = new Map<string, { worker: any, doses: any[] }>();
+  allYearDoses?.forEach(d => {
+    const wId = (d.toe_workers as any).id;
+    if (!workerDosesMap.has(wId)) {
+      workerDosesMap.set(wId, { worker: d.toe_workers, doses: [] });
+    }
+    workerDosesMap.get(wId)!.doses.push({ hp10: d.hp10, month: d.month });
+  });
+
+  const { calculateDoseProjection } = await import('@/utils/analytics');
+  const atRiskWorkers = Array.from(workerDosesMap.values())
+    .map(({ worker, doses }) => {
+      const projection = calculateDoseProjection(doses, new Date().getFullYear());
+      return { worker, projection };
+    })
+    .filter(item => item.projection.isAtRisk)
+    .sort((a, b) => b.projection.projected - a.projection.projected)
+    .slice(0, 5);
 
   return (
     <div>
@@ -134,8 +167,43 @@ export default async function LabHomePage() {
           <DoseChart data={chartData} />
         </div>
 
-        {/* RECENT ALERTS */}
+        {/* RECENT ALERTS AND PROJECTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          {/* PREDICTIVE ANALYTICS WIDGET */}
+          {atRiskWorkers && atRiskWorkers.length > 0 && (
+            <section>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.25rem' }}>
+                <TrendingUp size={20} color="var(--state-warning)" />
+                Riesgo Proyectado (Límite Anual)
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {atRiskWorkers.map(({ worker, projection }) => (
+                  <div key={worker.id} className="clean-panel" style={{ 
+                    padding: '1rem', 
+                    borderLeft: `4px solid var(--state-warning)`,
+                    background: 'rgba(245, 158, 11, 0.05)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--state-warning)' }}>
+                        ALERTA PREDICTIVA
+                      </span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                        Velocidad: {projection.velocity} mSv/mes
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 700 }}>{worker.first_name} {worker.last_name}</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{worker.companies.name}</p>
+                    <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 900 }}>{projection.projected}</span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>mSv proyectados</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.25rem' }}>
               <ShieldAlert size={20} color="var(--state-danger)" />

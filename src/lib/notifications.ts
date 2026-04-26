@@ -8,7 +8,8 @@ export async function triggerDoseAlerts(
   month: number, 
   year: number,
   workerName: string,
-  companyName: string
+  companyName: string,
+  doseId?: string
 ) {
   const supabase = getServiceSupabase();
   const LIMIT = 1.66;
@@ -18,6 +19,7 @@ export async function triggerDoseAlerts(
 
   const isOverexposure = hp10 >= LIMIT;
   const type = isOverexposure ? 'THRESHOLD_CRITICAL' : 'THRESHOLD_WARNING';
+  const severity = isOverexposure ? 'critical' : 'warning';
   const alertText = isOverexposure ? 'SOBRE-EXPOSICIÓN (NIVEL ROJO)' : 'ADVERTENCIA 80% (NIVEL AMARILLO)';
   
   const message = `${alertText} detectada: ${workerName} (${companyName}) - ${hp10} mSv en ${month}/${year}.`;
@@ -67,5 +69,18 @@ export async function triggerDoseAlerts(
   if (notifications.length > 0) {
     const { error } = await supabase.from('notifications').insert(notifications);
     if (error) console.error('Error sending notifications:', error);
+  }
+
+  // 3. Create Incident Record
+  if (doseId) {
+    const { error: incidentError } = await supabase.from('incidents').insert({
+      tenant_id: tenantId,
+      company_id: companyId,
+      toe_worker_id: workerId,
+      dose_id: doseId,
+      severity: severity,
+      status: 'open'
+    });
+    if (incidentError) console.error('Error creating incident:', incidentError);
   }
 }
