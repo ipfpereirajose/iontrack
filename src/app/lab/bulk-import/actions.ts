@@ -103,7 +103,7 @@ export async function bulkImportAction(type: string, data: any[]) {
 
       } else if (type === 'workers') {
         const ci = item.CI || item.ci || item.cedula;
-        const companyCode = item.company_code || item.codigo_empresa || item.codigo;
+        const companyRif = item['RIF EMPRESA'] || item.rif_empresa || item.rif || item.company_code || item.codigo_empresa;
         const firstName = item.Nombre || item.nombre || item.first_name;
         const lastName = item.Apellido || item.apellido || item.last_name;
         const sex = item.Sexo || item.sexo || item.sex;
@@ -122,16 +122,16 @@ export async function bulkImportAction(type: string, data: any[]) {
           throw new Error(`Práctica "${practice}" no reconocida. Use valores como: ${standards.practicas.slice(0, 3).join(', ')}...`);
         }
 
-        const { data: company } = await supabase
+        const { data: company } = await adminSupabase
           .from('companies')
           .select('id')
-          .eq('company_code', companyCode)
+          .eq('tax_id', companyRif)
           .eq('tenant_id', tenantId)
           .maybeSingle();
 
-        if (!company) throw new Error(`Empresa con código ${companyCode} no encontrada`);
+        if (!company) throw new Error(`Empresa con RIF ${companyRif} no encontrada. Asegúrese de que la empresa esté registrada previamente.`);
 
-        const { data: existingWorker } = await supabase
+        const { data: existingWorker } = await adminSupabase
           .from('toe_workers')
           .select('id')
           .eq('ci', ci)
@@ -147,7 +147,7 @@ export async function bulkImportAction(type: string, data: any[]) {
           birth_year: parseInt(birthYear),
           position,
           practice,
-          worker_code: item.worker_code || item.codigo_toe,
+          worker_code: item.worker_code || item.codigo_toe || `TOE-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
           status: 'active'
         };
 

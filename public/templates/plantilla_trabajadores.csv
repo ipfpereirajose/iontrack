@@ -1,5 +1,5 @@
-Nombre,Apellido,CI,Sexo,Año de nacimiento,Cargo,Practica,codigo_empresa,codigo_toe
-Juan,Perez,12345678,M,1985,Radiologo,Diagnostico,EMP01,TOE001
-Maria,Garcia,87654321,F,1990,Tecnico,Medicina Nuclear,EMP01,TOE002
-Pedro,Rodriguez,11223344,M,1982,Oncologo,Radioterapia,EMP02,TOE005
-Ana,Martinez,44332211,F,1988,Fisico Medico,Control de Calidad,EMP02,TOE008
+Nombre,Apellido,CI,Sexo,Año de nacimiento,Cargo,Practica,RIF EMPRESA
+Juan,Perez,12345678,M,1985,Radiologo,Diagnostico,J-123456789
+Maria,Garcia,87654321,F,1990,Tecnico,Medicina Nuclear,J-123456789
+Pedro,Rodriguez,11223344,M,1982,Oncologo,Radioterapia,G-987654321
+Ana,Martinez,44332211,F,1988,Fisico Medico,Control de Calidad,G-987654321
