@@ -25,19 +25,42 @@ export default async function CompanyDetailsPage({
 
   const adminSupabase = getServiceSupabase();
 
-  const { data: company, error } = await adminSupabase
+  const { data: company, error: companyError } = await adminSupabase
     .from("companies")
-    .select("*, tenants(lab_code)")
+    .select("*, tenants(name)")
     .eq("id", companyId)
     .eq("tenant_id", tenantId)
     .single();
 
   if (!company) {
     return (
-      <div style={{ padding: "2rem", color: "white" }}>
-        <h2>Error al cargar la empresa</h2>
-        <p>ID Buscado: {companyId}</p>
-        <pre>{JSON.stringify(error, null, 2)}</pre>
+      <div
+        style={{
+          padding: "2rem",
+          color: "white",
+          background: "#1a1a1a",
+          borderRadius: "12px",
+          margin: "2rem",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        <h2 style={{ color: "#ef4444", marginBottom: "1rem" }}>
+          Error al cargar la empresa
+        </h2>
+        <p style={{ opacity: 0.8, marginBottom: "0.5rem" }}>
+          ID Buscado: {companyId}
+        </p>
+        <pre
+          style={{
+            background: "black",
+            padding: "1rem",
+            borderRadius: "8px",
+            overflow: "auto",
+            fontSize: "0.8rem",
+          }}
+        >
+          {JSON.stringify(companyError, null, 2)}
+        </pre>
         <Link
           href="/lab/companies"
           className="btn btn-primary"
