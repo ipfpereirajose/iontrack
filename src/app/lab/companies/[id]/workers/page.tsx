@@ -1,20 +1,30 @@
 import { Users, Plus, ArrowLeft, Mail, Shield, User, Fingerprint } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
+import { getServiceSupabase } from '@/lib/supabase';
+import { getCurrentProfile } from '@/lib/auth';
 import Link from 'next/link';
 
 export default async function WorkersListPage({ params }: { params: { id: string } }) {
   const { id: companyId } = await params;
-  const supabase = await createClient();
+  const { profile } = await getCurrentProfile();
+  const tenantId = profile?.tenant_id;
+  
+  if (!tenantId) return <div>No autorizado</div>;
 
-  // 1. Fetch Company Info with Lab Code
-  const { data: company } = await supabase
+  const adminSupabase = getServiceSupabase();
+
+  // 1. Fetch Company Info with Lab Code, ensuring it belongs to the tenant
+  const { data: company } = await adminSupabase
     .from('companies')
     .select('*, tenants(lab_code)')
     .eq('id', companyId)
+    .eq('tenant_id', tenantId)
     .single();
 
+  if (!company) return <div>Empresa no encontrada o no pertenece a su laboratorio.</div>;
+
   // 2. Fetch Workers
-  const { data: workers, error } = await supabase
+  const { data: workers, error } = await adminSupabase
     .from('toe_workers')
     .select('*')
     .eq('company_id', companyId)
