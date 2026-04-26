@@ -111,15 +111,12 @@ export async function bulkImportAction(type: string, data: any[]) {
         const position = (item.Cargo || item.cargo || '').trim();
         const practice = (item.Practica || item.practica || item['practica que realiza'] || '').trim();
 
-        // VALIDATION: Positions & Practices
-        const isValidPosition = standards.cargos.some(c => c.toLowerCase() === position.toLowerCase());
-        const isValidPractice = standards.practicas.some(p => p.toLowerCase() === practice.toLowerCase());
-
-        if (!isValidPosition) {
-          throw new Error(`Cargo "${position}" no reconocido. Use valores como: ${standards.cargos.slice(0, 3).join(', ')}...`);
+        // VALIDATION: Only require non-empty values (bulk import accepts free-form cargo/practica)
+        if (!position) {
+          throw new Error(`Falta el campo "Cargo" en la fila.`);
         }
-        if (!isValidPractice) {
-          throw new Error(`Práctica "${practice}" no reconocida. Use valores como: ${standards.practicas.slice(0, 3).join(', ')}...`);
+        if (!practice) {
+          throw new Error(`Falta el campo "Practica" en la fila.`);
         }
 
         const { data: company } = await adminSupabase
