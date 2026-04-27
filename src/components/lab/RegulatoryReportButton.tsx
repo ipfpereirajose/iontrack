@@ -24,7 +24,7 @@ export default function RegulatoryReportButton({
       setProgress(0);
 
       let allData: any[] = [];
-      const batchSize = 500;
+      const batchSize = 1000;
       let offset = 0;
       let total = 0;
 
@@ -126,7 +126,7 @@ export default function RegulatoryReportButton({
       {loading ? (
         <>
           <Loader2 size={18} className="animate-spin" />
-          Descargando... {progress}%
+          Procesando {allData.length} de {total} registros... ({progress}%)
           <div 
             style={{ 
               position: "absolute", 
