@@ -29,6 +29,13 @@ export default async function LabHomePage({
   const tenantId = profile?.tenant_id;
   const adminSupabase = getServiceSupabase();
 
+  // 0. Fetch company IDs for this tenant to use as a reliable filter
+  const { data: tenantCompanies } = await adminSupabase
+    .from("companies")
+    .select("id")
+    .eq("tenant_id", tenantId);
+  const companyIds = tenantCompanies?.map((c) => c.id) || [];
+
   // 1. Fetch Stats & All Doses for the selected year
   const [
     { count: companiesCount = 0 } = {},
@@ -44,23 +51,24 @@ export default async function LabHomePage({
       .eq("tenant_id", tenantId),
     adminSupabase
       .from("toe_workers")
-      .select("*, companies!inner(tenant_id)", { count: "exact", head: true })
-      .eq("companies.tenant_id", tenantId),
+      .select("id", { count: "exact", head: true })
+      .in("company_id", companyIds),
     adminSupabase
       .from("doses")
       .select(
-        "id, month, year, hp10, status, toe_workers!inner(first_name, last_name, ci, companies!inner(tenant_id))",
+        "id, month, year, hp10, status, toe_workers!inner(first_name, last_name, ci)",
         { count: "exact" },
       )
       .eq("status", "pending")
-      .eq("toe_workers.companies.tenant_id", tenantId)
+      .in("toe_workers.company_id", companyIds)
       .limit(10),
     adminSupabase
       .from("doses")
-      .select(
-        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(tenant_id))",
-      )
-      .eq("toe_workers.companies.tenant_id", tenantId)
+      .select(`
+        id, hp10, month, year, status,
+        toe_workers!inner (id, first_name, last_name, company_id)
+      `)
+      .in("toe_workers.company_id", companyIds)
       .eq("year", targetYear)
       .in("status", ["approved", "pending"])
       .order("month", { ascending: true })
@@ -68,9 +76,9 @@ export default async function LabHomePage({
     adminSupabase
       .from("doses")
       .select(
-        "id, hp10, month, year, status, toe_workers!inner(first_name, last_name, companies!inner(name, tenant_id))",
+        "id, hp10, month, year, status, toe_workers!inner(first_name, last_name, company_id)",
       )
-      .eq("toe_workers.companies.tenant_id", tenantId)
+      .in("toe_workers.company_id", companyIds)
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
