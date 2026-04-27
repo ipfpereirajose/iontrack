@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import DoseChart from "@/components/lab/DoseChart";
 
+export const revalidate = 0;
+
 export default async function CompanyDetailsPage({
   params,
 }: {

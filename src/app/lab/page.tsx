@@ -134,12 +134,14 @@ export default async function LabHomePage({
 
   // Add projections to chart data if we are in the current year
   if (targetYear === new Date().getFullYear()) {
-    // Calculate global average velocity
+    // Calculate global sum of worker velocities (Total Lab Load)
     const totalVelocity = workerProjections.reduce((acc, curr) => acc + curr.projection.velocity, 0);
-    const lastReportedMonth = Math.max(...(allYearData?.map(d => d.month) || [0]));
+    const lastMonthWithData = Math.max(...(allYearData?.map(d => d.month) || [0]));
     
     chartData.forEach((d, i) => {
-      if (i + 1 > lastReportedMonth) {
+      const monthNum = i + 1;
+      // Only project for months that have NO actual data AND are after the last reported month
+      if (monthNum > lastMonthWithData && d.approved === 0 && d.pending === 0) {
         d.projected = parseFloat(totalVelocity.toFixed(4));
       }
     });

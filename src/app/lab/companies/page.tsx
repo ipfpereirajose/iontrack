@@ -17,6 +17,8 @@ import { getServiceSupabase } from "@/lib/supabase";
 import CompanyExportButton from "@/components/lab/CompanyExportButton";
 import YearSelector from "@/components/lab/YearSelector";
 
+export const revalidate = 0;
+
 export default async function CompaniesPage({
   searchParams,
 }: {
