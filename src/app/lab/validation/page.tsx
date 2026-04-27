@@ -17,17 +17,17 @@ export default async function ValidationPage() {
   const tenantId = profile?.tenant_id;
 
   // 2. Fetch pending doses for THIS lab using Service Role to avoid RLS recursion issues
-  const { data: doses, error } = await supabase
-    .from("doses")
-    .select(
-      `
-      id, month, year, hp10, hp3, status, worker_id,
-      toe_workers!inner (
-        first_name, last_name, ci,
-        companies!inner (name, tenant_id)
+    const { data: doses, error } = await supabase
+      .from("doses")
+      .select(
+        `
+        id, month, year, hp10, hp3, status, toe_worker_id,
+        toe_workers!inner (
+          first_name, last_name, ci,
+          companies!inner (name, tenant_id)
+        )
+      `,
       )
-    `,
-    )
     .eq("status", "pending")
     .eq("toe_workers.companies.tenant_id", tenantId)
     .order("created_at", { ascending: true });
