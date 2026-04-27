@@ -2,6 +2,7 @@ import { getServiceSupabase } from "@/lib/supabase";
 import { getCurrentProfile } from "@/lib/auth";
 import { Users, Shield, Trash2, Mail, Building } from "lucide-react";
 import UserForm from "./UserForm";
+import SyncButton from "./SyncButton";
 import { deleteCompanyUser } from "./actions";
 
 export default async function UsersManagementPage() {
@@ -31,9 +32,10 @@ export default async function UsersManagementPage() {
         <h1 style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: "0.5rem" }}>
           Gestión de Accesos
         </h1>
-        <p style={{ color: "var(--text-muted)" }}>
+        <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>
           Controla quién puede acceder a los portales de tus empresas clientes.
         </p>
+        <SyncButton tenantId={tenantId} />
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '2.5rem' }}>
