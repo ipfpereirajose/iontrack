@@ -125,7 +125,7 @@ export default async function CompaniesPage({
           </p>
         </div>
         <div style={{ display: "flex", gap: "1rem" }}>
-          <YearSelector selectedYear={selectedYear} />
+          <YearSelector currentYear={parseInt(selectedYear)} />
           <CompanyExportButton companies={companies || []} />
           <Link
             href="/lab/companies/new"
