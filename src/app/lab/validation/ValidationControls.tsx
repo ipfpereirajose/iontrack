@@ -16,7 +16,7 @@ export default function ValidationControls({ approveAllAction, pendingCount }: V
   const [loading, setLoading] = useState(false);
 
   const currentMonth = searchParams.get("month") || "";
-  const currentYear = searchParams.get("year") || new Date().getFullYear().toString();
+  const currentYear = searchParams.get("year") || "";
 
   const months = [
     { v: "1", n: "Enero" }, { v: "2", n: "Febrero" }, { v: "3", n: "Marzo" },
@@ -82,6 +82,7 @@ export default function ValidationControls({ approveAllAction, pendingCount }: V
           className="glass-card"
           style={{ padding: "0.5rem 1rem", borderRadius: "10px", border: "1px solid var(--border)", cursor: "pointer" }}
         >
+          <option value="">Todos los años</option>
           {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>

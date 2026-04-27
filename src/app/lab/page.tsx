@@ -14,23 +14,28 @@ import { getServiceSupabase } from "@/lib/supabase";
 import { getCurrentProfile } from "@/lib/auth";
 import Link from "next/link";
 import DoseChart from "@/components/lab/DoseChart";
+import YearSelector from "@/components/lab/YearSelector";
 
-export default async function LabHomePage() {
+export default async function LabHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string }>;
+}) {
   const { user, profile } = await getCurrentProfile();
   if (!user) return null;
 
-  // Use service role for the dashboard to avoid RLS issues that might hide data
+  const { year: selectedYear } = await searchParams;
+  const targetYear = selectedYear ? parseInt(selectedYear) : new Date().getFullYear();
+  const tenantId = profile?.tenant_id;
   const adminSupabase = getServiceSupabase();
 
-  const tenantId = profile?.tenant_id;
-
-  // Run all queries in parallel for maximum performance
+  // 1. Fetch Stats & All Doses for the selected year
   const [
     { count: companiesCount },
     { count: workersCount },
-    { data: pendingDoses, count: pendingCount },
     { data: yearData },
-    { data: criticalAlerts },
+    { data: criticalDoses },
+    { data: recentAudit },
   ] = await Promise.all([
     adminSupabase
       .from("companies")
@@ -38,47 +43,44 @@ export default async function LabHomePage() {
       .eq("tenant_id", tenantId),
     adminSupabase
       .from("toe_workers")
-      .select("*, companies!inner(*)", { count: "exact", head: true })
+      .select("*, companies!inner(tenant_id)", { count: "exact", head: true })
       .eq("companies.tenant_id", tenantId),
     adminSupabase
       .from("doses")
       .select(
-        `id, hp10, month, year, toe_workers!inner(first_name, last_name, ci, companies!inner(name, tenant_id))`,
-        { count: "exact" }
+        "id, hp10, month, year, toe_workers!inner(id, first_name, last_name, companies!inner(tenant_id))",
       )
-      .eq("status", "pending")
       .eq("toe_workers.companies.tenant_id", tenantId)
-      .limit(10),
-    adminSupabase
-      .from("doses")
-      .select(`
-        hp10, month, year,
-        toe_workers!inner (
-          id, first_name, last_name, ci,
-          companies!inner (name, tenant_id)
-        )
-      `)
-      .eq("toe_workers.companies.tenant_id", tenantId)
-      .eq("year", new Date().getFullYear())
+      .eq("year", targetYear)
       .eq("status", "approved")
       .order("month", { ascending: true })
-      .limit(5000), // High limit to ensure we get all year data
+      .limit(5000),
     adminSupabase
       .from("doses")
       .select(
-        `
-        id, hp10, month, year,
-        toe_workers!inner (
-          first_name, last_name,
-          companies!inner (name, tenant_id)
-        )
-      `,
+        "id, hp10, month, year, toe_workers!inner(first_name, last_name, companies!inner(name, tenant_id))",
       )
       .eq("toe_workers.companies.tenant_id", tenantId)
-      .gte("hp10", 1.328) // 80% of 1.66
+      .eq("year", targetYear)
+      .gte("hp10", 1.6)
+      .order("hp10", { ascending: false })
+      .limit(10),
+    adminSupabase
+      .from("audit_logs")
+      .select("*")
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(5),
   ]);
+
+  const { count: pendingCount } = await adminSupabase
+    .from("doses")
+    .select("*, toe_workers!inner(companies!inner(tenant_id))", {
+      count: "exact",
+      head: true,
+    })
+    .eq("status", "pending")
+    .eq("toe_workers.companies.tenant_id", tenantId);
 
   const recentDoses = yearData;
   const allYearDoses = yearData;
@@ -152,14 +154,11 @@ export default async function LabHomePage() {
             Estado operativo y vigilancia dosimétrica del laboratorio.
           </p>
         </div>
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <YearSelector currentYear={targetYear} />
           <button
-            className="btn"
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              padding: "0.75rem 1.25rem",
-              borderRadius: "12px",
-            }}
+            className="btn-secondary"
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
           >
             <Calendar size={18} />
             Periodo Actual
