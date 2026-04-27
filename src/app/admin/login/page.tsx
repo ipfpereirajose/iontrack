@@ -41,62 +41,60 @@ export default function AdminLogin() {
     }
   };
 
-  return (
     <div
       style={{
         minHeight: "100vh",
+        width: "100%",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        position: "relative",
+        background: "var(--bg-app)",
+        padding: "2rem"
       }}
     >
-      <div
-        className="hero-gradient"
-        style={{
-          background:
-            "radial-gradient(circle at 50% -20%, rgba(245, 158, 11, 0.15), transparent)",
-        }}
-      ></div>
+      <div className="hero-gradient"></div>
 
       <div
         className="glass-card"
-        style={{ width: "100%", maxWidth: "450px", padding: "3rem" }}
+        style={{ 
+          width: "100%", 
+          maxWidth: "480px", 
+          padding: "3.5rem",
+          zIndex: 10,
+          position: "relative"
+        }}
       >
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div
-            style={{
-              background: "#f59e0b",
-              color: "#000",
-              width: "56px",
-              height: "56px",
-              borderRadius: "16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 1.5rem auto",
-            }}
-          >
-            <Server size={32} />
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="IONTRACK Logo" 
+            style={{ 
+              width: "120px", 
+              height: "auto", 
+              margin: "0 auto 2rem auto",
+              display: "block",
+              filter: "drop-shadow(0 10px 15px rgba(245, 158, 11, 0.2))"
+            }} 
+          />
           <h1
             style={{
-              fontSize: "1.75rem",
+              fontSize: "2rem",
               fontWeight: 900,
               marginBottom: "0.5rem",
               color: "var(--text-main)",
+              letterSpacing: "-0.03em"
             }}
           >
             Infraestructura
           </h1>
           <p
             style={{
-              color: "var(--text-main)",
-              fontSize: "0.9375rem",
+              color: "var(--text-muted)",
+              fontSize: "1rem",
               fontWeight: 600,
             }}
           >
-            Acceso restringido para administradores globales.
+            Acceso restringido para administradores.
           </p>
         </div>
 
