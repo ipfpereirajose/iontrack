@@ -13,15 +13,16 @@ import {
   Shield,
   Users,
   ClipboardList,
+  Download,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { bulkImportAction } from "./actions";
 import RegulatoryReportButton from "@/components/lab/RegulatoryReportButton";
 
-type ImportType = "companies" | "workers" | "doses";
+type ImportType = "companies" | "workers" | "doses" | null;
 
 export default function BulkImportPage() {
-  const [importType, setImportType] = useState<ImportType>("doses");
+  const [importType, setImportType] = useState<ImportType>(null);
   const [file, setFile] = useState<File | null>(null);
   const [rawData, setRawData] = useState<any[]>([]);
   const [preview, setPreview] = useState<any[]>([]);
@@ -29,6 +30,7 @@ export default function BulkImportPage() {
   const [results, setResults] = useState<{
     success: number;
     errors: any[];
+    mapping?: any[];
   } | null>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +80,7 @@ export default function BulkImportPage() {
     if (rawData.length === 0) return;
     setLoading(true);
     try {
+      if (!importType) return;
       const res = await bulkImportAction(importType, rawData);
       setResults(res);
     } catch (err: any) {
@@ -101,6 +104,22 @@ export default function BulkImportPage() {
     alignItems: "center",
     textAlign: "center" as const,
   });
+
+  const getMissingColumns = () => {
+    if (!importType || preview.length === 0) return [];
+    const headers = Object.keys(preview[0]).map((h) => h.toLowerCase());
+    const required: Record<string, string[]> = {
+      companies: ["rif", "entidad", "dirección"],
+      workers: ["ci", "nombre", "apellido", "rif"],
+      doses: ["ci", "rif", "mes", "año"],
+    };
+
+    return required[importType as string].filter(
+      (req) => !headers.some((h) => h.includes(req)),
+    );
+  };
+
+  const missingCols = getMissingColumns();
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -420,14 +439,30 @@ export default function BulkImportPage() {
                 style={{
                   padding: "1.5rem",
                   display: "flex",
-                  justifyContent: "flex-end",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   background: "#f8fafc",
                   borderTop: "1px solid var(--border)",
                 }}
               >
+                <div style={{ fontSize: "0.85rem" }}>
+                  {!importType ? (
+                    <span style={{ color: "var(--state-danger)", fontWeight: 800 }}>
+                      ⚠️ Seleccione un tipo de importación a la izquierda
+                    </span>
+                  ) : missingCols.length > 0 ? (
+                    <span style={{ color: "var(--state-danger)", fontWeight: 800 }}>
+                      ⚠️ Faltan columnas: {missingCols.join(", ")}
+                    </span>
+                  ) : (
+                    <span style={{ color: "var(--primary-teal)", fontWeight: 700 }}>
+                      ✓ Preparado para importar {rawData.length} {importType === 'doses' ? 'Dosis' : importType === 'workers' ? 'Trabajadores' : 'Empresas'}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={processImport}
-                  disabled={loading}
+                  disabled={loading || !importType || missingCols.length > 0}
                   className="btn btn-primary"
                   style={{ gap: "0.75rem", padding: "0.75rem 2.5rem" }}
                 >
@@ -436,7 +471,7 @@ export default function BulkImportPage() {
                   ) : (
                     <CheckCircle2 size={20} />
                   )}
-                  {loading ? "Procesando..." : "Confirmar e Importar"}
+                  {loading ? "Procesando..." : `Confirmar e Importar`}
                 </button>
               </div>
             </div>
@@ -450,6 +485,43 @@ export default function BulkImportPage() {
                 gap: "1.5rem",
               }}
             >
+              {results.mapping && results.mapping.length > 0 && (
+                <div
+                  className="clean-panel"
+                  style={{
+                    background: "rgba(0, 168, 181, 0.05)",
+                    border: "1px solid var(--primary-teal)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    <Fingerprint size={32} color="var(--primary-teal)" />
+                    <div>
+                      <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--primary-teal)" }}>
+                        Relación de IDs Generada
+                      </h3>
+                      <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>
+                        Se ha generado el mapeo de RIF vs Código de Instalación único. Úselo para sus cargas masivas de trabajadores y dosis.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const ws = XLSX.utils.json_to_sheet(results.mapping!);
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, "Relacion_IDs");
+                      XLSX.writeFile(wb, `Relacion_Sedes_IonTrack_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    }}
+                    className="btn btn-primary"
+                    style={{ background: "var(--primary-teal)", alignSelf: "flex-start", gap: "0.75rem" }}
+                  >
+                    <Download size={18} /> Descargar Relación de Sedes (Excel)
+                  </button>
+                </div>
+              )}
+
               <div
                 className="clean-panel"
                 style={{

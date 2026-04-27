@@ -16,11 +16,15 @@ export async function getCurrentProfile() {
 
   // Use service role to bypass the RLS recursion on profiles
   const adminSupabase = getServiceSupabase();
-  const { data: profile } = await adminSupabase
+  const { data: profile, error } = await adminSupabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  return { user, profile };
+  if (error) {
+    console.error("Error fetching profile:", error);
+  }
+
+  return { user, profile: profile || null };
 }

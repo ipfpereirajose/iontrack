@@ -26,6 +26,7 @@ export async function bulkImportAction(type: string, data: any[]) {
   const tenantId = profile.tenant_id;
   let successCount = 0;
   const errors = [];
+  const mapping: any[] = [];
 
   for (const item of data) {
     try {
@@ -55,6 +56,8 @@ export async function bulkImportAction(type: string, data: any[]) {
         if (tipoRif && rif && !rif.toString().startsWith(tipoRif)) {
           rif = `${tipoRif}${rif}`;
         }
+
+        const companyCode = getVal(["CÓDIGO EMPRESA", "codigo_empresa", "CODIGO_INSTALACION", "CODIGO", "company_code"]);
 
         const monthInput =
           getVal(["Mes", "month", "mes"]) || item.month || "0";
@@ -92,6 +95,17 @@ export async function bulkImportAction(type: string, data: any[]) {
 
         const year = parseInt(getVal(["Año", "año", "year"]) || "0");
 
+        if (month < 1 || month > 12) {
+          throw new Error(
+            `Mes inválido o no detectado: "${monthInput}". Asegúrese de tener una columna 'Mes'.`,
+          );
+        }
+        if (year < 1900 || year > 2100) {
+          throw new Error(
+            `Año inválido o no detectado: "${year}". Asegúrese de tener una columna 'Año'.`,
+          );
+        }
+
         if (!ci || !rif) {
           throw new Error(
             "Faltan campos críticos: se requiere 'RIF EMPRESA' y 'CI TRABAJADOR'.",
@@ -110,26 +124,26 @@ export async function bulkImportAction(type: string, data: any[]) {
           getVal(["Hp007_Extremidades", "hp007_ext", "extremidades"]) || "0",
         );
 
-        // 1. Find the company (Try exact match first, then normalized)
-        let { data: company } = await adminSupabase
+        let { data: allCompanies } = await adminSupabase
           .from("companies")
-          .select("id, name, tax_id")
-          .eq("tax_id", rif)
-          .eq("tenant_id", tenantId)
-          .maybeSingle();
+          .select("id, name, tax_id, company_code")
+          .eq("tenant_id", tenantId);
 
-        if (!company) {
-          // Normalization: Remove dashes and spaces
-          const normalizedRif = rif.toString().replace(/[-\s]/g, "");
-          const { data: allCompanies } = await adminSupabase
-            .from("companies")
-            .select("id, name, tax_id")
-            .eq("tenant_id", tenantId);
+        let company = null;
 
-          company =
-            allCompanies?.find(
-              (c) => c.tax_id.replace(/[-\s]/g, "") === normalizedRif,
-            ) || null;
+        if (companyCode) {
+          company = allCompanies?.find(c => c.company_code === companyCode.toString().trim()) || null;
+        }
+
+        if (!company && rif) {
+          const numericRif = rif.toString().replace(/[^0-9]/g, "");
+          company = allCompanies?.find((c) => {
+            const dbTaxId = c.tax_id.toString();
+            const dbNumeric = dbTaxId.replace(/[^0-9]/g, "");
+            if (dbNumeric === numericRif) return true;
+            if (dbTaxId === rif.toString()) return true;
+            return false;
+          }) || null;
         }
 
         if (!company) throw new Error(`Empresa con RIF ${rif} no encontrada.`);
@@ -213,7 +227,13 @@ export async function bulkImportAction(type: string, data: any[]) {
           item.rif_empresa ||
           item.RIF ||
           item.rif ||
-          item.tax_id ||
+          item.tax_id;
+
+        const companyCode = 
+          item["CÓDIGO EMPRESA"] || 
+          item.codigo_empresa || 
+          item.CODIGO_INSTALACION || 
+          item.CODIGO || 
           item.company_code ||
           item.codigo_empresa;
 
@@ -244,12 +264,27 @@ export async function bulkImportAction(type: string, data: any[]) {
           );
         }
 
-        const { data: company } = await adminSupabase
+        const { data: allCompanies } = await adminSupabase
           .from("companies")
-          .select("id")
-          .eq("tax_id", companyRif)
-          .eq("tenant_id", tenantId)
-          .maybeSingle();
+          .select("id, tax_id, company_code")
+          .eq("tenant_id", tenantId);
+
+        let company = null;
+
+        if (companyCode) {
+          company = allCompanies?.find(c => c.company_code === companyCode.toString().trim()) || null;
+        }
+
+        if (!company && companyRif) {
+          const numericCompanyRif = companyRif.toString().replace(/[^0-9]/g, "");
+          company = allCompanies?.find((c) => {
+            const dbNumeric = c.tax_id.toString().replace(/[^0-9]/g, "");
+            return (
+              dbNumeric === numericCompanyRif ||
+              c.tax_id.toString() === companyRif.toString()
+            );
+          }) || null;
+        }
 
         if (!company)
           throw new Error(
@@ -326,7 +361,7 @@ export async function bulkImportAction(type: string, data: any[]) {
         // Check if this exact branch exists
         const { data: existingBranch } = await adminSupabase
           .from("companies")
-          .select("id")
+          .select("id, company_code")
           .eq("tax_id", taxId)
           .eq("address", address)
           .eq("state", state)
@@ -376,22 +411,21 @@ export async function bulkImportAction(type: string, data: any[]) {
             throw new Error(`Error al insertar empresa: ${insErr.message}`);
         }
 
-        // AUDIT LOG
-        await adminSupabase.from("audit_logs").insert({
-          user_id: user.id,
-          tenant_id: tenantId,
-          action: "bulk_import_company",
-          entity_type: "companies",
-          details: { name, tax_id: taxId, branch: address },
+        // Add to mapping for user report
+        mapping.push({
+          RIF: taxId,
+          ENTIDAD: name,
+          DIRECCIÓN: address,
+          CODIGO_INSTALACION: existingBranch ? existingBranch.company_code : (companyData as any).company_code || 'N/A'
         });
-      }
 
-      successCount++;
+        successCount++;
+      }
     } catch (err: any) {
       errors.push({ row: item, message: err.message });
     }
   }
 
   revalidatePath("/lab");
-  return { success: successCount, errors };
+  return { success: successCount, errors, mapping };
 }

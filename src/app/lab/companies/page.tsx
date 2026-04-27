@@ -419,7 +419,7 @@ export default async function CompaniesPage({
                       }}
                     >
                       <Users size={12} />
-                      {Array.isArray(company.toe_workers)
+                      {Array.isArray(company.toe_workers) && company.toe_workers.length > 0
                         ? company.toe_workers[0].count
                         : 0}{" "}
                       TOEs

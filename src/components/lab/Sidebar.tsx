@@ -108,7 +108,7 @@ export default function Sidebar() {
           className={`nav-link ${pathname === "/lab/settings" ? "active" : ""}`}
         >
           <Settings size={20} />
-          Marca Blanca
+          Configuraciones
         </Link>
         <button
           className="nav-link"

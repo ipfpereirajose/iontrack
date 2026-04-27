@@ -29,6 +29,7 @@ export default function ResetPasswordButton({ email }: Props) {
       setStatus("success");
       setTimeout(() => setStatus("idle"), 3000);
     } else {
+      alert(result.error || "Error al resetear la contraseña.");
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
     }

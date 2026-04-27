@@ -13,10 +13,26 @@ import { getCurrentProfile } from "@/lib/auth";
 import { getServiceSupabase } from "@/lib/supabase";
 import ChangeRequestForm from "./ChangeRequestForm";
 import PasswordResetForm from "./PasswordResetForm";
+import ThemeConfigForm from "./ThemeConfigForm";
+import { Palette } from "lucide-react";
 
 export default async function LabSettingsPage() {
   const { user, profile } = await getCurrentProfile();
-  if (!user || !profile) return null;
+
+  if (!user) return null;
+
+  if (!profile) {
+    return (
+      <div style={{ padding: "4rem", textAlign: "center" }}>
+        <h2 style={{ marginBottom: "1rem" }}>Perfil no encontrado</h2>
+        <p style={{ color: "var(--text-muted)", marginBottom: "2rem" }}>
+          Su perfil de usuario parece haber sido eliminado (posiblemente por una
+          limpieza de base de datos). Por favor, contacte al administrador o
+          vuelva a registrarse.
+        </p>
+      </div>
+    );
+  }
 
   const supabase = getServiceSupabase();
   const { data: tenant } = await supabase
@@ -24,6 +40,17 @@ export default async function LabSettingsPage() {
     .select("*")
     .eq("id", profile.tenant_id)
     .single();
+
+  if (!tenant) {
+    return (
+      <div style={{ padding: "4rem", textAlign: "center" }}>
+        <h2 style={{ marginBottom: "1rem" }}>Laboratorio no encontrado</h2>
+        <p style={{ color: "var(--text-muted)" }}>
+          No se encontró información del laboratorio asociado a su perfil.
+        </p>
+      </div>
+    );
+  }
 
   const { data: pendingRequests } = await supabase
     .from("change_requests")
@@ -187,6 +214,35 @@ export default async function LabSettingsPage() {
               cerrará la sesión después del cambio.
             </p>
             <PasswordResetForm />
+          </section>
+
+          <section className="clean-panel">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                marginBottom: "2rem",
+                borderBottom: "1px solid var(--border)",
+                paddingBottom: "1rem",
+              }}
+            >
+              <Palette size={24} color="var(--primary-teal)" />
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 800 }}>
+                Personalización (Marca Blanca)
+              </h2>
+            </div>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--text-muted)",
+                marginBottom: "1.5rem",
+              }}
+            >
+              Configure su logo y colores institucionales. Estos cambios se
+              aplicarán a sus reportes y portal.
+            </p>
+            <ThemeConfigForm tenant={tenant} />
           </section>
 
           <div

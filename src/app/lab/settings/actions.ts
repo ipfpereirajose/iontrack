@@ -87,3 +87,38 @@ export async function updatePasswordAction(formData: FormData) {
   revalidatePath("/lab/settings");
   return { success: true };
 }
+
+export async function updateLabThemeAction(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("No autenticado");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("tenant_id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "lab_admin") {
+    throw new Error("No tiene permisos para cambiar la configuración.");
+  }
+
+  const logo_url = formData.get("logo_url") as string;
+  const primary_color = formData.get("primary_color") as string;
+
+  const { error } = await supabase
+    .from("tenants")
+    .update({
+      logo_url: logo_url || null,
+      config: { primary_color: primary_color || "#06b6d4" },
+    })
+    .eq("id", profile.tenant_id);
+
+  if (error) throw error;
+
+  revalidatePath("/lab");
+  revalidatePath("/lab/settings");
+  return { success: true };
+}

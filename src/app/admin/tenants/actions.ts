@@ -99,26 +99,35 @@ export async function createTenantAction(formData: FormData) {
 }
 
 export async function resetTenantPasswordAction(email: string) {
-  const adminSupabase = getServiceSupabase();
+  try {
+    const adminSupabase = getServiceSupabase();
 
-  const { error } = await adminSupabase.auth.admin.generateLink({
-    type: "recovery",
-    email: email,
-  });
+    // 1. Find the user first to make sure they exist
+    const { data: userData, error: findError } =
+      await adminSupabase.auth.admin.listUsers();
 
-  if (error) {
-    console.error("Error generating reset link:", error);
-    return { error: "No se pudo generar el enlace de recuperación." };
+    if (findError) throw findError;
+
+    const user = userData.users.find((u) => u.email === email);
+    if (!user) {
+      return { error: "No se encontró un usuario con ese correo electrónico." };
+    }
+
+    // 2. Send the reset email
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://iontrack.vercel.app";
+    const { error: resetError } =
+      await adminSupabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+      });
+
+    if (resetError) {
+      console.error("Error sending reset email:", resetError);
+      return { error: resetError.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Critical error in resetTenantPasswordAction:", err);
+    return { error: err.message || "Error inesperado al resetear contraseña." };
   }
-
-  // Alternatively, just send the standard reset email
-  const { error: resetError } =
-    await adminSupabase.auth.resetPasswordForEmail(email);
-
-  if (resetError) {
-    console.error("Error sending reset email:", resetError);
-    return { error: "Error al enviar el correo de recuperación." };
-  }
-
-  return { success: true };
 }
