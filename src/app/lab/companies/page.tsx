@@ -10,7 +10,8 @@ import {
   ShieldAlert, 
   TrendingUp,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Users
 } from "lucide-react";
 
 export default async function CompaniesPage({
