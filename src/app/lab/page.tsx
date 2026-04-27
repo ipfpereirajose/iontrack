@@ -29,9 +29,8 @@ export default async function LabHomePage() {
     { count: companiesCount },
     { count: workersCount },
     { data: pendingDoses, count: pendingCount },
-    { data: recentDoses },
+    { data: yearData },
     { data: criticalAlerts },
-    { data: allYearDoses },
   ] = await Promise.all([
     adminSupabase
       .from("companies")
@@ -49,13 +48,21 @@ export default async function LabHomePage() {
       )
       .eq("status", "pending")
       .eq("toe_workers.companies.tenant_id", tenantId)
-      .limit(5),
+      .limit(10),
     adminSupabase
       .from("doses")
-      .select("hp10, month, year, toe_workers!inner(companies!inner(tenant_id))")
+      .select(`
+        hp10, month, year,
+        toe_workers!inner (
+          id, first_name, last_name, ci,
+          companies!inner (name, tenant_id)
+        )
+      `)
       .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", new Date().getFullYear())
-      .eq("status", "approved"),
+      .eq("status", "approved")
+      .order("month", { ascending: true })
+      .limit(5000), // High limit to ensure we get all year data
     adminSupabase
       .from("doses")
       .select(
@@ -70,22 +77,11 @@ export default async function LabHomePage() {
       .eq("toe_workers.companies.tenant_id", tenantId)
       .gte("hp10", 1.328) // 80% of 1.66
       .order("created_at", { ascending: false })
-      .limit(3),
-    adminSupabase
-      .from("doses")
-      .select(
-        `
-        hp10, month,
-        toe_workers!inner (
-          id, first_name, last_name, ci,
-          companies!inner (name, tenant_id)
-        )
-      `,
-      )
-      .eq("toe_workers.companies.tenant_id", tenantId)
-      .eq("year", new Date().getFullYear())
-      .eq("status", "approved"),
+      .limit(5),
   ]);
+
+  const recentDoses = yearData;
+  const allYearDoses = yearData;
 
   // Process Chart Data
   const months = [
