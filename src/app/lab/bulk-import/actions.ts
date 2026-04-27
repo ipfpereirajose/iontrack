@@ -28,6 +28,22 @@ export async function bulkImportAction(type: string, data: any[]) {
   const errors = [];
   const mapping: any[] = [];
 
+  // Pre-fetch all companies for the tenant to avoid thousands of queries
+  const { data: allCompanies } = await adminSupabase
+    .from("companies")
+    .select("id, name, tax_id, company_code")
+    .eq("tenant_id", tenantId);
+
+  // Pre-fetch all workers for this tenant's companies to avoid thousands of queries
+  const { data: allWorkers } = await adminSupabase
+    .from("toe_workers")
+    .select("id, first_name, last_name, ci, company_id")
+    .in("company_id", allCompanies?.map(c => c.id) || []);
+
+  const batchSize = 500;
+  const doseBatch: any[] = [];
+  const auditBatch: any[] = [];
+
   for (const item of data) {
     try {
       // Helper for case-insensitive column access
@@ -42,25 +58,16 @@ export async function bulkImportAction(type: string, data: any[]) {
       };
 
       if (type === "doses") {
-        const ci = getVal([
-          "CI TRABAJADOR",
-          "ci_trabajador",
-          "CI",
-          "cedula",
-          "CEDULA",
-        ]);
+        const ci = getVal(["CI TRABAJADOR", "ci_trabajador", "CI", "cedula", "CEDULA"]);
         const tipoRif = getVal(["tipo de rif", "tipo_rif", "TIPO RIF"]) || "";
         let rif = getVal(["RIF EMPRESA", "rif_empresa", "RIF", "rif"]);
+        const companyCode = getVal(["CÓDIGO EMPRESA", "codigo_empresa", "CODIGO_INSTALACION", "CODIGO", "company_code"]);
 
-        // If tipoRif is provided separately and not already in the RIF, combine them
         if (tipoRif && rif && !rif.toString().startsWith(tipoRif)) {
           rif = `${tipoRif}${rif}`;
         }
 
-        const companyCode = getVal(["CÓDIGO EMPRESA", "codigo_empresa", "CODIGO_INSTALACION", "CODIGO", "company_code"]);
-
-        const monthInput =
-          getVal(["Mes", "month", "mes"]) || item.month || "0";
+        const monthInput = getVal(["Mes", "month", "mes"]) || item.month || "0";
         let month = parseInt(monthInput);
 
         if (isNaN(month) || month === 0) {
@@ -82,127 +89,71 @@ export async function bulkImportAction(type: string, data: any[]) {
         }
 
         const year = parseInt(getVal(["Año", "año", "year"]) || "0");
-
-        if (month < 1 || month > 12) {
-          throw new Error(
-            `Mes inválido o no detectado: "${monthInput}". Asegúrese de tener una columna 'Mes'.`,
-          );
-        }
-        if (year < 1900 || year > 2100) {
-          throw new Error(
-            `Año inválido o no detectado: "${year}". Asegúrese de tener una columna 'Año'.`,
-          );
-        }
-
-        if (!ci || (!rif && !companyCode)) {
-          throw new Error(
-            "Faltan campos críticos: se requiere ('RIF EMPRESA' o 'CÓDIGO EMPRESA') y 'CI TRABAJADOR'.",
-          );
-        }
+        if (month < 1 || month > 12) throw new Error(`Mes inválido: "${monthInput}"`);
+        if (year < 1900 || year > 2100) throw new Error(`Año inválido: "${year}"`);
+        if (!ci || (!rif && !companyCode)) throw new Error("Faltan identificadores (CI y RIF/Código)");
 
         const hp10 = parseFloat(getVal(["Hp10", "HP10"]) || "0");
-        const hp007 = parseFloat(
-          getVal(["Hp007", "HP007", "Hp0.07"]) || "0",
-        );
+        const hp007 = parseFloat(getVal(["Hp007", "HP007", "Hp0.07"]) || "0");
         const hp3 = parseFloat(getVal(["Hp3", "HP3", "Hp0.3"]) || "0");
-        const hp10_neu = parseFloat(
-          getVal(["Hp10_Neutrones", "hp10_neu", "neutrones"]) || "0",
-        );
-        const hp007_ext = parseFloat(
-          getVal(["Hp007_Extremidades", "hp007_ext", "extremidades"]) || "0",
-        );
+        const hp10_neu = parseFloat(getVal(["Hp10_Neutrones", "hp10_neu", "neutrones"]) || "0");
+        const hp007_ext = parseFloat(getVal(["Hp007_Extremidades", "hp007_ext", "extremidades"]) || "0");
 
-        let { data: allCompanies } = await adminSupabase
-          .from("companies")
-          .select("id, name, tax_id, company_code")
-          .eq("tenant_id", tenantId);
-
+        // Use pre-fetched companies
         let company = null;
-
         if (companyCode) {
           company = allCompanies?.find(c => c.company_code === companyCode.toString().trim()) || null;
         }
-
         if (!company && rif) {
           const numericRif = rif.toString().replace(/[^0-9]/g, "");
           company = allCompanies?.find((c) => {
             const dbTaxId = c.tax_id.toString();
             const dbNumeric = dbTaxId.replace(/[^0-9]/g, "");
-            if (dbNumeric === numericRif) return true;
-            if (dbTaxId === rif.toString()) return true;
-            return false;
+            return dbNumeric === numericRif || dbTaxId === rif.toString();
           }) || null;
         }
 
-        if (!company) throw new Error(`Empresa con RIF ${rif} no encontrada.`);
+        if (!company) throw new Error(`Empresa no encontrada.`);
 
-        // 2. Find the worker (Also try exact then normalized CI)
-        let { data: worker } = (await adminSupabase
-          .from("toe_workers")
-          .select("id, first_name, last_name, ci")
-          .eq("ci", ci)
-          .eq("company_id", company.id)
-          .maybeSingle()) as any;
-
-        if (!worker) {
-          const normalizedCi = ci.toString().replace(/[-\s.]/g, "");
-          const { data: allWorkers } = await adminSupabase
-            .from("toe_workers")
-            .select("id, first_name, last_name, ci")
-            .eq("company_id", company.id);
-
-          worker =
-            allWorkers?.find(
-              (w) => w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi,
-            ) || null;
-        }
-
-        if (!worker)
-          throw new Error(
-            `Trabajador con CI ${ci} no encontrado en la empresa ${company.name}.`,
-          );
-
-        // 3. Insert Dose
-        const { error: doseError, data: doseData } = await adminSupabase
-          .from("doses")
-          .insert({
-            toe_worker_id: worker.id,
-            month,
-            year,
-            hp10,
-            hp007,
-            hp3,
-            hp10_neu,
-            hp007_ext,
-            status: "pending",
-          })
-          .select()
-          .single();
-
-        if (doseError) throw new Error(doseError.message);
-
-        // 4. Trigger Alerts
-        await triggerDoseAlerts(
-          tenantId,
-          company.id,
-          worker.id,
-          hp10,
-          month,
-          year,
-          `${worker.first_name} ${worker.last_name}`,
-          company.name,
-          doseData.id,
+        // Use pre-fetched workers
+        const normalizedCi = ci.toString().replace(/[-\s.]/g, "");
+        const worker = allWorkers?.find(w => 
+          w.company_id === company.id && 
+          (w.ci.toString() === ci.toString() || w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi)
         );
 
-        // 5. Audit Log
-        await adminSupabase.from("audit_logs").insert({
+        if (!worker) throw new Error(`Trabajador con CI ${ci} no encontrado en la empresa.`);
+
+        // Add to batch instead of immediate insert
+        doseBatch.push({
+          toe_worker_id: worker.id,
+          month,
+          year,
+          hp10,
+          hp007,
+          hp3,
+          hp10_neu,
+          hp007_ext,
+          status: "pending",
+        });
+
+        auditBatch.push({
           user_id: user.id,
           tenant_id: tenantId,
           action: "bulk_import_dose",
           entity_type: "doses",
-          entity_id: doseData.id,
           details: { ci, rif, hp10, month, year },
         });
+
+        successCount++;
+
+        // Process batch if reached size
+        if (doseBatch.length >= batchSize) {
+          await adminSupabase.from("doses").insert(doseBatch);
+          await adminSupabase.from("audit_logs").insert(auditBatch);
+          doseBatch.length = 0;
+          auditBatch.length = 0;
+        }
       } else if (type === "workers") {
         const ci =
           item.CI || item.ci || item.cedula || item.CEDULA || item["Cédula"];
@@ -252,25 +203,16 @@ export async function bulkImportAction(type: string, data: any[]) {
           );
         }
 
-        const { data: allCompanies } = await adminSupabase
-          .from("companies")
-          .select("id, tax_id, company_code")
-          .eq("tenant_id", tenantId);
-
+        // Use pre-fetched companies
         let company = null;
-
         if (companyCode) {
           company = allCompanies?.find(c => c.company_code === companyCode.toString().trim()) || null;
         }
-
         if (!company && companyRif) {
           const numericCompanyRif = companyRif.toString().replace(/[^0-9]/g, "");
           company = allCompanies?.find((c) => {
             const dbNumeric = c.tax_id.toString().replace(/[^0-9]/g, "");
-            return (
-              dbNumeric === numericCompanyRif ||
-              c.tax_id.toString() === companyRif.toString()
-            );
+            return dbNumeric === numericCompanyRif || c.tax_id.toString() === companyRif.toString();
           }) || null;
         }
 
@@ -279,12 +221,12 @@ export async function bulkImportAction(type: string, data: any[]) {
             `Empresa con RIF ${companyRif} no encontrada. Asegúrese de que la empresa esté registrada previamente.`,
           );
 
-        const { data: existingWorker } = await adminSupabase
-          .from("toe_workers")
-          .select("id")
-          .eq("ci", ci)
-          .eq("company_id", company.id)
-          .maybeSingle();
+        // Use pre-fetched workers to check for existence
+        const normalizedCi = ci.toString().replace(/[-\s.]/g, "");
+        const existingWorker = allWorkers?.find(w => 
+          w.company_id === company.id && 
+          (w.ci.toString() === ci.toString() || w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi)
+        );
 
         const workerData = {
           company_id: company.id,
@@ -415,6 +357,12 @@ export async function bulkImportAction(type: string, data: any[]) {
     } catch (err: any) {
       errors.push({ row: item, message: err.message });
     }
+  }
+
+  // Final flush for any remaining items in the last batch
+  if (doseBatch.length > 0) {
+    await adminSupabase.from("doses").insert(doseBatch);
+    await adminSupabase.from("audit_logs").insert(auditBatch);
   }
 
   revalidatePath("/lab");
