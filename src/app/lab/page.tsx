@@ -49,6 +49,13 @@ export default async function LabHomePage({
     );
   }
 
+  // 0b. Fetch all worker IDs for these companies
+  const { data: tenantWorkers } = await adminSupabase
+    .from("toe_workers")
+    .select("id")
+    .in("company_id", companyIds);
+  const workerIds = tenantWorkers?.map(w => w.id) || [];
+
   // 1. Fetch Stats & All Doses for the selected year
   const [
     { count: companiesCount = 0 } = {},
@@ -73,7 +80,7 @@ export default async function LabHomePage({
         { count: "exact" },
       )
       .eq("status", "pending")
-      .in("toe_workers.company_id", companyIds)
+      .in("toe_worker_id", workerIds)
       .limit(10),
     adminSupabase
       .from("doses")
@@ -81,7 +88,7 @@ export default async function LabHomePage({
         id, hp10, month, year, status,
         toe_workers!inner (id, first_name, last_name, company_id)
       `)
-      .in("toe_workers.company_id", companyIds)
+      .in("toe_worker_id", workerIds)
       .eq("year", targetYear)
       .in("status", ["approved", "pending"])
       .order("month", { ascending: true })
@@ -91,7 +98,7 @@ export default async function LabHomePage({
       .select(
         "id, hp10, month, year, status, toe_workers!inner(first_name, last_name, company_id)",
       )
-      .in("toe_workers.company_id", companyIds)
+      .in("toe_worker_id", workerIds)
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
