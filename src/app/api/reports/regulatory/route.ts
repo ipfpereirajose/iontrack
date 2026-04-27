@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("tenant_id")
+    .select("tenant_id, company_id, role")
     .eq("id", user.id)
     .single();
 
@@ -25,12 +25,18 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") || "100");
   const offset = parseInt(searchParams.get("offset") || "0");
 
-  // 1. Get all worker IDs for this tenant
-  const { data: workers } = await supabase
+  // 1. Get all worker IDs for this tenant/company
+  let workerQuery = supabase
     .from("toe_workers")
-    .select("id")
-    .eq("companies.tenant_id", profile.tenant_id);
+    .select("id");
 
+  if (profile.role === "company_manager" && profile.company_id) {
+    workerQuery = workerQuery.eq("company_id", profile.company_id);
+  } else {
+    workerQuery = workerQuery.eq("companies.tenant_id", profile.tenant_id);
+  }
+
+  const { data: workers } = await workerQuery;
   const workerIds = (workers || []).map(w => w.id);
 
   if (workerIds.length === 0) return NextResponse.json({ data: [], total: 0 });

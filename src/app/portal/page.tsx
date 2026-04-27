@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
+import MonthlyPDFReportButton from "@/components/lab/MonthlyPDFReportButton";
 
 export default async function B2BHomePage() {
   const supabase = await createClient();
@@ -59,10 +60,12 @@ export default async function B2BHomePage() {
             Resumen de Vigilancia Radiológica Ocupacional
           </p>
         </div>
-        <button className="btn btn-primary">
-          <Download size={18} />
-          Reporte Mensual PDF
-        </button>
+        <div style={{ width: "240px" }}>
+          <MonthlyPDFReportButton 
+            month={latestDoses && latestDoses.length > 0 ? latestDoses[0].month : new Date().getMonth() + 1}
+            year={latestDoses && latestDoses.length > 0 ? latestDoses[0].year : new Date().getFullYear()}
+          />
+        </div>
       </header>
 
       <div
