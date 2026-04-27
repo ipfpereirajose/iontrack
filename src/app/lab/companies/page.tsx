@@ -1,20 +1,17 @@
-import {
-  Building2,
-  Plus,
-  Phone,
-  Users,
-  AlertTriangle,
-  ShieldAlert,
+import { getServiceSupabase } from "@/lib/supabase";
+import InteractiveCompanyTrendChart from "@/components/lab/InteractiveCompanyTrendChart";
+import YearSelector from "@/components/lab/YearSelector";
+import CompanyExportButton from "@/components/lab/CompanyExportButton";
+import Link from "next/link";
+import { getCurrentProfile } from "@/lib/auth";
+import { 
+  Building2, 
+  Plus, 
+  ShieldAlert, 
   TrendingUp,
   Calendar,
-  ArrowRight,
+  ArrowRight
 } from "lucide-react";
-import { createClient } from "@/utils/supabase/server";
-import { getCurrentProfile } from "@/lib/auth";
-import Link from "next/link";
-import InteractiveCompanyTrendChart from "@/components/lab/InteractiveCompanyTrendChart";
-
-export const revalidate = 0;
 
 export default async function CompaniesPage({
   searchParams,
