@@ -493,7 +493,7 @@ export default async function LabHomePage({
             <div
               style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
             >
-              {!criticalAlerts || criticalAlerts.length === 0 ? (
+              {!criticalDoses || criticalDoses.length === 0 ? (
                 <div
                   className="clean-panel"
                   style={{
@@ -506,7 +506,7 @@ export default async function LabHomePage({
                   No hay alertas registradas.
                 </div>
               ) : (
-                criticalAlerts.map((alert: any) => (
+                criticalDoses.map((alert: any) => (
                   <div
                     key={alert.id}
                     className="clean-panel"
