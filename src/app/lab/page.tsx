@@ -58,13 +58,9 @@ export default async function LabHomePage({
     adminSupabase
       .from("doses")
       .select(
-        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, company_id)"
+        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(tenant_id))",
       )
-      .in("toe_worker_id", (
-        adminSupabase.from("toe_workers").select("id").in("company_id", 
-          adminSupabase.from("companies").select("id").eq("tenant_id", tenantId)
-        )
-      ) as any) // Using subquery if possible, or just simpler join
+      .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", targetYear)
       .in("status", ["approved", "pending"])
       .order("month", { ascending: true })
