@@ -33,6 +33,7 @@ export default async function LabHomePage({
   const [
     { count: companiesCount },
     { count: workersCount },
+    { data: pendingDoses, count: pendingCount },
     { data: yearData },
     { data: criticalDoses },
     { data: recentAudit },
@@ -45,6 +46,15 @@ export default async function LabHomePage({
       .from("toe_workers")
       .select("*, companies!inner(tenant_id)", { count: "exact", head: true })
       .eq("companies.tenant_id", tenantId),
+    adminSupabase
+      .from("doses")
+      .select(
+        "id, month, year, hp10, status, toe_workers!inner(first_name, last_name, ci, companies!inner(tenant_id))",
+        { count: "exact" },
+      )
+      .eq("status", "pending")
+      .eq("toe_workers.companies.tenant_id", tenantId)
+      .limit(10),
     adminSupabase
       .from("doses")
       .select(
@@ -72,15 +82,6 @@ export default async function LabHomePage({
       .order("created_at", { ascending: false })
       .limit(5),
   ]);
-
-  const { count: pendingCount } = await adminSupabase
-    .from("doses")
-    .select("*, toe_workers!inner(companies!inner(tenant_id))", {
-      count: "exact",
-      head: true,
-    })
-    .eq("status", "pending")
-    .eq("toe_workers.companies.tenant_id", tenantId);
 
   const recentDoses = yearData;
   const allYearDoses = yearData;
