@@ -18,6 +18,7 @@ export function calculateDoseProjection(
       projected: 0,
       isAtRisk: false,
       monthsActive: 0,
+      monthlyTrend: Array(12).fill(0),
     };
   }
 
@@ -28,8 +29,9 @@ export function calculateDoseProjection(
   );
 
   // Determine how many distinct months have readings
-  const uniqueMonths = new Set(doses.map((d) => d.month));
-  const monthsActive = uniqueMonths.size;
+  const uniqueMonths = Array.from(new Set(doses.map((d) => d.month))).sort((a, b) => a - b);
+  const monthsActive = uniqueMonths.length;
+  const lastMonth = uniqueMonths[uniqueMonths.length - 1];
 
   if (monthsActive === 0) {
     return {
@@ -38,17 +40,25 @@ export function calculateDoseProjection(
       projected: 0,
       isAtRisk: false,
       monthsActive,
+      monthlyTrend: Array(12).fill(0),
     };
   }
 
   // Calculate Dose Velocity (Average per active month)
   const velocity = accumulated / monthsActive;
 
-  // Calculate remaining months in the year
-  // If the latest reading is from month M, remaining is 12 - M.
-  // Alternatively, just assume a full 12 month projection based on velocity.
-  // A standard projection is Velocity * 12.
+  // Simple Linear Projection: velocity * 12
   const projected = velocity * 12;
+
+  // Generate monthly trend for graphing
+  // [Actual1, Actual2, ..., LastActual, Proj+1, Proj+2, ...]
+  const monthlyTrend = Array(12).fill(0).map((_, i) => {
+    const month = i + 1;
+    const existing = doses.find(d => d.month === month);
+    if (existing) return existing.hp10;
+    if (month > lastMonth) return velocity; // Projected
+    return 0; // Missing month in the past
+  });
 
   // Determine if at risk (projected >= limit)
   const isAtRisk = projected >= annualLimit;
@@ -59,5 +69,6 @@ export function calculateDoseProjection(
     projected: parseFloat(projected.toFixed(4)),
     isAtRisk,
     monthsActive,
+    monthlyTrend,
   };
 }

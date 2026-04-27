@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Zap,
   LayoutDashboard,
+  Activity,
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
@@ -276,11 +277,53 @@ export default async function LandingHUB() {
                 </div>
               </div>
             </Link>
-          </div>
 
+            {/* TOE Portal Card */}
+            <Link
+              href="/toe-portal"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className="hub-card">
+                <div
+                  className="hub-icon"
+                  style={{
+                    color: "var(--primary-teal)",
+                    background: "rgba(0, 168, 181, 0.1)",
+                  }}
+                >
+                  <Activity size={32} />
+                </div>
+                <h2 className="hub-title">Trabajadores (TOE)</h2>
+                <p className="hub-description">
+                  Consulta rápida de dosis mensual e historial acumulado (Dosis Vida) mediante identidad y verificación.
+                </p>
+                <div
+                  className="btn"
+                  style={{
+                    background: "rgba(0, 168, 181, 0.05)",
+                    width: "100%",
+                    justifyContent: "center",
+                    border: "1px solid var(--primary-teal)",
+                    color: "var(--primary-teal)",
+                    borderRadius: "12px",
+                    fontWeight: 800,
+                  }}
+                >
+                  Consultar mis Dosis
+                  <ArrowRight size={16} />
+                </div>
+              </div>
+            </Link>
+          </div>
           <style
             dangerouslySetInnerHTML={{
               __html: `
+            .hub-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+              gap: 2rem;
+              margin-top: 3rem;
+            }
             @keyframes fadeInUp {
               from { opacity: 0; transform: translateY(20px); }
               to { opacity: 1; transform: translateY(0); }

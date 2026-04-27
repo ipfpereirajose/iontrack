@@ -316,7 +316,7 @@ export default async function WorkersListPage({
                   Editar
                 </button>
                 <Link
-                  href={`/lab/validation?worker=${worker.id}`}
+                  href={`/lab/toe-consultation/${worker.id}`}
                   className="btn"
                   style={{
                     flex: 1,
@@ -326,7 +326,7 @@ export default async function WorkersListPage({
                     fontSize: "0.875rem",
                   }}
                 >
-                  Dosis
+                  Ver Historial
                 </Link>
               </div>
             </div>

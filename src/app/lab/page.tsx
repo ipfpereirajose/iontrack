@@ -34,7 +34,7 @@ export default async function LabHomePage({
     { count: companiesCount = 0 } = {},
     { count: workersCount = 0 } = {},
     { data: pendingDoses = [], count: pendingCount = 0 } = {},
-    { data: yearData = [] } = {},
+    { data: allYearData = [] } = {},
     { data: criticalDoses = [] } = {},
     { data: recentAudit = [] } = {},
   ] = await Promise.all([
@@ -58,17 +58,17 @@ export default async function LabHomePage({
     adminSupabase
       .from("doses")
       .select(
-        "id, hp10, month, year, toe_workers!inner(id, first_name, last_name, companies!inner(tenant_id))",
+        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))",
       )
       .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", targetYear)
-      .eq("status", "approved")
+      .in("status", ["approved", "pending"])
       .order("month", { ascending: true })
-      .limit(5000),
+      .limit(10000),
     adminSupabase
       .from("doses")
       .select(
-        "id, hp10, month, year, toe_workers!inner(first_name, last_name, companies!inner(name, tenant_id))",
+        "id, hp10, month, year, status, toe_workers!inner(first_name, last_name, companies!inner(name, tenant_id))",
       )
       .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", targetYear)
@@ -83,33 +83,35 @@ export default async function LabHomePage({
       .limit(5),
   ]);
 
-  const recentDoses = yearData;
-  const allYearDoses = yearData;
+
 
   // Process Chart Data
-  const months = [
-    "Ene",
-    "Feb",
-    "Mar",
-    "Abr",
-    "May",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dic",
-  ];
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  
+  // Calculate Global Lab Trend for the chart
   const chartData = months.map((name, index) => {
-    const monthDoses = recentDoses?.filter((d) => d.month === index + 1) || [];
-    const totalDose = monthDoses.reduce((acc, curr) => acc + curr.hp10, 0);
-    return { name, value: parseFloat(totalDose.toFixed(4)) };
+    const month = index + 1;
+    const monthDoses = allYearData?.filter((d) => d.month === month) || [];
+    
+    const approved = monthDoses
+      .filter(d => d.status === 'approved')
+      .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+      
+    const pending = monthDoses
+      .filter(d => d.status === 'pending')
+      .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+
+    return { 
+      name, 
+      approved: parseFloat(approved.toFixed(4)), 
+      pending: parseFloat(pending.toFixed(4)),
+      projected: 0
+    };
   });
 
-  // Calculate Projections
+  // Calculate Projections per Worker
   const workerDosesMap = new Map<string, { worker: any; doses: any[] }>();
-  allYearDoses?.forEach((d) => {
+  allYearData?.forEach((d) => {
     const wId = (d.toe_workers as any).id;
     if (!workerDosesMap.has(wId)) {
       workerDosesMap.set(wId, { worker: d.toe_workers, doses: [] });
@@ -118,17 +120,30 @@ export default async function LabHomePage({
   });
 
   const { calculateDoseProjection } = await import("@/utils/analytics");
-  const atRiskWorkers = Array.from(workerDosesMap.values())
+  
+  // Get all projections and sort by projected dose (not just at risk)
+  const workerProjections = Array.from(workerDosesMap.values())
     .map(({ worker, doses }) => {
-      const projection = calculateDoseProjection(
-        doses,
-        new Date().getFullYear(),
-      );
+      const projection = calculateDoseProjection(doses, targetYear);
       return { worker, projection };
     })
-    .filter((item) => item.projection.isAtRisk)
-    .sort((a, b) => b.projection.projected - a.projection.projected)
-    .slice(0, 5);
+    .sort((a, b) => b.projection.projected - a.projection.projected);
+
+  // Top 5 workers for the "At Risk" / "High Trend" section
+  const atRiskWorkers = workerProjections.slice(0, 5);
+
+  // Add projections to chart data if we are in the current year
+  if (targetYear === new Date().getFullYear()) {
+    // Calculate global average velocity
+    const totalVelocity = workerProjections.reduce((acc, curr) => acc + curr.projection.velocity, 0);
+    const lastReportedMonth = Math.max(...(allYearData?.map(d => d.month) || [0]));
+    
+    chartData.forEach((d, i) => {
+      if (i + 1 > lastReportedMonth) {
+        d.projected = parseFloat(totalVelocity.toFixed(4));
+      }
+    });
+  }
 
   return (
     <div>
@@ -393,8 +408,8 @@ export default async function LabHomePage({
                   marginBottom: "1.25rem",
                 }}
               >
-                <TrendingUp size={20} color="var(--state-warning)" />
-                Riesgo Proyectado (Límite Anual)
+                <TrendingUp size={20} color="var(--primary-teal)" />
+                Proyecciones y Vigilancia Preventiva
               </h3>
               <div
                 style={{
@@ -409,8 +424,8 @@ export default async function LabHomePage({
                     className="clean-panel"
                     style={{
                       padding: "1rem",
-                      borderLeft: `4px solid var(--state-warning)`,
-                      background: "rgba(245, 158, 11, 0.05)",
+                      borderLeft: `4px solid ${projection.isAtRisk ? 'var(--state-danger)' : projection.projected > 15 ? 'var(--state-warning)' : 'var(--primary-teal)'}`,
+                      background: projection.isAtRisk ? "rgba(239, 68, 68, 0.05)" : "rgba(0, 168, 181, 0.02)",
                     }}
                   >
                     <div
@@ -427,7 +442,7 @@ export default async function LabHomePage({
                           color: "var(--state-warning)",
                         }}
                       >
-                        ALERTA PREDICTIVA
+                        {projection.isAtRisk ? "ALERTA CRÍTICA" : "TENDENCIA ANUAL"}
                       </span>
                       <span
                         style={{

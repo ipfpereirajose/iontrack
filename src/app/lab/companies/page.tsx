@@ -49,7 +49,7 @@ export default async function CompaniesPage({
     .from("doses")
     .select(
       `
-      hp10, month, year,
+      hp10, month, year, status,
       toe_workers!inner (
         companies!inner (tenant_id)
       )
@@ -57,14 +57,14 @@ export default async function CompaniesPage({
     )
     .eq("toe_workers.companies.tenant_id", tenantId)
     .eq("year", parseInt(selectedYear))
-    .eq("status", "approved");
+    .in("status", ["approved", "pending"]);
 
   // 3. Fetch Alerts (Overexposure > 1.66 or Warning >= 1.328)
   const alertsQuery = adminSupabase
     .from("doses")
     .select(
       `
-      id, hp10, month, year,
+      id, hp10, month, year, status,
       toe_workers!inner (
         first_name, last_name,
         companies!inner (name, tenant_id)
@@ -95,9 +95,22 @@ export default async function CompaniesPage({
     "Dic",
   ];
   const chartData = months.map((name, index) => {
-    const monthDoses = doses?.filter((d) => d.month === index + 1) || [];
-    const totalDose = monthDoses.reduce((acc, curr) => acc + curr.hp10, 0);
-    return { name, value: parseFloat(totalDose.toFixed(4)) };
+    const month = index + 1;
+    const monthDoses = doses?.filter((d) => d.month === month) || [];
+    
+    const approved = monthDoses
+      .filter(d => d.status === 'approved')
+      .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+      
+    const pending = monthDoses
+      .filter(d => d.status === 'pending')
+      .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+
+    return { 
+      name, 
+      approved: parseFloat(approved.toFixed(4)), 
+      pending: parseFloat(pending.toFixed(4)) 
+    };
   });
 
   return (

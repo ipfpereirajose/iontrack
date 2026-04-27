@@ -27,11 +27,8 @@ export default function BulkImportPage() {
   const [rawData, setRawData] = useState<any[]>([]);
   const [preview, setPreview] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<{
-    success: number;
-    errors: any[];
-    mapping?: any[];
-  } | null>(null);
+  const [results, setResults] = useState<{ success: number; errors: any[]; mapping?: any[] } | null>(null);
+  const [progress, setProgress] = useState(0);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,12 +76,37 @@ export default function BulkImportPage() {
   const processImport = async () => {
     if (rawData.length === 0) return;
     setLoading(true);
+    setProgress(0);
+    setResults(null);
+
+    const CHUNK_SIZE = 500;
+    let totalSuccess = 0;
+    const allErrors: any[] = [];
+    const allMappings: any[] = [];
+
     try {
       if (!importType) return;
-      const res = await bulkImportAction(importType, rawData);
-      setResults(res);
+
+      for (let i = 0; i < rawData.length; i += CHUNK_SIZE) {
+        const chunk = rawData.slice(i, i + CHUNK_SIZE);
+        const res = await bulkImportAction(importType, chunk);
+        
+        totalSuccess += res.success;
+        allErrors.push(...res.errors);
+        if (res.mapping) allMappings.push(...res.mapping);
+
+        const currentProgress = Math.min(Math.round(((i + CHUNK_SIZE) / rawData.length) * 100), 100);
+        setProgress(currentProgress);
+
+        // Small delay to let the UI breathe and avoid hitting rate limits too fast
+        if (i + CHUNK_SIZE < rawData.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
+      setResults({ success: totalSuccess, errors: allErrors, mapping: allMappings });
     } catch (err: any) {
-      alert(err.message);
+      alert(`Error durante la importación: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -109,7 +131,7 @@ export default function BulkImportPage() {
     if (!importType || preview.length === 0) return [];
     const headers = Object.keys(preview[0]).map((h) => h.toLowerCase());
     const required: Record<string, string[]> = {
-      companies: ["rif", "entidad", "dirección"],
+      companies: ["rif", "entidad", "dirección", "osr nom", "osr ci", "osr email"],
       workers: ["ci", "nombre", "apellido", "rif"],
       doses: ["ci", "rif", "mes", "año"],
     };
@@ -452,7 +474,7 @@ export default function BulkImportPage() {
                   borderTop: "1px solid var(--border)",
                 }}
               >
-                <div style={{ fontSize: "0.85rem" }}>
+                <div style={{ fontSize: "0.85rem", flex: 1 }}>
                   {!importType ? (
                     <span style={{ color: "var(--state-danger)", fontWeight: 800 }}>
                       ⚠️ Seleccione un tipo de importación a la izquierda
@@ -461,6 +483,16 @@ export default function BulkImportPage() {
                     <span style={{ color: "var(--state-danger)", fontWeight: 800 }}>
                       ⚠️ Faltan columnas: {missingCols.join(", ")}
                     </span>
+                  ) : loading ? (
+                    <div style={{ width: "100%", paddingRight: "2rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontWeight: 800 }}>
+                        <span style={{ color: "var(--primary-teal)" }}>Procesando Datos...</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <div style={{ width: "100%", height: "8px", background: "rgba(0,0,0,0.05)", borderRadius: "10px", overflow: "hidden" }}>
+                        <div style={{ width: `${progress}%`, height: "100%", background: "var(--primary-teal)", transition: "width 0.3s ease" }} />
+                      </div>
+                    </div>
                   ) : (
                     <span style={{ color: "var(--primary-teal)", fontWeight: 700 }}>
                       ✓ Preparado para importar {rawData.length} {importType === 'doses' ? 'Dosis' : importType === 'workers' ? 'Trabajadores' : 'Empresas'}

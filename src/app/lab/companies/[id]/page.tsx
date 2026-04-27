@@ -9,7 +9,9 @@ import {
   Mail,
   Phone,
   Fingerprint,
+  TrendingUp,
 } from "lucide-react";
+import DoseChart from "@/components/lab/DoseChart";
 
 export default async function CompanyDetailsPage({
   params,
@@ -31,6 +33,24 @@ export default async function CompanyDetailsPage({
     .eq("id", companyId)
     .eq("tenant_id", tenantId)
     .single();
+
+  const currentYear = new Date().getFullYear();
+  const { data: doses = [] } = await adminSupabase
+    .from("doses")
+    .select("hp10, month, year, status, toe_workers!inner(company_id)")
+    .eq("toe_workers.company_id", companyId)
+    .eq("year", currentYear)
+    .in("status", ["approved", "pending"]);
+
+  // Process Chart Data
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const chartData = months.map((name, index) => {
+    const month = index + 1;
+    const monthDoses = doses?.filter((d) => d.month === month) || [];
+    const approved = monthDoses.filter(d => d.status === 'approved').reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+    const pending = monthDoses.filter(d => d.status === 'pending').reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+    return { name, approved: parseFloat(approved.toFixed(4)), pending: parseFloat(pending.toFixed(4)), projected: 0 };
+  });
 
   if (!company) {
     return (
@@ -124,6 +144,24 @@ export default async function CompanyDetailsPage({
           </Link>
         </div>
       </header>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "2rem", marginBottom: "2rem" }}>
+        <div className="glass-panel" style={{ padding: "2rem" }}>
+          <h3 style={{ fontSize: "1.25rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <TrendingUp size={20} color="var(--primary)" />
+            Carga Dosimétrica Anual ({currentYear})
+          </h3>
+          <DoseChart data={chartData} />
+        </div>
+
+        <div className="glass-panel" style={{ padding: "2rem", display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center" }}>
+          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 800, textTransform: "uppercase" }}>Dosis Acumulada Periodo</span>
+          <div style={{ fontSize: "3rem", fontWeight: 900, color: "var(--primary)", margin: "0.5rem 0" }}>
+            {(chartData.reduce((acc, curr) => acc + (curr.approved || 0) + (curr.pending || 0), 0)).toFixed(2)}
+          </div>
+          <span style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-muted)" }}>mSv Totales</span>
+        </div>
+      </div>
 
       <div className="glass-panel" style={{ padding: "2rem" }}>
         <h3

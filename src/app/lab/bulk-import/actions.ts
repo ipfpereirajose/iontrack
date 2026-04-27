@@ -28,19 +28,27 @@ export async function bulkImportAction(type: string, data: any[]) {
   const errors = [];
   const mapping: any[] = [];
 
-  // Pre-fetch all companies for the tenant to avoid thousands of queries
-  const { data: allCompanies } = await adminSupabase
-    .from("companies")
-    .select("id, name, tax_id, company_code")
-    .eq("tenant_id", tenantId);
+  // Pre-fetch only necessary data for this specific chunk if possible
+  // For doses, we need companies and workers
+  let allCompanies: any[] = [];
+  let allWorkers: any[] = [];
 
-  // Pre-fetch all workers for this tenant's companies to avoid thousands of queries
-  const { data: allWorkers } = await adminSupabase
-    .from("toe_workers")
-    .select("id, first_name, last_name, ci, company_id")
-    .in("company_id", allCompanies?.map(c => c.id) || []);
+  if (type === "doses" || type === "workers") {
+    const { data: companies } = await adminSupabase
+      .from("companies")
+      .select("id, name, tax_id, company_code")
+      .eq("tenant_id", tenantId);
+    allCompanies = companies || [];
+  }
 
-  const batchSize = 1000;
+  if (type === "doses") {
+    const { data: workers } = await adminSupabase
+      .from("toe_workers")
+      .select("id, first_name, last_name, ci, company_id")
+      .in("company_id", allCompanies.map(c => c.id) || []);
+    allWorkers = workers || [];
+  }
+
   const doseBatch: any[] = [];
   const workerBatch: any[] = [];
   const companyBatch: any[] = [];
@@ -78,16 +86,15 @@ export async function bulkImportAction(type: string, data: any[]) {
         const year = parseInt(getVal(["Año", "año", "year"]) || "0");
         const hp10 = parseFloat(getVal(["Hp10", "HP10"]) || "0");
         
-        // Find company & worker from pre-fetched lists
-        const company = allCompanies?.find(c => 
+        const company = allCompanies.find(c => 
           (companyCode && c.company_code === companyCode.toString().trim()) || 
           (rif && (c.tax_id === rif.toString() || c.tax_id.replace(/[^0-9]/g, "") === rif.toString().replace(/[^0-9]/g, "")))
         );
 
-        if (!company) throw new Error(`Empresa no encontrada.`);
+        if (!company) throw new Error(`Empresa no vinculada.`);
         
         const normalizedCi = ci.toString().replace(/[-\s.]/g, "");
-        const worker = allWorkers?.find(w => 
+        const worker = allWorkers.find(w => 
           w.company_id === company.id && 
           (w.ci.toString() === ci.toString() || w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi)
         );
@@ -104,7 +111,6 @@ export async function bulkImportAction(type: string, data: any[]) {
           status: "pending"
         });
 
-        // Track critical doses for bulk notification
         if (hp10 >= 1.28) {
           criticalBatch.push({
             tenant_id: tenantId,
@@ -125,7 +131,7 @@ export async function bulkImportAction(type: string, data: any[]) {
         const rif = getVal(["RIF EMPRESA", "RIF", "rif"]);
         const companyCode = getVal(["CÓDIGO EMPRESA", "CODIGO", "CODIGO_INSTALACION"]);
         
-        const company = allCompanies?.find(c => 
+        const company = allCompanies.find(c => 
           (companyCode && c.company_code === companyCode.toString().trim()) || 
           (rif && (c.tax_id === rif.toString() || c.tax_id.replace(/[^0-9]/g, "") === rif.toString().replace(/[^0-9]/g, "")))
         );
@@ -146,30 +152,57 @@ export async function bulkImportAction(type: string, data: any[]) {
         });
 
         successCount++;
-      }
+      } else if (type === "companies") {
+        const name = getVal(["Entidad", "nombre", "empresa", "name", "ENTIDAD"]);
+        const rif = getVal(["RIF", "tax_id", "RIF EMPRESA", "rif"]);
+        
+        if (!name || !rif) throw new Error("Nombre y RIF son obligatorios.");
 
-      // Execute batches
-      if (doseBatch.length >= batchSize) {
-        await adminSupabase.from("doses").insert(doseBatch);
-        if (criticalBatch.length > 0) await adminSupabase.from("notifications").insert(criticalBatch);
-        await adminSupabase.from("audit_logs").insert(auditBatch);
-        doseBatch.length = 0; auditBatch.length = 0; criticalBatch.length = 0;
-      }
-      if (workerBatch.length >= batchSize) {
-        await adminSupabase.from("toe_workers").upsert(workerBatch, { onConflict: "company_id,ci" });
-        workerBatch.length = 0;
+        const company_code = getVal(["Código", "codigo", "CODIGO", "CODIGO_INSTALACION"]) || `COM-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+        companyBatch.push({
+          tenant_id: tenantId,
+          name,
+          tax_id: rif,
+          tipo_rif: getVal(["Tipo RIF", "tipo_rif", "TIPO RIF"]),
+          tipo: getVal(["Tipo", "tipo", "TIPO"]),
+          sector: getVal(["Sector", "sector", "SECTOR"]),
+          address: getVal(["Dirección", "direccion", "address", "DIRECCIÓN"]),
+          state: getVal(["Estado", "estado", "state", "ESTADO"]),
+          municipality: getVal(["Municipio", "municipio", "municipality", "MUNICIPIO"]),
+          parish: getVal(["Parroquia", "parroquia", "parish", "PARROQUIA"]),
+          email: getVal(["Email", "email", "EMAIL"]),
+          phone_local: getVal(["Telf Local", "phone_local", "TELF LOCAL"]),
+          phone_mobile: getVal(["Telf Movil", "phone_mobile", "TELF MÓVIL"]),
+          rep_first_name: getVal(["OSR NOM", "rep_first_name", "Nombre OSR"]),
+          rep_last_name: getVal(["OSR APE", "rep_last_name", "Apellido OSR"]),
+          rep_ci: getVal(["OSR CI", "rep_ci", "Cédula OSR"]),
+          rep_email: getVal(["OSR EMAIL", "rep_email", "Email OSR"]),
+          rep_phone: getVal(["OSR TELF", "rep_phone", "Teléfono OSR"]),
+          company_code,
+          status: "active"
+        });
+
+        mapping.push({ Entidad: name, RIF: rif, Codigo: company_code });
+
+        auditBatch.push({
+          user_id: user.id, tenant_id: tenantId, action: "bulk_import_company",
+          entity_type: "companies", details: { name, rif }
+        });
+
+        successCount++;
       }
     } catch (err: any) {
       errors.push({ row: item, message: err.message });
     }
   }
 
-  // Final Flush
+  // Flush everything
   if (doseBatch.length > 0) await adminSupabase.from("doses").insert(doseBatch);
   if (criticalBatch.length > 0) await adminSupabase.from("notifications").insert(criticalBatch);
   if (auditBatch.length > 0) await adminSupabase.from("audit_logs").insert(auditBatch);
   if (workerBatch.length > 0) await adminSupabase.from("toe_workers").upsert(workerBatch, { onConflict: "company_id,ci" });
+  if (companyBatch.length > 0) await adminSupabase.from("companies").upsert(companyBatch, { onConflict: "tenant_id,company_code" });
 
-  revalidatePath("/lab");
   return { success: successCount, errors, mapping };
 }

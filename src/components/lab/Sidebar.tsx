@@ -10,6 +10,7 @@ import {
   LogOut,
   Activity,
   Database,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
@@ -21,6 +22,7 @@ export default function Sidebar() {
   const navItems = [
     { name: "Resumen", href: "/lab", icon: LayoutDashboard },
     { name: "Empresas Clientes", href: "/lab/companies", icon: Building2 },
+    { name: "Consulta de TOEs", href: "/lab/toe-consultation", icon: Users },
     { name: "Carga Masiva", href: "/lab/bulk-import", icon: Database },
     { name: "Validación Dosis", href: "/lab/validation", icon: ClipboardCheck },
     { name: "Reportes y Certificados", href: "/lab/reports", icon: FileText },

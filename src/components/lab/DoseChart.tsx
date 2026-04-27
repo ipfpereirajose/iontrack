@@ -8,12 +8,15 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  Legend,
 } from "recharts";
 
 interface ChartData {
   name: string;
-  value: number;
+  approved?: number;
+  pending?: number;
+  projected?: number;
+  value?: number; // Fallback for old usage
 }
 
 export default function DoseChart({ data }: { data: ChartData[] }) {
@@ -32,6 +35,9 @@ export default function DoseChart({ data }: { data: ChartData[] }) {
       </div>
     );
   }
+
+  // Determine if we are using the multi-series format or the legacy format
+  const isMultiSeries = data.some(d => d.approved !== undefined || d.pending !== undefined);
 
   return (
     <div style={{ height: "350px", width: "100%", marginTop: "1.5rem" }}>
@@ -64,20 +70,22 @@ export default function DoseChart({ data }: { data: ChartData[] }) {
               boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
             }}
           />
-          <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={
-                  entry.value >= 1.66
-                    ? "var(--state-danger)"
-                    : entry.value >= 1.66 * 0.8
-                      ? "var(--state-warning)"
-                      : "var(--primary-teal)"
-                }
-              />
-            ))}
-          </Bar>
+          <Legend 
+            verticalAlign="top" 
+            align="right" 
+            iconType="circle"
+            wrapperStyle={{ paddingBottom: '20px', fontSize: '12px', fontWeight: 600 }}
+          />
+          
+          {isMultiSeries ? (
+            <>
+              <Bar dataKey="approved" name="Aprobado" stackId="a" fill="var(--primary-teal)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="pending" name="Pendiente" stackId="a" fill="var(--state-warning)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="projected" name="Proyectado" stackId="a" fill="rgba(0, 168, 181, 0.2)" stroke="var(--primary-teal)" strokeDasharray="4 4" radius={[6, 6, 0, 0]} />
+            </>
+          ) : (
+            <Bar dataKey="value" name="Dosis Total" fill="var(--primary-teal)" radius={[6, 6, 0, 0]} />
+          )}
         </BarChart>
       </ResponsiveContainer>
     </div>
