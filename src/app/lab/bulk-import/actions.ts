@@ -393,6 +393,7 @@ export async function bulkImportAction(type: string, data: any[]) {
           status: "active",
         };
 
+        let finalCode = "";
         if (existingBranch) {
           const { error: updErr } = await adminSupabase
             .from("companies")
@@ -400,6 +401,7 @@ export async function bulkImportAction(type: string, data: any[]) {
             .eq("id", existingBranch.id);
           if (updErr)
             throw new Error(`Error al actualizar empresa: ${updErr.message}`);
+          finalCode = existingBranch.company_code;
         } else {
           const companyCode =
             item.codigo ||
@@ -409,6 +411,7 @@ export async function bulkImportAction(type: string, data: any[]) {
             .insert({ ...companyData, company_code: companyCode });
           if (insErr)
             throw new Error(`Error al insertar empresa: ${insErr.message}`);
+          finalCode = companyCode;
         }
 
         // Add to mapping for user report
@@ -416,7 +419,7 @@ export async function bulkImportAction(type: string, data: any[]) {
           RIF: taxId,
           ENTIDAD: name,
           DIRECCIÓN: address,
-          CODIGO_INSTALACION: existingBranch ? existingBranch.company_code : (companyData as any).company_code || 'N/A'
+          CODIGO_INSTALACION: finalCode
         });
 
         successCount++;
