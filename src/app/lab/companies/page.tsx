@@ -15,6 +15,7 @@ import Link from "next/link";
 import DoseChart from "@/components/lab/DoseChart";
 import { getServiceSupabase } from "@/lib/supabase";
 import CompanyExportButton from "@/components/lab/CompanyExportButton";
+import YearSelector from "@/components/lab/YearSelector";
 
 export default async function CompaniesPage({
   searchParams,
@@ -124,22 +125,7 @@ export default async function CompaniesPage({
           </p>
         </div>
         <div style={{ display: "flex", gap: "1rem" }}>
-          <select
-            defaultValue={selectedYear}
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid var(--border)",
-              borderRadius: "12px",
-              padding: "0.75rem 1rem",
-              color: "white",
-              fontWeight: 600,
-              outline: "none",
-            }}
-            // We'll use a simple form/anchor pattern for year selection
-          >
-            <option value="2026">Año 2026</option>
-            <option value="2025">Año 2025</option>
-          </select>
+          <YearSelector selectedYear={selectedYear} />
           <CompanyExportButton companies={companies || []} />
           <Link
             href="/lab/companies/new"
