@@ -33,7 +33,6 @@ export default async function CompanySettingsPage() {
   const company = profile?.companies;
 
   // Get pending requests
-  const serviceSupabase = getServiceSupabase();
   const { data: pendingRequests } = await serviceSupabase
     .from("change_requests")
     .select("*")
