@@ -42,8 +42,13 @@ export default function ValidationControls({ approveAllAction, pendingCount }: V
         currentMonth ? parseInt(currentMonth) : undefined, 
         currentYear ? parseInt(currentYear) : undefined
       );
-      alert(`Se han aprobado ${res.success} registros exitosamente.`);
-      router.refresh();
+
+      if (res.error) {
+        alert(`Error: ${res.error}`);
+      } else {
+        alert(`Se han aprobado ${res.success} registros exitosamente.`);
+        router.refresh();
+      }
     } catch (err: any) {
       alert(err.message);
     } finally {

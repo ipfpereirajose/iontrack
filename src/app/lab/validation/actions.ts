@@ -49,6 +49,7 @@ export async function approveDose(doseId: string) {
   await supabase.from("audit_logs").insert([
     {
       tenant_id: profile.tenant_id,
+      user_id: profile.id,
       action: "APPROVE_DOSE",
       table_name: "doses",
       record_id: doseId,
@@ -95,7 +96,8 @@ export async function approveAllForMonth(month?: number, year?: number) {
   if (!user) throw new Error("No autenticado");
   if (!profile?.tenant_id) throw new Error("Usuario sin laboratorio asignado");
 
-  // 1. Get all company IDs for this tenant
+  try {
+    // 1. Get all company IDs for this tenant
   const { data: companies } = await supabase
     .from("companies")
     .select("id")
@@ -163,6 +165,7 @@ export async function approveAllForMonth(month?: number, year?: number) {
   // 6. Audit Log (Bulk)
   await supabase.from("audit_logs").insert({
     tenant_id: profile.tenant_id,
+    user_id: profile.id,
     action: "APPROVE_ALL_MONTH",
     table_name: "doses",
     new_data: { month, year, count: ids.length },
@@ -171,4 +174,8 @@ export async function approveAllForMonth(month?: number, year?: number) {
 
   revalidatePath("/lab/validation");
   return { success: ids.length };
+} catch (err: any) {
+  console.error("Error in approveAllForMonth:", err);
+  return { error: err.message };
+}
 }
