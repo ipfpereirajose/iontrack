@@ -26,8 +26,6 @@ export default function B2BIncidentsPage() {
   async function fetchIncidents() {
     setLoading(true);
     
-    // Use service role to bypass RLS and ensure data is fetched
-    const serviceSupabase = getServiceSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -35,10 +33,9 @@ export default function B2BIncidentsPage() {
       return;
     }
 
-    const { data: profile } = await serviceSupabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("company_id")
-      .eq("id", user.id)
       .single();
 
     if (!profile?.company_id) {
