@@ -31,12 +31,12 @@ export default async function LabHomePage({
 
   // 1. Fetch Stats & All Doses for the selected year
   const [
-    { count: companiesCount },
-    { count: workersCount },
-    { data: pendingDoses, count: pendingCount },
-    { data: yearData },
-    { data: criticalDoses },
-    { data: recentAudit },
+    { count: companiesCount = 0 } = {},
+    { count: workersCount = 0 } = {},
+    { data: pendingDoses = [], count: pendingCount = 0 } = {},
+    { data: yearData = [] } = {},
+    { data: criticalDoses = [] } = {},
+    { data: recentAudit = [] } = {},
   ] = await Promise.all([
     adminSupabase
       .from("companies")
