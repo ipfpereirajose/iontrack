@@ -116,28 +116,17 @@ export default async function CompaniesPage({
         <InteractiveCompanyTrendChart workerIds={workerIds} targetYear={targetYear} />
       </div>
 
-      {/* TOP DASHBOARD GRID */}
+      {/* SUMMARY AND ALERTS */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "2fr 1fr",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
           gap: "2rem",
           marginBottom: "3rem",
         }}
       >
-                background: "rgba(255,255,255,0.05)",
-                padding: "0.25rem 0.75rem",
-                borderRadius: "20px",
-              }}
-            >
-              mSv Totales por Mes
-            </span>
-          </div>
-          <DoseChart data={chartData} />
-        </div>
-
         {/* ALERTS SECTION */}
-        <div className="glass-panel" style={{ padding: "2rem" }}>
+        <div className="clean-panel">
           <h3
             style={{
               display: "flex",
