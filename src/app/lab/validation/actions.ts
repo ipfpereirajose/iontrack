@@ -95,12 +95,30 @@ export async function approveAllForMonth(month?: number, year?: number) {
   if (!user) throw new Error("No autenticado");
   if (!profile?.tenant_id) throw new Error("Usuario sin laboratorio asignado");
 
-  // 1. Get all pending doses for this tenant (optional month/year filter)
+  // 1. Get all company IDs for this tenant
+  const { data: companies } = await supabase
+    .from("companies")
+    .select("id")
+    .eq("tenant_id", profile.tenant_id);
+  
+  const companyIds = companies?.map(c => c.id) || [];
+  if (companyIds.length === 0) return { success: 0 };
+
+  // 2. Get all worker IDs for these companies
+  const { data: workers } = await supabase
+    .from("toe_workers")
+    .select("id")
+    .in("company_id", companyIds);
+    
+  const workerIds = workers?.map(w => w.id) || [];
+  if (workerIds.length === 0) return { success: 0 };
+
+  // 3. Build query for pending doses
   let query = supabase
     .from("doses")
-    .select("id, hp10, toe_workers!inner(company_id, companies!inner(tenant_id))")
+    .select("id, hp10, toe_workers(company_id)")
     .eq("status", "pending")
-    .eq("toe_workers.companies.tenant_id", profile.tenant_id);
+    .in("toe_worker_id", workerIds);
 
   if (month) query = query.eq("month", month);
   if (year) query = query.eq("year", year);
@@ -111,7 +129,7 @@ export async function approveAllForMonth(month?: number, year?: number) {
 
   const ids = pendingDoses.map(d => d.id);
 
-  // 2. Bulk Update Status
+  // 4. Bulk Update Status
   const { error } = await supabase
     .from("doses")
     .update({
@@ -122,15 +140,15 @@ export async function approveAllForMonth(month?: number, year?: number) {
 
   if (error) throw new Error(error.message);
 
-  // 3. Threshold check & Notifications (Bulk)
+  // 5. Threshold check & Notifications (Bulk)
   const THRESHOLD = 1.28;
   const criticalDoses = pendingDoses.filter(d => d.hp10 >= THRESHOLD);
   if (criticalDoses.length > 0) {
     const notifications = criticalDoses.map((d: any) => ({
       tenant_id: profile.tenant_id,
-      company_id: d.toe_workers.company_id,
+      company_id: d.toe_workers?.company_id,
       type: "threshold_alert",
-      message: `ALERTA CRÍTICA: El trabajador ha superado el 80% del límite mensual permitido (${d.hp10} mSv).`,
+      message: `ALERTA CRÍTICA: Se detectó una dosis alta (${d.hp10} mSv). Por favor verifique el historial del trabajador.`,
     }));
     await supabase.from("notifications").insert(notifications);
   }
