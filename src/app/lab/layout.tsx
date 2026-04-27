@@ -28,9 +28,6 @@ export default async function LabLayout({ children }: { children: React.ReactNod
       className="dashboard-layout"
       style={{ 
         "--primary": "var(--color-lab)",
-        display: "grid",
-        gridTemplateColumns: "280px 1fr",
-        minHeight: "100vh"
       } as any}
     >
       <Sidebar />

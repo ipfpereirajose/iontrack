@@ -42,7 +42,8 @@ body {
 /* DASHBOARD LAYOUT */
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .main-content {
@@ -50,11 +51,14 @@ body {
   padding: 2.5rem;
   background: var(--bg-app);
   overflow-y: auto;
+  height: 100vh;
 }
 
 /* SIDEBAR */
 .sidebar {
   width: 280px;
+  height: 100vh;
+  flex-shrink: 0;
   background: var(--primary-dark);
   color: white;
   padding: 2.5rem 1.25rem;
@@ -63,6 +67,16 @@ body {
   gap: 2.5rem;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
   z-index: 50;
+  overflow-y: auto;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .brand {

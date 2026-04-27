@@ -32,9 +32,6 @@ export default async function AdminLayout({
       className="dashboard-layout"
       style={{ 
         "--primary": "var(--color-admin)",
-        display: "grid",
-        gridTemplateColumns: "280px 1fr",
-        minHeight: "100vh"
       } as any}
     >
       <Sidebar />
