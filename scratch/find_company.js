@@ -5,17 +5,18 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function countWorkers() {
-  const tenantId = "ea6841ba-1bca-4833-aa1b-8237450512e0";
-  
-  const { count, error } = await supabase
-    .from('toe_workers')
-    .select('id, companies!inner(tenant_id)', { count: 'exact', head: true })
-    .eq('companies.tenant_id', tenantId);
+async function findCompanyByCode() {
+  const code = "COM-ECZJR3";
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id, name, tenant_id')
+    .eq('company_code', code)
+    .single();
 
   if (error) { console.error(error); return; }
 
-  console.log(`Total workers for tenant: ${count}`);
+  console.log("COMPANY FOUND BY CODE COM-ECZJR3:");
+  console.log(JSON.stringify(data, null, 2));
 }
 
-countWorkers();
+findCompanyByCode();

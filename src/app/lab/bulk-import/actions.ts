@@ -131,7 +131,18 @@ export async function bulkImportAction(type: string, data: any[]) {
           (w.ci.toString() === ci.toString() || w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi)
         );
 
-        if (!worker) throw new Error(`TOE con CI ${ci} no encontrado.`);
+        if (!worker) {
+          // Check if worker exists in a different company of the same tenant
+          const otherWorker = allWorkers.find(w => 
+            (w.ci.toString() === ci.toString() || w.ci.toString().replace(/[-\s.]/g, "") === normalizedCi)
+          );
+          
+          if (otherWorker) {
+            const otherCompany = allCompanies.find(c => c.id === otherWorker.company_id);
+            throw new Error(`El TOE con CI ${ci} existe, pero está vinculado a la empresa "${otherCompany?.name || 'otra'}" y no a "${company.name}".`);
+          }
+          throw new Error(`TOE con CI ${ci} no encontrado en la base de datos del laboratorio.`);
+        }
 
         doseBatch.push({
           toe_worker_id: worker.id,

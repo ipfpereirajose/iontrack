@@ -5,17 +5,23 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function countWorkers() {
-  const tenantId = "ea6841ba-1bca-4833-aa1b-8237450512e0";
+async function checkFirstWorkers() {
+  const cis = ["20000001", "20000002", "20000003", "20000004", "20000005"];
   
-  const { count, error } = await supabase
+  const { data, error } = await supabase
     .from('toe_workers')
-    .select('id, companies!inner(tenant_id)', { count: 'exact', head: true })
-    .eq('companies.tenant_id', tenantId);
+    .select(`
+      ci, first_name, last_name,
+      companies (
+        company_code, name
+      )
+    `)
+    .in('ci', cis);
 
   if (error) { console.error(error); return; }
 
-  console.log(`Total workers for tenant: ${count}`);
+  console.log("FIRST WORKERS DATA:");
+  console.log(JSON.stringify(data, null, 2));
 }
 
-countWorkers();
+checkFirstWorkers();
