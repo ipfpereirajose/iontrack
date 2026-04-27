@@ -58,9 +58,13 @@ export default async function LabHomePage({
     adminSupabase
       .from("doses")
       .select(
-        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))",
+        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, company_id)"
       )
-      .eq("toe_workers.companies.tenant_id", tenantId)
+      .in("toe_worker_id", (
+        adminSupabase.from("toe_workers").select("id").in("company_id", 
+          adminSupabase.from("companies").select("id").eq("tenant_id", tenantId)
+        )
+      ) as any) // Using subquery if possible, or just simpler join
       .eq("year", targetYear)
       .in("status", ["approved", "pending"])
       .order("month", { ascending: true })
@@ -85,27 +89,34 @@ export default async function LabHomePage({
 
 
 
-  // Process Chart Data
+  // Process Chart Data (Average Dose per Worker)
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   
-  // Calculate Global Lab Trend for the chart
   const chartData = months.map((name, index) => {
     const month = index + 1;
     const monthDoses = allYearData?.filter((d) => d.month === month) || [];
     
-    const approved = monthDoses
+    // Number of unique workers with data in this month
+    const activeWorkers = new Set(monthDoses.map(d => (d.toe_workers as any)?.id)).size;
+    
+    const approvedTotal = monthDoses
       .filter(d => d.status === 'approved')
       .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
       
-    const pending = monthDoses
+    const pendingTotal = monthDoses
       .filter(d => d.status === 'pending')
       .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+
+    // Calculate Averages
+    const approved = activeWorkers > 0 ? approvedTotal / activeWorkers : 0;
+    const pending = activeWorkers > 0 ? pendingTotal / activeWorkers : 0;
 
     return { 
       name, 
       approved: parseFloat(approved.toFixed(4)), 
       pending: parseFloat(pending.toFixed(4)),
-      projected: 0
+      projected: 0,
+      activeWorkers
     };
   });
 
@@ -134,18 +145,25 @@ export default async function LabHomePage({
 
   // Add projections to chart data if we are in the current year
   if (targetYear === new Date().getFullYear()) {
-    // Calculate global sum of worker velocities (Total Lab Load)
-    const totalVelocity = workerProjections.reduce((acc, curr) => acc + curr.projection.velocity, 0);
+    // Calculate global AVERAGE velocity per worker
+    const avgVelocity = workerProjections.length > 0 
+      ? workerProjections.reduce((acc, curr) => acc + curr.projection.velocity, 0) / workerProjections.length
+      : 0;
+      
     const lastMonthWithData = Math.max(...(allYearData?.map(d => d.month) || [0]));
     
     chartData.forEach((d, i) => {
       const monthNum = i + 1;
-      // Only project for months that have NO actual data AND are after the last reported month
       if (monthNum > lastMonthWithData && d.approved === 0 && d.pending === 0) {
-        d.projected = parseFloat(totalVelocity.toFixed(4));
+        d.projected = parseFloat(avgVelocity.toFixed(4));
       }
     });
   }
+
+  // Calculate Projected Annual Average for the whole lab
+  const projectedAnnualAvg = workerProjections.length > 0
+    ? workerProjections.reduce((acc, curr) => acc + curr.projection.projected, 0) / workerProjections.length
+    : 0;
 
   return (
     <div>
@@ -281,7 +299,18 @@ export default async function LabHomePage({
             >
               Pendientes
             </span>
-            <ClipboardCheck size={18} color="var(--primary-teal)" />
+            <div
+              style={{
+                background: "var(--state-warning)",
+                color: "white",
+                padding: "0.25rem 0.5rem",
+                borderRadius: "6px",
+                fontSize: "0.7rem",
+                fontWeight: 900,
+              }}
+            >
+              ACCION
+            </div>
           </div>
           <div style={{ fontSize: "2.25rem", fontWeight: 900 }}>
             {pendingCount || 0}
@@ -300,6 +329,48 @@ export default async function LabHomePage({
             {pendingCount && pendingCount > 0
               ? "⚠️ Acción Requerida"
               : "✓ Al día"}
+          </p>
+        </div>
+
+        <div
+          className="clean-panel"
+          style={{
+            border: "1px solid var(--primary-teal)",
+            background: "rgba(0, 168, 181, 0.02)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "1rem",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 800,
+                color: "var(--text-muted)",
+                textTransform: "uppercase",
+              }}
+            >
+              Proyección Anual (Promedio)
+            </span>
+            <TrendingUp size={18} color="var(--primary-teal)" />
+          </div>
+          <div style={{ fontSize: "2.25rem", fontWeight: 900, color: "var(--primary-teal)" }}>
+            {projectedAnnualAvg.toFixed(2)}
+            <span style={{ fontSize: "1rem", marginLeft: "0.25rem" }}>mSv</span>
+          </div>
+          <p
+            style={{
+              fontSize: "0.75rem",
+              color: "var(--text-muted)",
+              marginTop: "0.5rem",
+              fontWeight: 700,
+            }}
+          >
+            Est. acumulado a fin de año
           </p>
         </div>
 

@@ -131,16 +131,20 @@ export async function approveAllForMonth(month?: number, year?: number) {
 
   const ids = pendingDoses.map(d => d.id);
 
-  // 4. Bulk Update Status
-  const { error } = await supabase
-    .from("doses")
-    .update({
-      status: "approved",
-      approved_at: new Date().toISOString(),
-    })
-    .in("id", ids);
+  // 4. Bulk Update Status (Batching to avoid URL length limits)
+  const CHUNK_SIZE = 100;
+  for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+    const chunk = ids.slice(i, i + CHUNK_SIZE);
+    const { error: updateError } = await supabase
+      .from("doses")
+      .update({
+        status: "approved",
+        approved_at: new Date().toISOString(),
+      })
+      .in("id", chunk);
 
-  if (error) throw new Error(error.message);
+    if (updateError) throw new Error(`Error actualizando bloque ${i / CHUNK_SIZE + 1}: ${updateError.message}`);
+  }
 
   // 5. Threshold check & Notifications (Bulk)
   const THRESHOLD = 1.28;
