@@ -77,18 +77,18 @@ export async function bulkImportAction(type: string, data: any[]) {
             octubre: 10,
             noviembre: 11,
             diciembre: 12,
-            january: 1,
-            february: 2,
-            march: 3,
-            april: 4,
-            may: 5,
-            june: 6,
-            july: 7,
-            august: 8,
-            september: 9,
-            october: 10,
-            november: 11,
-            december: 12,
+            january: 1, enero: 1, ene: 1,
+            february: 2, febrero: 2, feb: 2,
+            march: 3, marzo: 3, mar: 3,
+            april: 4, abril: 4, abr: 4,
+            may: 5, mayo: 5, may: 5,
+            june: 6, junio: 6, jun: 6,
+            july: 7, julio: 7, jul: 7,
+            august: 8, agosto: 8, ago: 8,
+            september: 9, septiembre: 9, sep: 9,
+            october: 10, octubre: 10, oct: 10,
+            november: 11, noviembre: 11, nov: 11,
+            december: 12, diciembre: 12, dic: 12,
           };
           month = monthsMap[monthInput.toString().toLowerCase()] || 0;
         }
@@ -186,7 +186,7 @@ export async function bulkImportAction(type: string, data: any[]) {
             hp3,
             hp10_neu,
             hp007_ext,
-            status: "approved",
+            status: "pending",
           })
           .select()
           .single();
