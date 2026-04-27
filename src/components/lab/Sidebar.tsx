@@ -40,19 +40,23 @@ export default function Sidebar() {
           marginBottom: "1.5rem",
         }}
       >
-        <Link href="/lab" className="brand" style={{ marginBottom: 0 }}>
-          I.O.N.<span className="brand-accent">TRACK</span>
+        <Link href="/lab" className="brand" style={{ marginBottom: 0, padding: 0 }}>
+          <img 
+            src="/logo.png" 
+            alt="IONTRACK" 
+            style={{ width: "110px", height: "auto" }} 
+          />
           <div
             style={{
               fontSize: "0.65rem",
-              color: "var(--text-muted)",
+              color: "rgba(255,255,255,0.4)",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.1em",
-              marginTop: "0.25rem",
+              marginTop: "0.5rem",
             }}
           >
-            Módulo de Laboratorio
+            Módulo Laboratorio
           </div>
         </Link>
         <NotificationBell />

@@ -31,20 +31,11 @@ export default function Sidebar() {
         className="brand"
         style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
       >
-        <div
-          style={{
-            background: "#a855f7",
-            padding: "0.5rem",
-            borderRadius: "10px",
-            color: "white",
-            display: "flex",
-          }}
-        >
-          <ShieldCheck size={26} />
-        </div>
-        <span>
-          ION<span style={{ color: "#a855f7" }}>TRACK</span>
-        </span>
+        <img 
+          src="/logo.png" 
+          alt="IONTRACK" 
+          style={{ width: "110px", height: "auto" }} 
+        />
       </Link>
 
       <nav className="nav-group">
@@ -71,29 +62,11 @@ export default function Sidebar() {
           marginTop: "auto",
           display: "flex",
           flexDirection: "column",
-          gap: "0.75rem",
+          gap: "0.5rem",
+          paddingTop: "1.5rem",
+          borderTop: "1px solid rgba(255,255,255,0.05)"
         }}
       >
-        <div className="glass-panel" style={{ padding: "1.25rem" }}>
-          <div
-            style={{
-              fontSize: "0.65rem",
-              fontWeight: 800,
-              color: "var(--text-muted)",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Tu Proveedor
-          </div>
-          <div
-            style={{ fontSize: "0.875rem", fontWeight: 800, color: "white" }}
-          >
-            Lab Radioprotección
-          </div>
-        </div>
-
         <Link
           href="/portal/settings"
           className={`nav-link ${pathname === "/portal/settings" ? "active" : ""}`}
@@ -103,7 +76,10 @@ export default function Sidebar() {
         </Link>
         <button
           className="nav-link"
-          style={{ color: "var(--danger)" }}
+          style={{ 
+            color: "#f87171",
+            marginTop: "0.25rem"
+          }}
           onClick={() => logout()}
         >
           <LogOut size={20} />
