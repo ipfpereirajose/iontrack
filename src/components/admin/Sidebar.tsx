@@ -37,8 +37,24 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <Link href="/admin" className="brand">
-        I.O.N.<span className="brand-accent">TRACK</span>
+      <Link href="/admin" className="brand" style={{ padding: 0, marginBottom: "2rem" }}>
+        <img 
+          src="/logo.png" 
+          alt="IONTRACK" 
+          style={{ width: "110px", height: "auto" }} 
+        />
+        <div
+          style={{
+            fontSize: "0.65rem",
+            color: "rgba(255,255,255,0.4)",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            marginTop: "0.5rem",
+          }}
+        >
+          Infraestructura Global
+        </div>
       </Link>
 
       <nav className="nav-group">
@@ -60,7 +76,16 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div style={{ marginTop: "auto" }}>
+      <div
+        style={{
+          marginTop: "auto",
+          paddingTop: "1.5rem",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.25rem"
+        }}
+      >
         <Link
           href="/admin/settings"
           className={`nav-link ${pathname === "/admin/settings" ? "active" : ""}`}
