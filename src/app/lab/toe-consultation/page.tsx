@@ -238,6 +238,17 @@ const labelStyle = {
   marginBottom: "0.5rem",
 };
 
+const inputStyle = {
+  width: "100%",
+  height: "48px",
+  padding: "0 1rem",
+  background: "white",
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  fontSize: "0.95rem",
+  fontWeight: 600,
+};
+
 const miniDoseStyle = {
   fontSize: "0.65rem",
   fontWeight: 700,
