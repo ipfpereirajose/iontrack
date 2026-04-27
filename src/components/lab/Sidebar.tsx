@@ -25,6 +25,7 @@ export default function Sidebar() {
     { name: "Empresas Clientes", href: "/lab/companies", icon: Building2 },
     { name: "Consulta de TOEs", href: "/lab/toe-consultation", icon: Users },
     { name: "Carga Masiva", href: "/lab/bulk-import", icon: Database },
+    { name: "Agente Local", href: "/lab/agent", icon: Activity },
     { name: "Validación Dosis", href: "/lab/validation", icon: ClipboardCheck },
     { name: "Reportes y Certificados", href: "/lab/reports", icon: FileText },
     { name: "Gestión de Accesos", href: "/lab/users", icon: ShieldCheck },

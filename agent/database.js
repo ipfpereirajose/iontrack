@@ -1,42 +1,51 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const db = new Database(path.join(__dirname, 'iontrack_buffer.db'));
+const dbPath = path.resolve(__dirname, 'agent_local.db');
+const db = new Database(dbPath);
 
-// Initialize Local Schema
+// Initialize Tables
 db.exec(`
-  CREATE TABLE IF NOT EXISTS local_doses (
+  CREATE TABLE IF NOT EXISTS pending_doses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     worker_ci TEXT NOT NULL,
-    period_month INTEGER NOT NULL,
-    period_year INTEGER NOT NULL,
-    hp10 REAL,
-    hp3 REAL,
+    month INTEGER NOT NULL,
+    year INTEGER NOT NULL,
+    hp10 REAL DEFAULT 0,
+    hp3 REAL DEFAULT 0,
+    hp007 REAL DEFAULT 0,
     raw_content TEXT,
-    sync_status TEXT DEFAULT 'pending',
-    error_log TEXT,
+    file_name TEXT,
+    status TEXT DEFAULT 'pending',
+    error_message TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
+  );
+
+  CREATE TABLE IF NOT EXISTS config (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
 `);
 
 module.exports = {
-  saveDose: (dose) => {
+  saveDose: (data) => {
     const stmt = db.prepare(`
-      INSERT INTO local_doses (worker_ci, period_month, period_year, hp10, hp3, raw_content)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO pending_doses (worker_ci, month, year, hp10, hp3, hp007, raw_content, file_name)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    return stmt.run(dose.worker_ci, dose.month, dose.year, dose.hp10, dose.hp3, dose.raw);
+    return stmt.run(data.worker_ci, data.month, data.year, data.hp10, data.hp3, data.hp007, data.raw, data.fileName);
   },
-  
-  getPendingSync: () => {
-    return db.prepare("SELECT * FROM local_doses WHERE sync_status = 'pending' LIMIT 50").all();
+
+  getPending: () => {
+    return db.prepare("SELECT * FROM pending_doses WHERE status = 'pending' LIMIT 100").all();
   },
-  
+
   markSynced: (id) => {
-    db.prepare("UPDATE local_doses SET sync_status = 'synced' WHERE id = ?").run(id);
+    return db.prepare("UPDATE pending_doses SET status = 'synced' WHERE id = ?").run(id);
   },
-  
-  setError: (id, error) => {
-    db.prepare("UPDATE local_doses SET sync_status = 'error', error_log = ? WHERE id = ?").run(error, id);
+
+  setError: (id, msg) => {
+    return db.prepare("UPDATE pending_doses SET status = 'error', error_message = ? WHERE id = ?").run(msg, id);
   }
 };

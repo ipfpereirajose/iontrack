@@ -1,61 +1,64 @@
-const { createClient } = require('@supabase/supabase-js');
+const axios = require('axios');
 const db = require('./database');
+const os = require('os');
 require('dotenv').config();
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const API_URL = process.env.API_URL || 'https://iontrack.vercel.app/api/agent/sync';
+const SECRET_KEY = process.env.SECRET_KEY;
+const MACHINE_ID = os.hostname();
 
-async function syncLoop() {
-  console.log('[SYNC] Iniciando ciclo de sincronización...');
-  
-  const pending = db.getPendingSync();
-  
-  if (pending.length === 0) {
-    console.log('[SYNC] No hay datos pendientes.');
-    return;
-  }
-
-  console.log(`[SYNC] Intentando sincronizar ${pending.length} registros...`);
-
-  for (const record of pending) {
-    try {
-      // 1. Get worker_id from CI in Supabase
-      // Note: In production, we'd cache this or use a RPC
-      const { data: worker, error: workerErr } = await supabase
-        .from('toe_workers')
-        .select('id')
-        .eq('ci', record.worker_ci)
-        .single();
-
-      if (workerErr || !worker) {
-        throw new Error(`Trabajador con CI ${record.worker_ci} no encontrado en la nube.`);
-      }
-
-      // 2. Insert into doses table
-      const { error: insertErr } = await supabase
-        .from('doses')
-        .insert([{
-          worker_id: worker.id,
-          month: record.period_month,
-          year: record.period_year,
-          hp10: record.hp10,
-          hp3: record.hp3,
-          raw_data_json: { raw: record.raw_content, agent_id: process.env.AGENT_ID },
-          sync_id: `local_${record.id}`
-        }]);
-
-      if (insertErr) throw insertErr;
-
-      // 3. Mark as synced locally
-      db.markSynced(record.id);
-      console.log(`[SYNC] Registro ${record.id} sincronizado exitosamente.`);
-
-    } catch (error) {
-      console.error(`[SYNC] Error en registro ${record.id}:`, error.message);
-      db.setError(record.id, error.message);
-    }
+async function heartbeat() {
+  if (!SECRET_KEY) return;
+  try {
+    await axios.post(API_URL, {
+      secretKey: SECRET_KEY,
+      action: 'heartbeat',
+      data: { machineId: MACHINE_ID }
+    });
+    // console.log('[SYNC] Heartbeat enviado.');
+  } catch (err) {
+    console.error('[SYNC] Error de conexión:', err.message);
   }
 }
 
-// Run every 30 seconds
-setInterval(syncLoop, 30000);
-syncLoop();
+async function syncData() {
+  if (!SECRET_KEY) return;
+  
+  const pending = db.getPending();
+  if (pending.length === 0) return;
+
+  console.log(`[SYNC] Sincronizando ${pending.length} registros...`);
+
+  try {
+    const response = await axios.post(API_URL, {
+      secretKey: SECRET_KEY,
+      action: 'sync_doses',
+      data: {
+        doses: pending.map(p => ({
+          worker_ci: p.worker_ci,
+          month: p.month,
+          year: p.year,
+          hp10: p.hp10,
+          hp3: p.hp3,
+          hp007: p.hp007,
+          raw: JSON.parse(p.raw_content),
+          fileName: p.file_name
+        }))
+      }
+    });
+
+    if (response.data.success) {
+      pending.forEach(p => db.markSynced(p.id));
+      console.log(`[SYNC] ${response.data.synced} registros sincronizados con éxito.`);
+    }
+  } catch (err) {
+    console.error('[SYNC] Error sincronizando:', err.response?.data?.error || err.message);
+  }
+}
+
+// Loops
+setInterval(heartbeat, 60000); // 1 minute heartbeat
+setInterval(syncData, 10000);  // 10 seconds sync
+
+heartbeat();
+syncData();
