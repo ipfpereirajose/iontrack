@@ -59,6 +59,7 @@ export async function createTenantAction(formData: FormData) {
   // Note: This requires the SERVICE_ROLE_KEY
   const { data: inviteData, error: inviteError } =
     await adminSupabase.auth.admin.inviteUserByEmail(rawData.email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://iontrack.vercel.app'}/auth/callback?next=/auth/reset-password`,
       data: {
         tenant_id: tenant.id,
         role: "lab_admin",
@@ -121,7 +122,7 @@ export async function resetTenantPasswordAction(email: string) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://iontrack.vercel.app";
     const { error: resetError } =
       await adminSupabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+        redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
       });
 
     if (resetError) {
