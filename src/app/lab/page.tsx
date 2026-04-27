@@ -43,13 +43,14 @@ export default async function LabHomePage() {
       .from("doses")
       .select(
         `id, hp10, month, year, toe_workers!inner(first_name, last_name, ci, companies!inner(name, tenant_id))`,
+        { count: "exact" }
       )
       .eq("status", "pending")
       .eq("toe_workers.companies.tenant_id", tenantId)
       .limit(5),
     supabase
       .from("doses")
-      .select("hp10, month, year")
+      .select("hp10, month, year, toe_workers!inner(companies!inner(tenant_id))")
       .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", new Date().getFullYear())
       .eq("status", "approved"),
@@ -60,7 +61,7 @@ export default async function LabHomePage() {
         id, hp10, month, year,
         toe_workers!inner (
           first_name, last_name,
-          companies!inner (name)
+          companies!inner (name, tenant_id)
         )
       `,
       )
@@ -75,7 +76,7 @@ export default async function LabHomePage() {
         hp10, month,
         toe_workers!inner (
           id, first_name, last_name, ci,
-          companies!inner (name)
+          companies!inner (name, tenant_id)
         )
       `,
       )
