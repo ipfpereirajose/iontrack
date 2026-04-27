@@ -11,6 +11,7 @@ import {
   Activity,
   Database,
   Users,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
@@ -26,6 +27,7 @@ export default function Sidebar() {
     { name: "Carga Masiva", href: "/lab/bulk-import", icon: Database },
     { name: "Validación Dosis", href: "/lab/validation", icon: ClipboardCheck },
     { name: "Reportes y Certificados", href: "/lab/reports", icon: FileText },
+    { name: "Gestión de Accesos", href: "/lab/users", icon: ShieldCheck },
   ];
 
   return (
