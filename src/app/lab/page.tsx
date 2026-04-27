@@ -36,6 +36,19 @@ export default async function LabHomePage({
     .eq("tenant_id", tenantId);
   const companyIds = tenantCompanies?.map((c) => c.id) || [];
 
+  if (companyIds.length === 0) {
+    return (
+      <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center' }}>
+        <Building2 size={48} style={{ opacity: 0.2, marginBottom: '1rem', margin: '0 auto' }} />
+        <h2 style={{ fontWeight: 800 }}>Bienvenido a IonTrack</h2>
+        <p style={{ color: 'var(--text-muted)' }}>Para comenzar, carga tus empresas clientes en la sección de Empresas.</p>
+        <Link href="/lab/bulk-import" className="btn btn-primary" style={{ marginTop: '1.5rem', display: 'inline-flex' }}>
+          Ir a Carga Masiva
+        </Link>
+      </div>
+    );
+  }
+
   // 1. Fetch Stats & All Doses for the selected year
   const [
     { count: companiesCount = 0 } = {},
