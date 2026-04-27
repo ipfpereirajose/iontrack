@@ -288,7 +288,7 @@ export default async function LabHomePage({
         <div
           className="clean-panel"
           style={{
-            borderLeft: `4px solid ${criticalAlerts?.length ? "var(--state-danger)" : "var(--state-safe)"}`,
+            borderLeft: `4px solid ${criticalDoses?.length ? "var(--state-danger)" : "var(--state-safe)"}`,
           }}
         >
           <div
@@ -311,7 +311,7 @@ export default async function LabHomePage({
             <AlertTriangle
               size={18}
               color={
-                criticalAlerts?.length
+                criticalDoses?.length
                   ? "var(--state-danger)"
                   : "var(--text-muted)"
               }
@@ -321,22 +321,22 @@ export default async function LabHomePage({
             style={{
               fontSize: "2.25rem",
               fontWeight: 900,
-              color: criticalAlerts?.length ? "var(--state-danger)" : "inherit",
+              color: criticalDoses?.length ? "var(--state-danger)" : "inherit",
             }}
           >
-            {criticalAlerts?.length || 0}
+            {criticalDoses?.length || 0}
           </div>
           <p
             style={{
               fontSize: "0.75rem",
-              color: criticalAlerts?.length
+              color: criticalDoses?.length
                 ? "var(--state-danger)"
                 : "var(--state-safe)",
               marginTop: "0.5rem",
               fontWeight: 700,
             }}
           >
-            {criticalAlerts?.length
+            {criticalDoses?.length
               ? "🚨 Sobre-exposición"
               : "✓ Sin incidencias"}
           </p>
