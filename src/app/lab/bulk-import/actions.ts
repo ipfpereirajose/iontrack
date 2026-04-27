@@ -34,19 +34,51 @@ export async function bulkImportAction(type: string, data: any[]) {
   let allWorkers: any[] = [];
 
   if (type === "doses" || type === "workers") {
-    const { data: companies } = await adminSupabase
-      .from("companies")
-      .select("id, name, tax_id, company_code")
-      .eq("tenant_id", tenantId);
-    allCompanies = companies || [];
+    let fetchedAll = false;
+    let offset = 0;
+    const batchSize = 1000;
+    allCompanies = [];
+
+    while (!fetchedAll) {
+      const { data: companies, error } = await adminSupabase
+        .from("companies")
+        .select("id, name, tax_id, company_code")
+        .eq("tenant_id", tenantId)
+        .range(offset, offset + batchSize - 1);
+      
+      if (error || !companies || companies.length === 0) {
+        fetchedAll = true;
+      } else {
+        allCompanies = [...allCompanies, ...companies];
+        offset += batchSize;
+        if (companies.length < batchSize) fetchedAll = true;
+      }
+    }
   }
 
   if (type === "doses") {
-    const { data: workers } = await adminSupabase
-      .from("toe_workers")
-      .select("id, first_name, last_name, ci, company_id")
-      .in("company_id", allCompanies.map(c => c.id) || []);
-    allWorkers = workers || [];
+    // Optimization: Join with companies to filter by tenant_id in a single query
+    // This avoids the "URL too long" error when there are many companies (.in filter limit)
+    let fetchedAll = false;
+    let offset = 0;
+    const batchSize = 1000;
+    allWorkers = [];
+
+    while (!fetchedAll) {
+      const { data: workers, error } = await adminSupabase
+        .from("toe_workers")
+        .select("id, first_name, last_name, ci, company_id, companies!inner(tenant_id)")
+        .eq("companies.tenant_id", tenantId)
+        .range(offset, offset + batchSize - 1);
+      
+      if (error || !workers || workers.length === 0) {
+        fetchedAll = true;
+      } else {
+        allWorkers = [...allWorkers, ...workers];
+        offset += batchSize;
+        if (workers.length < batchSize) fetchedAll = true;
+      }
+    }
   }
 
   const doseBatch: any[] = [];
