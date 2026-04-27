@@ -39,7 +39,7 @@ export default async function TOEConsultationPage({
       ci,
       worker_code,
       companies!inner(name, tenant_id),
-      doses(hp10, month, year, status)
+      doses(hp10, hp3, hp007, hp007_ext, hp10_neu, month, year, status)
     `)
     .eq("companies.tenant_id", tenantId);
 
@@ -52,15 +52,23 @@ export default async function TOEConsultationPage({
 
   const { data: workers } = await workersQuery.limit(100);
 
-  // Process workers to calculate totals
+  // Process workers to calculate totals per category
   const processedWorkers = workers?.map(w => {
     const approvedDoses = w.doses?.filter((d: any) => d.status === 'approved') || [];
-    const totalDose = approvedDoses.reduce((acc: number, curr: any) => acc + (Number(curr.hp10) || 0), 0);
+    
+    const totals = {
+      hp10: approvedDoses.reduce((acc: number, curr: any) => acc + (Number(curr.hp10) || 0), 0),
+      hp3: approvedDoses.reduce((acc: number, curr: any) => acc + (Number(curr.hp3) || 0), 0),
+      hp007: approvedDoses.reduce((acc: number, curr: any) => acc + (Number(curr.hp007) || 0), 0),
+      hp007_ext: approvedDoses.reduce((acc: number, curr: any) => acc + (Number(curr.hp007_ext) || 0), 0),
+      hp10_neu: approvedDoses.reduce((acc: number, curr: any) => acc + (Number(curr.hp10_neu) || 0), 0),
+    };
+
     const lastDose = approvedDoses.sort((a: any, b: any) => (b.year * 12 + b.month) - (a.year * 12 + a.month))[0];
     
     return {
       ...w,
-      totalDose,
+      totals,
       lastDose: lastDose?.hp10 || 0,
       lastDate: lastDose ? `${lastDose.month}/${lastDose.year}` : 'N/A'
     };
@@ -151,10 +159,31 @@ export default async function TOEConsultationPage({
                     <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{w.lastDate}</div>
                   </td>
                   <td style={tdStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <TrendingUp size={16} color="var(--primary-teal)" />
-                      <span style={{ fontWeight: 900, fontSize: "1.1rem" }}>{w.totalDose.toFixed(2)}</span>
-                      <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)" }}>mSv</span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                        <TrendingUp size={16} color="var(--primary-teal)" />
+                        <span style={{ fontWeight: 900, fontSize: "1.1rem" }}>{w.totals.hp10.toFixed(2)}</span>
+                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Hp(10)</span>
+                      </div>
+                      
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                        <div style={miniDoseStyle}>
+                          <span style={miniDoseLabel}>Hp(3):</span>
+                          <span>{w.totals.hp3.toFixed(2)}</span>
+                        </div>
+                        <div style={miniDoseStyle}>
+                          <span style={miniDoseLabel}>Hp(0.07):</span>
+                          <span>{w.totals.hp007.toFixed(2)}</span>
+                        </div>
+                        <div style={miniDoseStyle}>
+                          <span style={miniDoseLabel}>Ext:</span>
+                          <span>{w.totals.hp007_ext.toFixed(2)}</span>
+                        </div>
+                        <div style={miniDoseStyle}>
+                          <span style={miniDoseLabel}>Neu:</span>
+                          <span>{w.totals.hp10_neu.toFixed(2)}</span>
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td style={tdStyle}>
@@ -209,13 +238,18 @@ const labelStyle = {
   marginBottom: "0.5rem",
 };
 
-const inputStyle = {
-  width: "100%",
-  height: "48px",
-  padding: "0 1rem",
-  background: "white",
-  border: "1px solid var(--border)",
-  borderRadius: "12px",
-  fontSize: "0.95rem",
-  fontWeight: 600,
+const miniDoseStyle = {
+  fontSize: "0.65rem",
+  fontWeight: 700,
+  color: "var(--text-main)",
+  display: "flex",
+  justifyContent: "space-between",
+  padding: "0.2rem 0.4rem",
+  background: "rgba(0,0,0,0.03)",
+  borderRadius: "4px"
+};
+
+const miniDoseLabel = {
+  color: "var(--text-muted)",
+  marginRight: "0.25rem"
 };
