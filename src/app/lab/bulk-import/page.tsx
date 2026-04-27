@@ -114,8 +114,15 @@ export default function BulkImportPage() {
       doses: ["ci", "rif", "mes", "año"],
     };
 
+    const checkCol = (headers: string[], req: string) => {
+      if (req === "rif") {
+        return headers.some(h => h.includes("rif") || h.includes("codigo") || h.includes("id"));
+      }
+      return headers.some((h) => h.includes(req));
+    };
+
     return required[importType as string].filter(
-      (req) => !headers.some((h) => h.includes(req)),
+      (req) => !checkCol(headers, req)
     );
   };
 
