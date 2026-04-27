@@ -56,12 +56,25 @@ export default async function LabHomePage({
     .in("company_id", companyIds);
   const workerIds = tenantWorkers?.map(w => w.id) || [];
 
-  // 1. Fetch Stats & All Doses for the selected year
+  // 1. Fetch Doses in batches of 100 to avoid URL length limits
+  const allYearDoses: any[] = [];
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < workerIds.length; i += BATCH_SIZE) {
+    const chunk = workerIds.slice(i, i + BATCH_SIZE);
+    const { data: chunkDoses } = await adminSupabase
+      .from("doses")
+      .select("hp10, month, year, status, toe_worker_id")
+      .in("toe_worker_id", chunk)
+      .eq("year", targetYear)
+      .in("status", ["approved", "pending"]);
+    if (chunkDoses) allYearDoses.push(...chunkDoses);
+  }
+
+  // 2. Fetch Stats & Remaining Data
   const [
     { count: companiesCount = 0 } = {},
     { count: workersCount = 0 } = {},
     { data: pendingDoses = [], count: pendingCount = 0 } = {},
-    { data: allYearData = [] } = {},
     { data: criticalDoses = [] } = {},
     { data: recentAudit = [] } = {},
   ] = await Promise.all([
@@ -71,32 +84,18 @@ export default async function LabHomePage({
       .eq("tenant_id", tenantId),
     adminSupabase
       .from("toe_workers")
-      .select("id, companies!inner(tenant_id)", { count: "exact", head: true })
-      .eq("companies.tenant_id", tenantId),
+      .select("id", { count: "exact", head: true })
+      .in("company_id", companyIds),
     adminSupabase
       .from("doses")
-      .select(
-        "id, month, year, hp10, status, toe_workers!inner(first_name, last_name, ci, companies!inner(tenant_id))",
-        { count: "exact" },
-      )
+      .select("id, month, year, hp10, status, toe_workers!inner(first_name, last_name, ci)")
       .eq("status", "pending")
-      .eq("toe_workers.companies.tenant_id", tenantId)
+      .in("toe_worker_id", workerIds.slice(0, 100))
       .limit(10),
-    // 1. Fetch Doses for all companies in parallel to avoid long URL issues
-    Promise.all(companyIds.map(id => 
-      adminSupabase
-        .from("doses")
-        .select("hp10, month, year, status, toe_worker_id, toe_workers!inner(company_id)")
-        .eq("toe_workers.company_id", id)
-        .eq("year", targetYear)
-        .in("status", ["approved", "pending"])
-    )).then(results => ({ data: results.flatMap(r => r.data || []) })),
-    
-    // Recent Critical Doses (Same strategy)
     adminSupabase
       .from("doses")
       .select("id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, company_id)")
-      .in("toe_workers.company_id", companyIds.slice(0, 50)) // Limit to first 50 to avoid crash
+      .in("toe_worker_id", workerIds.slice(0, 100))
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
@@ -109,7 +108,7 @@ export default async function LabHomePage({
       .limit(5),
   ]);
 
-
+  const allYearData = allYearDoses;
 
   // Process Chart Data (Average Dose per Worker)
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
