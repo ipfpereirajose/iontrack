@@ -28,37 +28,28 @@ export async function GET(request: Request) {
 
   const serviceSupabase = getServiceSupabase();
 
-  // 1. Get all worker IDs for this tenant/company
-  let workerQuery = serviceSupabase
-    .from("toe_workers")
-    .select("id, companies!inner(tenant_id)");
-
-  if (profile.role === "company_manager" && profile.company_id) {
-    workerQuery = workerQuery.eq("company_id", profile.company_id);
-  } else {
-    workerQuery = workerQuery.eq("companies.tenant_id", profile.tenant_id);
-  }
-
-  const { data: workers } = await workerQuery;
-  const workerIds = (workers || []).map(w => w.id);
-
-  if (workerIds.length === 0) return NextResponse.json({ data: [], total: 0 });
-
-  // 2. Fetch doses for these workers with pagination
-  const { data: doses, error, count } = await serviceSupabase
+  // 1. Fetch doses with deep joins and filters
+  let query = serviceSupabase
     .from("doses")
     .select(`
       *,
-      toe_workers(
-        ci, first_name, last_name,
-        companies(
-          name, tax_id, state, municipality, address,
+      toe_workers!inner(
+        ci, first_name, last_name, company_id,
+        companies!inner(
+          id, name, tax_id, state, municipality, address, tenant_id,
           rep_first_name, rep_last_name, rep_ci, rep_phone, rep_email,
           tenants(name, rif, address, email)
         )
       )
-    `, { count: "exact" })
-    .in("toe_worker_id", workerIds)
+    `, { count: "exact" });
+
+  if (profile.role === "company_manager" && profile.company_id) {
+    query = query.eq("toe_workers.company_id", profile.company_id);
+  } else {
+    query = query.eq("toe_workers.companies.tenant_id", profile.tenant_id);
+  }
+
+  const { data: doses, error, count } = await query
     .eq("month", parseInt(month || "0"))
     .eq("year", parseInt(year || "0"))
     .range(offset, offset + limit - 1);
