@@ -65,7 +65,7 @@ export default async function ValidationPage({
           >
             <ClipboardCheck size={28} />
           </div>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 900 }}>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, color: "var(--text-main)" }}>
             Bandeja de Validación
           </h1>
         </div>

@@ -54,7 +54,7 @@ export default async function WorkersPage() {
             >
               <Users size={28} />
             </div>
-            <h1 style={{ fontSize: "2.5rem", fontWeight: 900 }}>
+            <h1 style={{ fontSize: "2.5rem", fontWeight: 900, color: "var(--text-main)" }}>
               Directorio de Personal (TOE)
             </h1>
           </div>
@@ -105,7 +105,7 @@ export default async function WorkersPage() {
               outline: "none",
               width: "100%",
               fontSize: "0.875rem",
-              color: "white",
+              color: "var(--text-main)",
             }}
           />
         </div>
@@ -259,7 +259,7 @@ export default async function WorkersPage() {
                       >
                         <UserCircle size={24} />
                       </div>
-                      <span style={{ fontWeight: 700, fontSize: "1.05rem" }}>
+                      <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--text-main)" }}>
                         {worker.first_name} {worker.last_name}
                       </span>
                     </div>
@@ -314,7 +314,7 @@ export default async function WorkersPage() {
                     >
                       <Activity size={18} />
                       <span
-                        style={{ marginLeft: "0.5rem", fontSize: "0.8125rem" }}
+                        style={{ marginLeft: "0.5rem", fontSize: "0.8125rem", color: "var(--text-main)" }}
                       >
                         Ver Dosis
                       </span>

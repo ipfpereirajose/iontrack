@@ -123,6 +123,7 @@ export default async function WorkersListPage({
                 fontSize: "2.5rem",
                 fontWeight: 900,
                 marginBottom: "0.5rem",
+                color: "var(--text-main)",
               }}
             >
               {company?.name}
@@ -251,6 +252,7 @@ export default async function WorkersListPage({
                     fontSize: "1.35rem",
                     fontWeight: 800,
                     marginBottom: "0.25rem",
+                    color: "var(--text-main)",
                   }}
                 >
                   {worker.first_name} {worker.last_name}
