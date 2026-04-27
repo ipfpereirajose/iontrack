@@ -22,6 +22,9 @@ export async function GET(request: Request) {
   if (!profile)
     return NextResponse.json({ error: "No profile" }, { status: 403 });
 
+  const limit = parseInt(searchParams.get("limit") || "100");
+  const offset = parseInt(searchParams.get("offset") || "0");
+
   // 1. Get all worker IDs for this tenant
   const { data: workers } = await supabase
     .from("toe_workers")
@@ -30,10 +33,10 @@ export async function GET(request: Request) {
 
   const workerIds = (workers || []).map(w => w.id);
 
-  if (workerIds.length === 0) return NextResponse.json([]);
+  if (workerIds.length === 0) return NextResponse.json({ data: [], total: 0 });
 
-  // 2. Fetch doses for these workers
-  const { data: doses, error } = await supabase
+  // 2. Fetch doses for these workers with pagination
+  const { data: doses, error, count } = await supabase
     .from("doses")
     .select(`
       *,
@@ -45,15 +48,16 @@ export async function GET(request: Request) {
           tenants(name, rif, address, email)
         )
       )
-    `)
+    `, { count: "exact" })
     .in("toe_worker_id", workerIds)
     .eq("month", parseInt(month || "0"))
-    .eq("year", parseInt(year || "0"));
+    .eq("year", parseInt(year || "0"))
+    .range(offset, offset + limit - 1);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
-  if (!doses || doses.length === 0) return NextResponse.json([]);
+  if (!doses || doses.length === 0) return NextResponse.json({ data: [], total: count || 0 });
 
   // 3. Get Life Dose history
   const cis = Array.from(new Set(doses.map((d) => d.toe_workers.ci)));
@@ -99,5 +103,5 @@ export async function GET(request: Request) {
     observacion: d.observacion,
   }));
 
-  return NextResponse.json(formatted);
+  return NextResponse.json({ data: formatted, total: count || 0 });
 }

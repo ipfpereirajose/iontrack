@@ -10,6 +10,7 @@ import {
   Send,
 } from "lucide-react";
 import RegulatoryReportButton from "@/components/lab/RegulatoryReportButton";
+import MonthlyPDFReportButton from "@/components/lab/MonthlyPDFReportButton";
 
 export default function LabReportsPage() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -114,9 +115,10 @@ export default function LabReportsPage() {
               </div>
             </div>
 
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-            >
+              <MonthlyPDFReportButton 
+                month={month} 
+                year={year} 
+              />
               <RegulatoryReportButton
                 month={month}
                 year={year}

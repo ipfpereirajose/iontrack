@@ -18,9 +18,10 @@ export default function RegulatoryReportButton({
     // 1. Fetch all approved doses for this lab and period
     // In a real app, this would be a server action
     const response = await fetch(
-      `/api/reports/regulatory?month=${month}&year=${year}`,
+      `/api/reports/regulatory?month=${month}&year=${year}&limit=5000`, // Fetch all for excel for now
     );
-    const data = await response.json();
+    const result = await response.json();
+    const data = result.data || [];
 
     if (!data || data.length === 0) {
       alert("No hay dosis registradas para este periodo.");
