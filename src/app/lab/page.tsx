@@ -16,9 +16,11 @@ import Link from "next/link";
 import DoseChart from "@/components/lab/DoseChart";
 
 export default async function LabHomePage() {
-  const supabase = await createClient();
   const { user, profile } = await getCurrentProfile();
   if (!user) return null;
+
+  // Use service role for the dashboard to avoid RLS issues that might hide data
+  const adminSupabase = getServiceSupabase();
 
   const tenantId = profile?.tenant_id;
 
@@ -31,15 +33,15 @@ export default async function LabHomePage() {
     { data: criticalAlerts },
     { data: allYearDoses },
   ] = await Promise.all([
-    supabase
+    adminSupabase
       .from("companies")
       .select("*", { count: "exact", head: true })
       .eq("tenant_id", tenantId),
-    supabase
+    adminSupabase
       .from("toe_workers")
       .select("*, companies!inner(*)", { count: "exact", head: true })
       .eq("companies.tenant_id", tenantId),
-    supabase
+    adminSupabase
       .from("doses")
       .select(
         `id, hp10, month, year, toe_workers!inner(first_name, last_name, ci, companies!inner(name, tenant_id))`,
@@ -48,13 +50,13 @@ export default async function LabHomePage() {
       .eq("status", "pending")
       .eq("toe_workers.companies.tenant_id", tenantId)
       .limit(5),
-    supabase
+    adminSupabase
       .from("doses")
       .select("hp10, month, year, toe_workers!inner(companies!inner(tenant_id))")
       .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", new Date().getFullYear())
       .eq("status", "approved"),
-    supabase
+    adminSupabase
       .from("doses")
       .select(
         `
@@ -69,7 +71,7 @@ export default async function LabHomePage() {
       .gte("hp10", 1.328) // 80% of 1.66
       .order("created_at", { ascending: false })
       .limit(3),
-    supabase
+    adminSupabase
       .from("doses")
       .select(
         `
@@ -733,6 +735,20 @@ export default async function LabHomePage() {
           )}
         </div>
       </section>
+      {/* DEBUG FOOTER */}
+      <div
+        style={{
+          marginTop: "4rem",
+          padding: "1rem",
+          borderTop: "1px solid var(--border)",
+          fontSize: "0.65rem",
+          color: "rgba(255,255,255,0.1)",
+          fontFamily: "monospace",
+          textAlign: "center",
+        }}
+      >
+        Auth UUID: {user.id} | Tenant ID: {tenantId || "MISSING"} | Role: {profile?.role}
+      </div>
     </div>
   );
 }
