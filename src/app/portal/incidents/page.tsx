@@ -25,11 +25,26 @@ export default function B2BIncidentsPage() {
 
   async function fetchIncidents() {
     setLoading(true);
-    const { data: profile } = await supabase
+    
+    // Use service role to bypass RLS and ensure data is fetched
+    const serviceSupabase = getServiceSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } = await serviceSupabase
       .from("profiles")
       .select("company_id")
+      .eq("id", user.id)
       .single();
-    if (!profile?.company_id) return;
+
+    if (!profile?.company_id) {
+      setLoading(false);
+      return;
+    }
 
     const { data } = await supabase
       .from("incidents")
@@ -83,7 +98,9 @@ export default function B2BIncidentsPage() {
       </header>
 
       {loading ? (
-        <div style={{ color: "var(--text-main)" }}>Cargando incidencias...</div>
+        <div style={{ color: "var(--text-main)", padding: "2rem", textAlign: "center", fontWeight: 700 }}>
+          Cargando incidencias...
+        </div>
       ) : incidents.length === 0 ? (
         <div
           className="glass-panel"
@@ -249,6 +266,7 @@ export default function B2BIncidentsPage() {
                         padding: "1rem",
                         borderRadius: "8px",
                         marginBottom: "1rem",
+                        fontSize: "0.9rem"
                       }}
                     />
                     <div

@@ -22,8 +22,9 @@ export default async function CompanySettingsPage() {
 
   if (!user) return null;
 
-  // Get User Profile and linked Company
-  const { data: profile } = await supabase
+  // Use service role to bypass RLS and ensure data is fetched
+  const serviceSupabase = getServiceSupabase();
+  const { data: profile } = await serviceSupabase
     .from("profiles")
     .select("*, companies(*)")
     .eq("id", user.id)
@@ -94,6 +95,7 @@ export default async function CompanySettingsPage() {
             fontSize: "2.5rem",
             fontWeight: 900,
             marginBottom: "0.5rem",
+            color: "var(--text-main)"
           }}
         >
           Configuración de Empresa

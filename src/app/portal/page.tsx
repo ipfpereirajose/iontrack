@@ -51,7 +51,7 @@ export default async function B2BHomePage() {
       >
         <div>
           <h1
-            style={{ fontSize: "2rem", marginBottom: "0.5rem", color: "#fff" }}
+            style={{ fontSize: "2rem", marginBottom: "0.5rem", color: "var(--text-main)" }}
           >
             {companyName}
           </h1>
@@ -97,7 +97,7 @@ export default async function B2BHomePage() {
             </span>
             <Users size={20} color="var(--primary)" />
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800 }}>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--text-main)" }}>
             {toeCount || 0}
           </div>
           <div className="badge badge-success" style={{ marginTop: "0.5rem" }}>
@@ -129,7 +129,7 @@ export default async function B2BHomePage() {
             </span>
             <Calendar size={20} color="var(--primary)" />
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800 }}>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--text-main)" }}>
             {lastPeriod}
           </div>
           <div className="badge badge-success" style={{ marginTop: "0.5rem" }}>
@@ -161,7 +161,7 @@ export default async function B2BHomePage() {
             </span>
             <ShieldCheck size={20} color="var(--secondary)" />
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800 }}>100%</div>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--text-main)" }}>100%</div>
           <div className="badge badge-success" style={{ marginTop: "0.5rem" }}>
             Límites Cumplidos
           </div>
@@ -177,7 +177,7 @@ export default async function B2BHomePage() {
             marginBottom: "1.5rem",
           }}
         >
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-main)" }}>
             Lecturas Recientes de Dosímetros
           </h2>
           <button
@@ -274,7 +274,7 @@ export default async function B2BHomePage() {
                     key={dose.id}
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
-                    <td style={{ padding: "1.25rem 1.5rem", fontWeight: 600 }}>
+                    <td style={{ padding: "1.25rem 1.5rem", fontWeight: 600, color: "var(--text-main)" }}>
                       {dose.toe_workers?.first_name}{" "}
                       {dose.toe_workers?.last_name}
                     </td>
@@ -302,7 +302,7 @@ export default async function B2BHomePage() {
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: "1.25rem 1.5rem", fontWeight: 700 }}>
+                    <td style={{ padding: "1.25rem 1.5rem", fontWeight: 700, color: "var(--text-main)" }}>
                       {dose.hp10}
                     </td>
                   </tr>
