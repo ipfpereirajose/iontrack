@@ -121,7 +121,7 @@ export async function approveAllForMonth(month: number, year: number) {
   const THRESHOLD = 1.28;
   const criticalDoses = pendingDoses.filter(d => d.hp10 >= THRESHOLD);
   if (criticalDoses.length > 0) {
-    const notifications = criticalDoses.map(d => ({
+    const notifications = criticalDoses.map((d: any) => ({
       tenant_id: profile.tenant_id,
       company_id: d.toe_workers.company_id,
       type: "threshold_alert",
