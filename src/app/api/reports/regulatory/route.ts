@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   // 1. Get all worker IDs for this tenant/company
   let workerQuery = serviceSupabase
     .from("toe_workers")
-    .select("id");
+    .select("id, companies!inner(tenant_id)");
 
   if (profile.role === "company_manager" && profile.company_id) {
     workerQuery = workerQuery.eq("company_id", profile.company_id);
