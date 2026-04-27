@@ -5,7 +5,7 @@ import { getCurrentProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function approveDose(doseId: string) {
-  const supabase = await createClient();
+  const supabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) throw new Error("No autenticado");
   if (!profile?.tenant_id) throw new Error("Usuario sin laboratorio asignado");
@@ -61,7 +61,7 @@ export async function approveDose(doseId: string) {
 }
 
 export async function rejectDose(doseId: string) {
-  const supabase = await createClient();
+  const supabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) throw new Error("No autenticado");
 
@@ -87,8 +87,10 @@ export async function rejectDose(doseId: string) {
   revalidatePath("/lab/validation");
 }
 
+import { getServiceSupabase } from "@/lib/supabase";
+
 export async function approveAllForMonth(month?: number, year?: number) {
-  const supabase = await createClient();
+  const supabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) throw new Error("No autenticado");
   if (!profile?.tenant_id) throw new Error("Usuario sin laboratorio asignado");
