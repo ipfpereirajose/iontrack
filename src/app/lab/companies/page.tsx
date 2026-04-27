@@ -14,6 +14,7 @@ import { getCurrentProfile } from "@/lib/auth";
 import Link from "next/link";
 import DoseChart from "@/components/lab/DoseChart";
 import { getServiceSupabase } from "@/lib/supabase";
+import CompanyExportButton from "@/components/lab/CompanyExportButton";
 
 export default async function CompaniesPage({
   searchParams,
@@ -139,6 +140,7 @@ export default async function CompaniesPage({
             <option value="2026">Año 2026</option>
             <option value="2025">Año 2025</option>
           </select>
+          <CompanyExportButton companies={companies || []} />
           <Link
             href="/lab/companies/new"
             className="btn btn-primary"
