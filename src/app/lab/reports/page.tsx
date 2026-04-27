@@ -115,6 +115,9 @@ export default function LabReportsPage() {
               </div>
             </div>
 
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
               <MonthlyPDFReportButton 
                 month={month} 
                 year={year} 
