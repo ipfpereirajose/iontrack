@@ -12,10 +12,7 @@ import {
 import { createClient } from "@/utils/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
 import Link from "next/link";
-import DoseChart from "@/components/lab/DoseChart";
-import { getServiceSupabase } from "@/lib/supabase";
-import CompanyExportButton from "@/components/lab/CompanyExportButton";
-import YearSelector from "@/components/lab/YearSelector";
+import InteractiveCompanyTrendChart from "@/components/lab/InteractiveCompanyTrendChart";
 
 export const revalidate = 0;
 
@@ -26,7 +23,6 @@ export default async function CompaniesPage({
 }) {
   const { year: selectedYear = new Date().getFullYear().toString() } =
     await searchParams;
-  const supabase = await createClient();
   const adminSupabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) return null;
@@ -42,26 +38,11 @@ export default async function CompaniesPage({
   // 1. Fetch Companies
   const companiesQuery = adminSupabase
     .from("companies")
-    .select("*, toe_workers(count)")
+    .select("*, toe_workers(count, id)")
     .eq("tenant_id", tenantId)
     .order("name", { ascending: true });
 
-  // 2. Fetch Doses for Chart (Current Year)
-  const chartQuery = adminSupabase
-    .from("doses")
-    .select(
-      `
-      hp10, month, year, status,
-      toe_workers!inner (
-        companies!inner (tenant_id)
-      )
-    `,
-    )
-    .eq("toe_workers.companies.tenant_id", tenantId)
-    .eq("year", parseInt(selectedYear))
-    .in("status", ["approved", "pending"]);
-
-  // 3. Fetch Alerts (Overexposure > 1.66 or Warning >= 1.328)
+  // 2. Fetch Alerts (Overexposure > 1.66 or Warning >= 1.328)
   const alertsQuery = adminSupabase
     .from("doses")
     .select(
@@ -78,42 +59,13 @@ export default async function CompaniesPage({
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const [{ data: companies }, { data: doses }, { data: alerts }] =
-    await Promise.all([companiesQuery, chartQuery, alertsQuery]);
+  const [{ data: companies }, { data: alerts }] =
+    await Promise.all([companiesQuery, alertsQuery]);
 
-  // Process Chart Data
-  const months = [
-    "Ene",
-    "Feb",
-    "Mar",
-    "Abr",
-    "May",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dic",
-  ];
-  const chartData = months.map((name, index) => {
-    const month = index + 1;
-    const monthDoses = doses?.filter((d) => d.month === month) || [];
-    
-    const approved = monthDoses
-      .filter(d => d.status === 'approved')
-      .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
-      
-    const pending = monthDoses
-      .filter(d => d.status === 'pending')
-      .reduce((acc, curr) => acc + (Number(curr.hp10) || 0), 0);
+  // Extract workerIds for the chart
+  const workerIds = (companies || []).flatMap(c => (c.toe_workers || []).map((w: any) => w.id));
 
-    return { 
-      name, 
-      approved: parseFloat(approved.toFixed(4)), 
-      pending: parseFloat(pending.toFixed(4)) 
-    };
-  });
+  const targetYear = parseInt(selectedYear);
 
   return (
     <div>
@@ -140,7 +92,7 @@ export default async function CompaniesPage({
           </p>
         </div>
         <div style={{ display: "flex", gap: "1rem" }}>
-          <YearSelector currentYear={parseInt(selectedYear)} />
+          <YearSelector currentYear={targetYear} />
           <CompanyExportButton companies={companies || []} />
           <Link
             href="/lab/companies/new"
@@ -148,14 +100,21 @@ export default async function CompaniesPage({
             style={{
               padding: "0.75rem 1.5rem",
               borderRadius: "12px",
-              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
             }}
           >
-            <Plus size={20} />
+            <Plus size={18} />
             Nueva Empresa
           </Link>
         </div>
       </header>
+
+      {/* CHART SECTION */}
+      <div style={{ marginBottom: "2.5rem" }}>
+        <InteractiveCompanyTrendChart workerIds={workerIds} targetYear={targetYear} />
+      </div>
 
       {/* TOP DASHBOARD GRID */}
       <div
@@ -166,33 +125,6 @@ export default async function CompaniesPage({
           marginBottom: "3rem",
         }}
       >
-        {/* CHART SECTION */}
-        <div className="glass-panel" style={{ padding: "2rem" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1rem",
-            }}
-          >
-            <h3
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                fontSize: "1.1rem",
-                fontWeight: 800,
-              }}
-            >
-              <TrendingUp size={20} color="var(--primary)" />
-              Carga Dosimétrica Anual ({selectedYear})
-            </h3>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                color: "var(--text-muted)",
                 background: "rgba(255,255,255,0.05)",
                 padding: "0.25rem 0.75rem",
                 borderRadius: "20px",
