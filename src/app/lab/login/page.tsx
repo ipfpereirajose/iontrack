@@ -41,56 +41,60 @@ export default function LabLogin() {
     }
   };
 
-  return (
     <div
       style={{
         minHeight: "100vh",
+        width: "100%",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        position: "relative",
+        background: "var(--bg-app)",
+        padding: "2rem"
       }}
     >
       <div className="hero-gradient"></div>
 
       <div
         className="glass-card"
-        style={{ width: "100%", maxWidth: "450px", padding: "3rem" }}
+        style={{ 
+          width: "100%", 
+          maxWidth: "480px", 
+          padding: "3.5rem",
+          zIndex: 10,
+          position: "relative"
+        }}
       >
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div
-            style={{
-              background: "var(--primary)",
-              color: "#000",
-              width: "56px",
-              height: "56px",
-              borderRadius: "16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 1.5rem auto",
-            }}
-          >
-            <ShieldCheck size={32} />
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="IONTRACK Logo" 
+            style={{ 
+              width: "120px", 
+              height: "auto", 
+              margin: "0 auto 2rem auto",
+              display: "block",
+              filter: "drop-shadow(0 10px 15px rgba(0, 168, 181, 0.2))"
+            }} 
+          />
           <h1
             style={{
-              fontSize: "1.75rem",
+              fontSize: "2rem",
               fontWeight: 900,
               marginBottom: "0.5rem",
               color: "var(--text-main)",
+              letterSpacing: "-0.03em"
             }}
           >
             Acceso Laboratorio
           </h1>
           <p
             style={{
-              color: "var(--text-main)",
-              fontSize: "0.9375rem",
+              color: "var(--text-muted)",
+              fontSize: "1rem",
               fontWeight: 600,
             }}
           >
-            Ingrese sus credenciales de oficial de seguridad.
+            Ingrese sus credenciales para continuar.
           </p>
         </div>
 
