@@ -17,11 +17,15 @@ export default function RegulatoryReportButton({
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentCount, setCurrentCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
 
   const downloadReport = async () => {
     try {
       setLoading(true);
       setProgress(0);
+      setCurrentCount(0);
+      setTotalCount(0);
 
       let allData: any[] = [];
       const batchSize = 1000;
@@ -38,6 +42,8 @@ export default function RegulatoryReportButton({
       
       allData = initialResult.data || [];
       total = initialResult.total || 0;
+      setTotalCount(total);
+      setCurrentCount(allData.length);
 
       if (total === 0) {
         alert("No hay dosis registradas para este periodo.");
@@ -56,6 +62,7 @@ export default function RegulatoryReportButton({
         const result = await res.json();
         if (result.data) {
           allData = [...allData, ...result.data];
+          setCurrentCount(allData.length);
           setProgress(Math.floor((allData.length / total) * 100));
         } else {
           break;
@@ -126,7 +133,7 @@ export default function RegulatoryReportButton({
       {loading ? (
         <>
           <Loader2 size={18} className="animate-spin" />
-          Procesando {allData.length} de {total} registros... ({progress}%)
+          Procesando {currentCount} de {totalCount} registros... ({progress}%)
           <div 
             style={{ 
               position: "absolute", 
