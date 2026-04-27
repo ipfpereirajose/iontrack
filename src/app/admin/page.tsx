@@ -6,11 +6,11 @@ import {
   Plus,
   Settings,
 } from "lucide-react";
-import { createClient } from "@/utils/supabase/server";
+import { getServiceSupabase } from "@/lib/supabase";
 import Link from "next/link";
 
 export default async function SuperAdminHomePage() {
-  const supabase = await createClient();
+  const supabase = getServiceSupabase();
 
   // 1. Fetch Global Stats
   const { count: tenantsCount } = await supabase

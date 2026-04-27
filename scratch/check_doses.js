@@ -1,46 +1,37 @@
-
 const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
 
-function getEnv(key) {
-  const envPath = path.join(process.cwd(), '.env.local');
-  if (!fs.existsSync(envPath)) return null;
-  const content = fs.readFileSync(envPath, 'utf8');
-  const lines = content.split('\n');
-  for (const line of lines) {
-    if (line.startsWith(`${key}=`)) {
-      return line.split('=')[1].trim().replace(/^["']|["']$/g, '');
-    }
-  }
-  return null;
-}
+const supabaseUrl = "https://gjdxaejbqibwemotyvto.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqZHhhZWpicWlid2Vtb3R5dnRvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjgyODU5MSwiZXhwIjoyMDkyNDA0NTkxfQ.YiclyRBpr3-wQGeVBLh4TIdUbWGwh9csd6h8nHIa2uw";
 
-const supabaseUrl = getEnv('NEXT_PUBLIC_SUPABASE_URL');
-const supabaseServiceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase credentials');
-  process.exit(1);
-}
+async function checkData() {
+  const month = 4;
+  const year = 2026;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-async function checkJanDoses() {
-  const { data, error } = await supabase
+  // Total in Doses
+  const { count: totalDoses, error: err1 } = await supabase
     .from('doses')
-    .select('id, month, year, status, hp10, toe_worker_id')
-    .eq('month', 1);
+    .select('*', { count: 'exact', head: true })
+    .eq('month', month)
+    .eq('year', year);
 
-  if (error) {
-    console.error('Error:', error);
-  } else {
-    console.log('JAN_DOSES_FOUND:', data.length);
-    if (data.length > 0) {
-        console.log('Sample Data:');
-        console.log(JSON.stringify(data.slice(0, 5), null, 2));
-    }
+  // Total Approved
+  const { count: approvedDoses, error: err2 } = await supabase
+    .from('doses')
+    .select('*', { count: 'exact', head: true })
+    .eq('month', month)
+    .eq('year', year)
+    .eq('status', 'approved');
+
+  if (err1 || err2) {
+    console.error('Error:', err1 || err2);
+    return;
   }
+
+  console.log(`Summary for ${month}/${year}:`);
+  console.log(`- Total doses in table: ${totalDoses}`);
+  console.log(`- Total APPROVED doses: ${approvedDoses}`);
 }
 
-checkJanDoses();
+checkData();

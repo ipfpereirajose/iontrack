@@ -7,13 +7,13 @@ import {
   Layers,
   Database,
 } from "lucide-react";
-import { createClient } from "@/utils/supabase/server";
+import { getServiceSupabase } from "@/lib/supabase";
 import Link from "next/link";
 
 export const revalidate = 0;
 
 export default async function InfrastructurePage() {
-  const supabase = await createClient();
+  const supabase = getServiceSupabase();
 
   // Fetch hierarchical data
   const { data: tenants } = await supabase
