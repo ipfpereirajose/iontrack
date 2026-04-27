@@ -1,5 +1,3 @@
-Nombre,Apellido,CI,Sexo,Año de nacimiento,Cargo,Practica,RIF EMPRESA
-Juan,Perez,12345678,M,1985,Radiologo,Diagnostico,J-123456789
-Maria,Garcia,87654321,F,1990,Tecnico,Medicina Nuclear,J-123456789
-Pedro,Rodriguez,11223344,M,1982,Oncologo,Radioterapia,G-987654321
-Ana,Martinez,44332211,F,1988,Fisico Medico,Control de Calidad,G-987654321
+CODIGO_INSTALACION,Nombre,Apellido,CI,Sexo,Año de nacimiento,Cargo,Practica,RIF EMPRESA
+EMP-XXXX,Juan,Perez,12345678,M,1985,Radiologo,Diagnostico,J-123456789
+,Maria,Garcia,87654321,F,1990,Tecnico,Medicina Nuclear,J-123456789
