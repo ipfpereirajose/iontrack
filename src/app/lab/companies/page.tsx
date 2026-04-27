@@ -479,5 +479,3 @@ export default async function CompaniesPage({
     </div>
   );
 }
-
-export const revalidate = 0;
