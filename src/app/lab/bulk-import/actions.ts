@@ -106,9 +106,9 @@ export async function bulkImportAction(type: string, data: any[]) {
           );
         }
 
-        if (!ci || !rif) {
+        if (!ci || (!rif && !companyCode)) {
           throw new Error(
-            "Faltan campos críticos: se requiere 'RIF EMPRESA' y 'CI TRABAJADOR'.",
+            "Faltan campos críticos: se requiere ('RIF EMPRESA' o 'CÓDIGO EMPRESA') y 'CI TRABAJADOR'.",
           );
         }
 
@@ -258,9 +258,9 @@ export async function bulkImportAction(type: string, data: any[]) {
           throw new Error(`Falta el campo "Practica" en la fila.`);
         }
 
-        if (!companyRif) {
+        if (!companyRif && !companyCode) {
           throw new Error(
-            "No se detectó la columna de RIF. Asegúrese de que su archivo tenga una columna llamada 'RIF' o 'RIF EMPRESA'.",
+            "No se detectó el identificador de sede. Asegúrese de que su archivo tenga una columna llamada 'RIF' o 'CÓDIGO EMPRESA'.",
           );
         }
 
