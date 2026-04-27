@@ -68,7 +68,7 @@ export default function B2BIncidentsPage() {
           style={{
             fontSize: "2rem",
             marginBottom: "0.5rem",
-            color: "#fff",
+            color: "var(--text-main)",
             display: "flex",
             alignItems: "center",
             gap: "0.75rem",
@@ -83,7 +83,7 @@ export default function B2BIncidentsPage() {
       </header>
 
       {loading ? (
-        <div style={{ color: "white" }}>Cargando incidencias...</div>
+        <div style={{ color: "var(--text-main)" }}>Cargando incidencias...</div>
       ) : incidents.length === 0 ? (
         <div
           className="glass-panel"
@@ -104,7 +104,7 @@ export default function B2BIncidentsPage() {
           <h3
             style={{
               fontSize: "1.25rem",
-              color: "white",
+              color: "var(--text-main)",
               marginBottom: "0.5rem",
             }}
           >
@@ -169,7 +169,7 @@ export default function B2BIncidentsPage() {
                   <h3
                     style={{
                       fontSize: "1.25rem",
-                      color: "white",
+                      color: "var(--text-main)",
                       fontWeight: 700,
                       margin: "0.5rem 0",
                     }}
@@ -180,7 +180,7 @@ export default function B2BIncidentsPage() {
                   </h3>
                   <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
                     Lectura de{" "}
-                    <strong style={{ color: "white" }}>
+                    <strong style={{ color: "var(--text-main)" }}>
                       {incident.doses?.hp10} mSv
                     </strong>{" "}
                     en el periodo {incident.doses?.month}/{incident.doses?.year}
@@ -214,7 +214,7 @@ export default function B2BIncidentsPage() {
                   >
                     <h4
                       style={{
-                        color: "white",
+                        color: "var(--text-main)",
                         marginBottom: "1rem",
                         display: "flex",
                         alignItems: "center",
@@ -243,9 +243,9 @@ export default function B2BIncidentsPage() {
                       style={{
                         width: "100%",
                         minHeight: "100px",
-                        background: "rgba(0,0,0,0.2)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
+                        background: "rgba(0,0,0,0.05)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text-main)",
                         padding: "1rem",
                         borderRadius: "8px",
                         marginBottom: "1rem",
@@ -303,7 +303,7 @@ export default function B2BIncidentsPage() {
                   </span>
                   <p
                     style={{
-                      color: "white",
+                      color: "var(--text-main)",
                       fontSize: "0.9rem",
                       marginTop: "0.5rem",
                     }}
