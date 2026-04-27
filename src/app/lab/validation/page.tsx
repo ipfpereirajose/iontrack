@@ -6,31 +6,43 @@ import {
 } from "lucide-react";
 import { getServiceSupabase } from "@/lib/supabase";
 import { getCurrentProfile } from "@/lib/auth";
-import { approveDose, rejectDose } from "./actions";
+import { approveDose, rejectDose, approveAllForMonth } from "./actions";
 import ValidationButtons from "./ValidationButtons";
+import ValidationControls from "./ValidationControls";
 
-export default async function ValidationPage() {
+export default async function ValidationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string; year?: string }>;
+}) {
   const supabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) return null;
 
+  const { month, year } = await searchParams;
   const tenantId = profile?.tenant_id;
 
-  // 2. Fetch pending doses for THIS lab using Service Role to avoid RLS recursion issues
-    const { data: doses, error } = await supabase
-      .from("doses")
-      .select(
-        `
-        id, month, year, hp10, hp3, status, toe_worker_id,
-        toe_workers!inner (
-          first_name, last_name, ci,
-          companies!inner (name, tenant_id)
-        )
-      `,
+  // 2. Fetch pending doses for THIS lab
+  let query = supabase
+    .from("doses")
+    .select(
+      `
+      id, month, year, hp10, hp3, status, toe_worker_id,
+      toe_workers!inner (
+        first_name, last_name, ci,
+        companies!inner (name, tenant_id)
       )
+    `,
+    )
     .eq("status", "pending")
-    .eq("toe_workers.companies.tenant_id", tenantId)
-    .order("created_at", { ascending: true });
+    .eq("toe_workers.companies.tenant_id", tenantId);
+
+  if (month) query = query.eq("month", parseInt(month));
+  if (year) query = query.eq("year", parseInt(year));
+
+  const { data: doses, error } = await query.order("created_at", {
+    ascending: true,
+  });
 
   return (
     <div>
@@ -62,6 +74,11 @@ export default async function ValidationPage() {
           publicarlas a los clientes.
         </p>
       </header>
+
+      <ValidationControls
+        approveAllAction={approveAllForMonth}
+        pendingCount={doses?.length || 0}
+      />
 
       {error && (
         <div

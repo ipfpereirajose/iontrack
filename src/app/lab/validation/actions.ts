@@ -86,3 +86,59 @@ export async function rejectDose(doseId: string) {
 
   revalidatePath("/lab/validation");
 }
+
+export async function approveAllForMonth(month: number, year: number) {
+  const supabase = await createClient();
+  const { user, profile } = await getCurrentProfile();
+  if (!user) throw new Error("No autenticado");
+  if (!profile?.tenant_id) throw new Error("Usuario sin laboratorio asignado");
+
+  // 1. Get all pending doses for this tenant and month/year
+  const { data: pendingDoses } = await supabase
+    .from("doses")
+    .select("id, hp10, toe_workers!inner(company_id, companies!inner(tenant_id))")
+    .eq("status", "pending")
+    .eq("month", month)
+    .eq("year", year)
+    .eq("toe_workers.companies.tenant_id", profile.tenant_id);
+
+  if (!pendingDoses || pendingDoses.length === 0) return { success: 0 };
+
+  const ids = pendingDoses.map(d => d.id);
+
+  // 2. Bulk Update Status
+  const { error } = await supabase
+    .from("doses")
+    .update({
+      status: "approved",
+      approved_at: new Date().toISOString(),
+    })
+    .in("id", ids);
+
+  if (error) throw new Error(error.message);
+
+  // 3. Threshold check & Notifications (Bulk)
+  const THRESHOLD = 1.28;
+  const criticalDoses = pendingDoses.filter(d => d.hp10 >= THRESHOLD);
+  if (criticalDoses.length > 0) {
+    const notifications = criticalDoses.map(d => ({
+      tenant_id: profile.tenant_id,
+      company_id: d.toe_workers.company_id,
+      type: "threshold_alert",
+      message: `ALERTA CRÍTICA: El trabajador ha superado el 80% del límite mensual permitido (${d.hp10} mSv).`,
+    }));
+    await supabase.from("notifications").insert(notifications);
+  }
+
+  // 4. Audit Log (Bulk)
+  await supabase.from("audit_logs").insert({
+    tenant_id: profile.tenant_id,
+    action: "APPROVE_ALL_MONTH",
+    table_name: "doses",
+    details: { month, year, count: ids.length },
+    justification: "Validación masiva mensual por Oficial de Seguridad",
+  });
+
+  revalidatePath("/lab/validation");
+  return { success: ids.length };
+}
