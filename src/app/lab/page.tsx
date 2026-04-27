@@ -71,24 +71,24 @@ export default async function LabHomePage({
       .eq("tenant_id", tenantId),
     adminSupabase
       .from("toe_workers")
-      .select("id", { count: "exact", head: true })
-      .in("company_id", companyIds),
+      .select("id, companies!inner(tenant_id)", { count: "exact", head: true })
+      .eq("companies.tenant_id", tenantId),
     adminSupabase
       .from("doses")
       .select(
-        "id, month, year, hp10, status, toe_workers!inner(first_name, last_name, ci)",
+        "id, month, year, hp10, status, toe_workers!inner(first_name, last_name, ci, companies!inner(tenant_id))",
         { count: "exact" },
       )
       .eq("status", "pending")
-      .in("toe_worker_id", workerIds)
+      .eq("toe_workers.companies.tenant_id", tenantId)
       .limit(10),
     adminSupabase
       .from("doses")
       .select(`
-        id, hp10, month, year, status,
-        toe_workers!inner (id, first_name, last_name, company_id)
+        hp10, month, year, status,
+        toe_workers!inner ( id, companies!inner (tenant_id) )
       `)
-      .in("toe_worker_id", workerIds)
+      .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", targetYear)
       .in("status", ["approved", "pending"])
       .order("month", { ascending: true })
@@ -96,9 +96,9 @@ export default async function LabHomePage({
     adminSupabase
       .from("doses")
       .select(
-        "id, hp10, month, year, status, toe_workers!inner(first_name, last_name, company_id)",
+        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(tenant_id))",
       )
-      .in("toe_worker_id", workerIds)
+      .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
