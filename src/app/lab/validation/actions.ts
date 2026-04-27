@@ -87,20 +87,23 @@ export async function rejectDose(doseId: string) {
   revalidatePath("/lab/validation");
 }
 
-export async function approveAllForMonth(month: number, year: number) {
+export async function approveAllForMonth(month?: number, year?: number) {
   const supabase = await createClient();
   const { user, profile } = await getCurrentProfile();
   if (!user) throw new Error("No autenticado");
   if (!profile?.tenant_id) throw new Error("Usuario sin laboratorio asignado");
 
-  // 1. Get all pending doses for this tenant and month/year
-  const { data: pendingDoses } = await supabase
+  // 1. Get all pending doses for this tenant (optional month/year filter)
+  let query = supabase
     .from("doses")
     .select("id, hp10, toe_workers!inner(company_id, companies!inner(tenant_id))")
     .eq("status", "pending")
-    .eq("month", month)
-    .eq("year", year)
     .eq("toe_workers.companies.tenant_id", profile.tenant_id);
+
+  if (month) query = query.eq("month", month);
+  if (year) query = query.eq("year", year);
+
+  const { data: pendingDoses } = await query;
 
   if (!pendingDoses || pendingDoses.length === 0) return { success: 0 };
 

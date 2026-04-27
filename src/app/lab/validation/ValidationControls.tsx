@@ -33,15 +33,15 @@ export default function ValidationControls({ approveAllAction, pendingCount }: V
   };
 
   const handleApproveAll = async () => {
-    if (!currentMonth) {
-      alert("Por favor seleccione un mes para aprobar masivamente.");
-      return;
-    }
-    if (!confirm(`¿Está seguro de aprobar todos los registros (${pendingCount}) para este periodo?`)) return;
+    const label = currentMonth ? "este periodo" : "TODOS los registros pendientes";
+    if (!confirm(`¿Está seguro de aprobar ${label} (${pendingCount})?`)) return;
 
     setLoading(true);
     try {
-      const res = await approveAllAction(parseInt(currentMonth), parseInt(currentYear));
+      const res = await approveAllAction(
+        currentMonth ? parseInt(currentMonth) : undefined, 
+        currentYear ? parseInt(currentYear) : undefined
+      );
       alert(`Se han aprobado ${res.success} registros exitosamente.`);
       router.refresh();
     } catch (err: any) {
@@ -86,7 +86,7 @@ export default function ValidationControls({ approveAllAction, pendingCount }: V
         </select>
       </div>
 
-      {pendingCount > 0 && currentMonth && (
+      {pendingCount > 0 && (
         <button
           onClick={handleApproveAll}
           disabled={loading}
@@ -101,7 +101,7 @@ export default function ValidationControls({ approveAllAction, pendingCount }: V
           }}
         >
           {loading ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle2 size={18} />}
-          Aprobar todo el mes ({pendingCount})
+          {currentMonth ? `Aprobar periodo (${pendingCount})` : `Aprobar todos los pendientes (${pendingCount})`}
         </button>
       )}
     </div>
