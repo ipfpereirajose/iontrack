@@ -144,21 +144,28 @@ export async function approveAllForMonth(month?: number, year?: number) {
   const THRESHOLD = 1.28;
   const criticalDoses = pendingDoses.filter(d => d.hp10 >= THRESHOLD);
   if (criticalDoses.length > 0) {
-    const notifications = criticalDoses.map((d: any) => ({
-      tenant_id: profile.tenant_id,
-      company_id: d.toe_workers?.company_id,
-      type: "threshold_alert",
-      message: `ALERTA CRÍTICA: Se detectó una dosis alta (${d.hp10} mSv). Por favor verifique el historial del trabajador.`,
-    }));
-    await supabase.from("notifications").insert(notifications);
+    const notifications = criticalDoses.map((d: any) => {
+      // Handle toe_workers as object or array
+      const worker = Array.isArray(d.toe_workers) ? d.toe_workers[0] : d.toe_workers;
+      return {
+        tenant_id: profile.tenant_id,
+        company_id: worker?.company_id,
+        type: "threshold_alert",
+        message: `ALERTA CRÍTICA: Se detectó una dosis alta (${d.hp10} mSv). Por favor verifique el historial del trabajador.`,
+      };
+    }).filter((n: any) => n.company_id); // Ensure we have a company_id
+
+    if (notifications.length > 0) {
+        await supabase.from("notifications").insert(notifications);
+    }
   }
 
-  // 4. Audit Log (Bulk)
+  // 6. Audit Log (Bulk)
   await supabase.from("audit_logs").insert({
     tenant_id: profile.tenant_id,
     action: "APPROVE_ALL_MONTH",
     table_name: "doses",
-    details: { month, year, count: ids.length },
+    new_data: { month, year, count: ids.length },
     justification: "Validación masiva mensual por Oficial de Seguridad",
   });
 

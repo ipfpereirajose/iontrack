@@ -140,8 +140,8 @@ export default async function ValidationPage({
                   <td>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-                        {dose.toe_workers?.first_name}{" "}
-                        {dose.toe_workers?.last_name}
+                        {Array.isArray(dose.toe_workers) ? dose.toe_workers[0]?.first_name : dose.toe_workers?.first_name}{" "}
+                        {Array.isArray(dose.toe_workers) ? dose.toe_workers[0]?.last_name : dose.toe_workers?.last_name}
                       </span>
                       <span
                         style={{
@@ -150,7 +150,7 @@ export default async function ValidationPage({
                           fontWeight: 600,
                         }}
                       >
-                        CI: {dose.toe_workers?.ci}
+                        CI: {Array.isArray(dose.toe_workers) ? dose.toe_workers[0]?.ci : dose.toe_workers?.ci}
                       </span>
                     </div>
                   </td>
@@ -166,7 +166,9 @@ export default async function ValidationPage({
                       }}
                     >
                       <Building2 size={16} />
-                      {dose.toe_workers?.companies?.name}
+                      {Array.isArray(dose.toe_workers) 
+                        ? (dose.toe_workers[0]?.companies as any)?.name 
+                        : (dose.toe_workers?.companies as any)?.name}
                     </div>
                   </td>
                   <td>
