@@ -10,7 +10,7 @@ import {
   ArrowRight,
   Calendar,
 } from "lucide-react";
-import { createClient } from "@/utils/supabase/server";
+import { getServiceSupabase } from "@/lib/supabase";
 import { getCurrentProfile } from "@/lib/auth";
 import Link from "next/link";
 import DoseChart from "@/components/lab/DoseChart";
