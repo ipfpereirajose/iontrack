@@ -29,15 +29,16 @@ export async function GET(request: Request) {
       *,
       toe_workers!inner(
         ci, first_name, last_name,
-        companies(
+        companies!inner(
           name, tax_id, state, municipality, address,
           rep_first_name, rep_last_name, rep_ci, rep_phone, rep_email,
+          tenant_id,
           tenants(name, rif, address, email)
         )
       )
     `,
     )
-    .eq("toe_workers.tenant_id", profile.tenant_id)
+    .eq("toe_workers.companies.tenant_id", profile.tenant_id)
     .eq("month", month)
     .eq("year", year);
 
