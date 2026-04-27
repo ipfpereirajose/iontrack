@@ -1,18 +1,25 @@
 import Sidebar from "@/components/lab/Sidebar";
+import { getCurrentProfile } from "@/lib/auth";
 
 export const metadata = {
   title: "I.O.N.T.R.A.C.K. | Lab Manager",
   description: "Sistema de Gestión Dosimétrica para Laboratorios",
 };
 
-export default function LabLayout({ children }: { children: React.ReactNode }) {
+export default async function LabLayout({ children }: { children: React.ReactNode }) {
+  const { user } = await getCurrentProfile();
+  const showSidebar = !!user;
+
   return (
     <div
       className="dashboard-layout"
-      style={{ "--primary": "var(--color-lab)" } as any}
+      style={{ 
+        "--primary": "var(--color-lab)",
+        gridTemplateColumns: showSidebar ? "280px 1fr" : "1fr" 
+      } as any}
     >
-      <Sidebar />
-      <main className="main-content">{children}</main>
+      {showSidebar && <Sidebar />}
+      <main className={showSidebar ? "main-content" : ""}>{children}</main>
     </div>
   );
 }
