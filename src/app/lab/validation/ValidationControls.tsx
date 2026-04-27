@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Filter, Loader2 } from "lucide-react";
 
 interface ValidationControlsProps {
-  approveAllAction: (month?: number, year?: number) => Promise<{ success: number }>;
+  approveAllAction: (month?: number, year?: number) => Promise<{ success?: number; error?: string }>;
   pendingCount: number;
 }
 
