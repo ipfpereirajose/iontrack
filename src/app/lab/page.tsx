@@ -86,9 +86,9 @@ export default async function LabHomePage({
       .from("doses")
       .select(`
         hp10, month, year, status,
-        toe_workers!inner ( id, companies!inner (tenant_id) )
+        toe_workers!inner ( id, company_id )
       `)
-      .eq("toe_workers.companies.tenant_id", tenantId)
+      .in("toe_workers.company_id", companyIds)
       .eq("year", targetYear)
       .in("status", ["approved", "pending"])
       .order("month", { ascending: true })
@@ -96,9 +96,9 @@ export default async function LabHomePage({
     adminSupabase
       .from("doses")
       .select(
-        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(tenant_id))",
+        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, company_id)",
       )
-      .eq("toe_workers.companies.tenant_id", tenantId)
+      .in("toe_workers.company_id", companyIds)
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
