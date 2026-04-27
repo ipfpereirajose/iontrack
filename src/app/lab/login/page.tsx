@@ -41,6 +41,7 @@ export default function LabLogin() {
     }
   };
 
+  return (
     <div
       style={{
         minHeight: "100vh",

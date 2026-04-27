@@ -41,6 +41,7 @@ export default function PortalLogin() {
     }
   };
 
+  return (
     <div
       style={{
         minHeight: "100vh",
