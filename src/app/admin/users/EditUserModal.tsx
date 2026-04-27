@@ -81,22 +81,7 @@ export default function EditUserModal({ users }: { users: any[] }) {
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0,0,0,0.4)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: "1rem",
-      }}
-    >
+    <div className="modal-overlay">
       <div
         className="glass-card"
         style={{
@@ -121,13 +106,21 @@ export default function EditUserModal({ users }: { users: any[] }) {
           <X size={24} />
         </button>
 
-        <div style={{ marginBottom: "2rem" }}>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 900 }}>
+        <div style={{ 
+          marginBottom: "2rem",
+          borderBottom: "1px solid var(--border)",
+          paddingBottom: "1.5rem",
+          margin: "-2.5rem -2.5rem 2rem -2.5rem",
+          padding: "2.5rem",
+          background: "linear-gradient(to bottom, #f8fafc, #ffffff)",
+          borderRadius: "24px 24px 0 0"
+        }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--primary-dark)" }}>
             {isNew ? "Nuevo Administrador" : "Editar Administrador"}
           </h2>
           {editId && (
-            <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>
-              ID: {editId}
+            <p style={{ color: "var(--text-muted)", fontSize: "0.8125rem", marginTop: "0.25rem", fontFamily: "monospace" }}>
+              REFERENCE ID: {editId}
             </p>
           )}
         </div>
@@ -303,9 +296,12 @@ export default function EditUserModal({ users }: { users: any[] }) {
             disabled={loading}
             className="btn btn-primary"
             style={{
-              marginTop: "1rem",
+              marginTop: "1.5rem",
               width: "100%",
               justifyContent: "center",
+              height: "3.5rem",
+              fontSize: "1rem",
+              boxShadow: "0 10px 20px -5px rgba(0, 168, 181, 0.3)"
             }}
           >
             {loading ? (

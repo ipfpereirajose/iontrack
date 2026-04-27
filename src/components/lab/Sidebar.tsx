@@ -75,49 +75,57 @@ export default function Sidebar() {
 
       <div
         style={{
-          marginTop: "auto",
+          marginTop: "1.5rem",
+          paddingTop: "1.5rem",
+          borderTop: "1px solid rgba(255,255,255,0.1)",
           display: "flex",
           flexDirection: "column",
           gap: "0.5rem",
         }}
       >
+        <Link
+          href="/lab/settings"
+          className={`nav-link ${pathname === "/lab/settings" ? "active" : ""}`}
+          style={{ padding: "0.6rem 1.25rem", fontSize: "0.85rem" }}
+        >
+          <Settings size={18} />
+          Configuraciones
+        </Link>
+        <button
+          className="nav-link"
+          style={{ color: "#fca5a5", padding: "0.6rem 1.25rem", fontSize: "0.85rem" }}
+          onClick={() => logout()}
+        >
+          <LogOut size={18} />
+          Cerrar Sesión
+        </button>
+
         <div
           className="glass-panel"
-          style={{ padding: "1rem", marginBottom: "1rem" }}
+          style={{ 
+            padding: "0.85rem", 
+            marginTop: "1rem", 
+            background: "rgba(255,255,255,0.03)", 
+            border: "1px solid rgba(255,255,255,0.05)" 
+          }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",
-              marginBottom: "0.5rem",
+              marginBottom: "0.25rem",
             }}
           >
-            <Activity size={14} color="var(--secondary)" />
-            <span style={{ fontSize: "0.75rem", fontWeight: 600 }}>
-              Agente Local
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--state-safe)" }} />
+            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>
+              AGENTE LOCAL
             </span>
           </div>
-          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-            Sincronizado hace 2m
+          <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
+            Sincronizado: hace 2m
           </div>
         </div>
-
-        <Link
-          href="/lab/settings"
-          className={`nav-link ${pathname === "/lab/settings" ? "active" : ""}`}
-        >
-          <Settings size={20} />
-          Configuraciones
-        </Link>
-        <button
-          className="nav-link"
-          style={{ color: "#f87171" }}
-          onClick={() => logout()}
-        >
-          <LogOut size={20} />
-          Cerrar Sesión
-        </button>
       </div>
     </aside>
   );
