@@ -36,7 +36,7 @@ export default async function CompaniesPage({
   // 1. Fetch Companies
   const companiesQuery = adminSupabase
     .from("companies")
-    .select("*, toe_workers(count, id)")
+    .select("*, toe_workers(id)")
     .eq("tenant_id", tenantId)
     .order("name", { ascending: true });
 
@@ -341,8 +341,8 @@ export default async function CompaniesPage({
                       }}
                     >
                       <Users size={12} />
-                      {Array.isArray(company.toe_workers) && company.toe_workers.length > 0
-                        ? company.toe_workers[0].count
+                      {Array.isArray(company.toe_workers)
+                        ? company.toe_workers.length
                         : 0}{" "}
                       TOEs
                     </span>
