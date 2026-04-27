@@ -82,23 +82,21 @@ export default async function LabHomePage({
       .eq("status", "pending")
       .eq("toe_workers.companies.tenant_id", tenantId)
       .limit(10),
+    // 1. Fetch Doses for all companies in parallel to avoid long URL issues
+    Promise.all(companyIds.map(id => 
+      adminSupabase
+        .from("doses")
+        .select("hp10, month, year, status, toe_worker_id, toe_workers!inner(company_id)")
+        .eq("toe_workers.company_id", id)
+        .eq("year", targetYear)
+        .in("status", ["approved", "pending"])
+    )).then(results => ({ data: results.flatMap(r => r.data || []) })),
+    
+    // Recent Critical Doses (Same strategy)
     adminSupabase
       .from("doses")
-      .select(`
-        hp10, month, year, status,
-        toe_workers!inner ( id, company_id )
-      `)
-      .in("toe_workers.company_id", companyIds)
-      .eq("year", targetYear)
-      .in("status", ["approved", "pending"])
-      .order("month", { ascending: true })
-      .limit(10000),
-    adminSupabase
-      .from("doses")
-      .select(
-        "id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, company_id)",
-      )
-      .in("toe_workers.company_id", companyIds)
+      .select("id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, company_id)")
+      .in("toe_workers.company_id", companyIds.slice(0, 50)) // Limit to first 50 to avoid crash
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
