@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { getServiceSupabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -25,8 +26,10 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") || "100");
   const offset = parseInt(searchParams.get("offset") || "0");
 
+  const serviceSupabase = getServiceSupabase();
+
   // 1. Get all worker IDs for this tenant/company
-  let workerQuery = supabase
+  let workerQuery = serviceSupabase
     .from("toe_workers")
     .select("id");
 
@@ -42,7 +45,7 @@ export async function GET(request: Request) {
   if (workerIds.length === 0) return NextResponse.json({ data: [], total: 0 });
 
   // 2. Fetch doses for these workers with pagination
-  const { data: doses, error, count } = await supabase
+  const { data: doses, error, count } = await serviceSupabase
     .from("doses")
     .select(`
       *,
