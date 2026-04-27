@@ -1,5 +1,6 @@
 import Sidebar from "@/components/admin/Sidebar";
 import { getCurrentProfile } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "I.O.N.T.R.A.C.K. | Command Center",
@@ -12,8 +13,19 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = await getCurrentProfile();
-  const showSidebar = !!user;
+  const { user, profile } = await getCurrentProfile();
+  
+  // 1. If no user, let them see the login page (handled by middleware for protection)
+  if (!user) return <>{children}</>;
+
+  // 2. Critical Security Check: Only SuperAdmins allowed here
+  if (profile?.role !== "superadmin") {
+    if (profile?.role === "lab_admin" || profile?.role === "lab_tech") redirect("/lab");
+    if (profile?.role === "company_manager") redirect("/portal");
+    redirect("/");
+  }
+
+  const showSidebar = true;
 
   return (
     <div
@@ -21,12 +33,12 @@ export default async function AdminLayout({
       style={{ 
         "--primary": "var(--color-admin)",
         display: "grid",
-        gridTemplateColumns: showSidebar ? "280px 1fr" : "1fr",
+        gridTemplateColumns: "280px 1fr",
         minHeight: "100vh"
       } as any}
     >
-      {showSidebar && <Sidebar />}
-      <main className={showSidebar ? "main-content" : ""}>{children}</main>
+      <Sidebar />
+      <main className="main-content">{children}</main>
     </div>
   );
 }

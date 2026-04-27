@@ -20,7 +20,7 @@ export default function LabLogin() {
     setError(null);
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -30,9 +30,27 @@ export default function LabLogin() {
         return;
       }
 
-      document.cookie = `iontrack_role=lab_admin; path=/; max-age=604800; SameSite=Lax`;
+      // Fetch the actual role from the database
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authData.user.id)
+        .single();
 
-      router.push("/lab");
+      const role = profile?.role || "unknown";
+      document.cookie = `iontrack_role=${role}; path=/; max-age=604800; SameSite=Lax`;
+
+      // Redirect based on actual role
+      if (role === "lab_admin" || role === "lab_tech") {
+        router.push("/lab");
+      } else if (role === "company_manager") {
+        router.push("/portal");
+      } else if (role === "superadmin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
+      
       router.refresh();
     } catch (err) {
       setError("Error inesperado al iniciar sesión.");
