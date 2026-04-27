@@ -48,7 +48,11 @@ export async function createTenantAction(formData: FormData) {
 
   if (tenantError) {
     console.error("Error creating tenant:", tenantError);
-    return { error: "Error al crear el laboratorio en la base de datos." };
+    return { 
+      error: tenantError.code === "23505" 
+        ? "Ya existe un laboratorio con ese RIF o nombre (slug duplicado)." 
+        : `Error al crear el laboratorio: ${tenantError.message}` 
+    };
   }
 
   // 4. Invite User via Supabase Auth Admin

@@ -8,16 +8,13 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function checkTenants() {
   const { data, error } = await supabase
     .from('tenants')
-    .select('*');
+    .select('name, rif, slug');
 
-  if (error) {
-    console.error('Error:', error);
-    return;
-  }
+  if (error) { console.error(error); return; }
 
-  console.log("Registered Tenants (Laboratories):");
+  console.log("Existing Tenants:");
   data.forEach(t => {
-    console.log(`- ${t.name} (RIF: ${t.rif})`);
+    console.log(`- NAME: ${t.name} | RIF: ${t.rif} | SLUG: ${t.slug}`);
   });
 }
 
