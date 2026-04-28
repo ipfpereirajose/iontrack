@@ -80,8 +80,8 @@ export default async function LabHomePage({
       .limit(10),
     adminSupabase
       .from("doses")
-      .select("id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(name))")
-      .in("toe_worker_id", workerIds.slice(0, 100))
+      .select("id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))")
+      .eq("toe_workers.companies.tenant_id", tenantId)
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
