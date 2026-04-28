@@ -8,9 +8,9 @@ import {
   History,
   TrendingUp,
   Building2,
-  ChevronRight,
   Filter,
 } from "lucide-react";
+import RegisterDoseModal from "@/components/lab/RegisterDoseModal";
 
 export default async function TOEConsultationPage({
   searchParams,
@@ -52,7 +52,7 @@ export default async function TOEConsultationPage({
 
   const { data: workers } = await workersQuery.limit(100);
 
-  // Process workers to calculate totals per category
+  // Process workers
   const processedWorkers = workers?.map(w => {
     const approvedDoses = w.doses?.filter((d: any) => d.status === 'approved') || [];
     
@@ -75,7 +75,7 @@ export default async function TOEConsultationPage({
   }) || [];
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+    <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
       <header style={{ marginBottom: "2.5rem" }}>
         <h1 style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: "0.5rem" }}>
           Consulta de TOEs
@@ -187,23 +187,26 @@ export default async function TOEConsultationPage({
                     </div>
                   </td>
                   <td style={tdStyle}>
-                    <Link
-                      href={`/lab/toe-consultation/${w.id}`}
-                      className="btn"
-                      style={{
-                        flex: 1,
-                        background: "rgba(6, 182, 212, 0.1)",
-                        color: "var(--primary)",
-                        justifyContent: "center",
-                        fontSize: "0.875rem",
-                        padding: "0.5rem 1rem",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.5rem"
-                      }}
-                    >
-                      <History size={14} /> Ver Historial
-                    </Link>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <Link
+                        href={`/lab/toe-consultation/${w.id}`}
+                        className="btn btn-secondary"
+                        style={{
+                          flex: 1,
+                          justifyContent: "center",
+                          fontSize: "0.8rem",
+                          padding: "0.5rem"
+                        }}
+                      >
+                        <History size={14} /> Historial
+                      </Link>
+                      
+                      <RegisterDoseModal 
+                        workerId={w.id} 
+                        workerName={`${w.first_name} ${w.last_name}`}
+                        companyName={(w.companies as any).name}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))
