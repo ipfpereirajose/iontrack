@@ -51,7 +51,7 @@ function SubmitButton() {
         gap: "0.5rem",
         padding: "0.875rem 2.5rem",
         background: "var(--primary)",
-        color: "var(--primary-dark)",
+        color: "#1a365d",
         border: "none",
         borderRadius: "12px",
         fontWeight: 700,
@@ -229,25 +229,22 @@ export default function NewPortalWorkerPage() {
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <select required name="birth_day" style={{ ...selectStyle, flex: 1, padding: "0.875rem 0.5rem" }}>
                 <option value="">Día</option>
-                {Array.from({ length: 31 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}</option>
-                ))}
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
               </select>
               <select required name="birth_month" style={{ ...selectStyle, flex: 2, padding: "0.875rem 0.5rem" }}>
                 <option value="">Mes</option>
-                {[
-                  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-                ].map((m, i) => (
-                  <option key={i + 1} value={i + 1}>{m}</option>
-                ))}
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="12">Diciembre</option>
               </select>
               <select required name="birth_year" style={{ ...selectStyle, flex: 1, padding: "0.875rem 0.5rem" }}>
                 <option value="">Año</option>
-                {Array.from({ length: 70 }, (_, i) => {
-                  const y = new Date().getFullYear() - 18 - i;
-                  return <option key={y} value={y}>{y}</option>;
-                })}
+                <option value="1990">1990</option>
+                <option value="1980">1980</option>
+                <option value="2000">2000</option>
               </select>
             </div>
           </div>
