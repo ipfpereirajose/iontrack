@@ -167,3 +167,90 @@ export async function deleteUser(userId: string) {
     };
   }
 }
+
+export async function syncAllCompanyUsers() {
+  const supabase = getServiceSupabase();
+
+  try {
+    // 1. Get all companies
+    const { data: companies, error: cError } = await supabase
+      .from("companies")
+      .select("id, name, rep_email, rep_first_name, rep_last_name, tenant_id");
+
+    if (cError) throw new Error(cError.message);
+
+    // 2. Get all existing company_manager profiles
+    const { data: profiles, error: pError } = await supabase
+      .from("profiles")
+      .select("company_id")
+      .eq("role", "company_manager");
+
+    if (pError) throw new Error(pError.message);
+
+    const managedCompanyIds = new Set(profiles.map(p => p.company_id));
+
+    // 3. Filter companies that need a user
+    const pendingCompanies = companies.filter(c => !managedCompanyIds.has(c.id) && c.rep_email);
+
+    let created = 0;
+    let errors = 0;
+
+    // 4. Provision users (limit to avoid extreme overhead in one call)
+    // We will do 50 at a time to prevent timeout
+    const batch = pendingCompanies.slice(0, 50);
+
+    for (const company of batch) {
+      try {
+        // Create Auth User
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: company.rep_email as string,
+          password: "Portal" + company.rep_email?.split('@')[0].toUpperCase().substring(0, 3) + "2024!",
+          email_confirm: true,
+          user_metadata: {
+            first_name: company.rep_first_name || "Manager",
+            last_name: company.rep_last_name || company.name,
+          }
+        });
+
+        if (authError) {
+          console.error(`Error creating auth for ${company.name}:`, authError.message);
+          errors++;
+          continue;
+        }
+
+        if (authData.user) {
+          // Create Profile
+          const { error: profError } = await supabase.from("profiles").insert({
+            id: authData.user.id,
+            company_id: company.id,
+            tenant_id: company.tenant_id,
+            role: "company_manager",
+            first_name: company.rep_first_name || "Manager",
+            last_name: company.rep_last_name || company.name,
+            status: "active"
+          });
+
+          if (profError) {
+            console.error(`Error creating profile for ${company.name}:`, profError.message);
+            errors++;
+          } else {
+            created++;
+          }
+        }
+      } catch (err) {
+        console.error(`Unexpected error for ${company.name}:`, err);
+        errors++;
+      }
+    }
+
+    revalidatePath("/admin/users");
+    return { 
+      success: true, 
+      created, 
+      errors, 
+      remaining: pendingCompanies.length - batch.length 
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}

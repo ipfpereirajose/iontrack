@@ -12,13 +12,18 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  Shield
+  Shield,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { 
   resetUserPassword, 
   updateUserStatus, 
-  deleteUser 
+  deleteUser,
+  syncAllCompanyUsers
 } from "@/app/admin/users/actions";
 
 interface User {
@@ -39,6 +44,8 @@ interface UserManagerProps {
 export default function UserManager({ users: initialUsers }: UserManagerProps) {
   const [search, setSearch] = useState("");
   const [collapsedRoles, setCollapsedRoles] = useState<Record<string, boolean>>({});
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ created: number, remaining: number, errors: number } | null>(null);
 
   const filteredUsers = initialUsers.filter(user => 
     `${user.first_name} ${user.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,25 +67,92 @@ export default function UserManager({ users: initialUsers }: UserManagerProps) {
 
   const rolesOrder = ["superadmin", "lab_admin", "lab_tech", "company_manager"];
 
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await syncAllCompanyUsers();
+      if (res.success) {
+        setSyncResult({ 
+          created: res.created || 0, 
+          remaining: res.remaining || 0, 
+          errors: res.errors || 0 
+        });
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-      {/* SEARCH BAR */}
-      <div className="glass-panel" style={{ padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem" }}>
-        <Search size={20} color="var(--text-muted)" />
-        <input 
-          type="text" 
-          placeholder="Buscar por nombre, email o rol..." 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            background: "transparent",
-            border: "none",
-            outline: "none",
-            color: "var(--text-main)",
-            fontSize: "1rem"
+      {/* SYNC STATUS PANEL */}
+      {syncResult && (
+        <div className="glass-panel" style={{ 
+          padding: "1.5rem", 
+          borderLeft: "4px solid var(--state-safe)",
+          background: "rgba(34, 197, 94, 0.05)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <CheckCircle2 color="var(--state-safe)" size={24} />
+            <div>
+              <p style={{ fontWeight: 800 }}>Sincronización Completada (Lote)</p>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                Se crearon <strong>{syncResult.created}</strong> usuarios nuevos. 
+                {syncResult.remaining > 0 && ` Quedan ${syncResult.remaining} empresas pendientes.`}
+                {syncResult.errors > 0 && ` Hubo ${syncResult.errors} errores.`}
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setSyncResult(null)}
+            className="btn btn-secondary"
+            style={{ padding: "0.5rem 1rem" }}
+          >
+            Entendido
+          </button>
+        </div>
+      )}
+
+      {/* TOOLS AND SEARCH */}
+      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div className="glass-panel" style={{ flex: 1, padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+          <Search size={20} color="var(--text-muted)" />
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre, email o rol..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              color: "var(--text-main)",
+              fontSize: "1rem"
+            }}
+          />
+        </div>
+        
+        <button 
+          onClick={handleSync}
+          disabled={syncing}
+          className="btn btn-secondary"
+          style={{ 
+            height: "100%", 
+            padding: "0 1.5rem", 
+            borderRadius: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            fontWeight: 700
           }}
-        />
+        >
+          {syncing ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
+          {syncing ? "Sincronizando..." : "Sincronizar Lote (50)"}
+        </button>
       </div>
 
       {/* GROUPS */}
@@ -111,7 +185,7 @@ export default function UserManager({ users: initialUsers }: UserManagerProps) {
           </div>
 
           <div style={{ 
-            maxHeight: collapsedRoles[role] ? "0px" : "2000px", 
+            maxHeight: collapsedRoles[role] ? "0px" : "4000px", 
             overflow: "hidden", 
             transition: "max-height 0.4s ease-in-out" 
           }}>
