@@ -12,6 +12,10 @@ export async function GET(request: Request) {
 
   // Clean CI (remove dots or spaces)
   const cleanCi = ci?.replace(/\D/g, "");
+  
+  // Create a fuzzy pattern for CI (e.g. 24370 -> %2%4%3%7%0%)
+  // This allows matching V-24.370.632 or 24.370.632 or 24370632
+  const fuzzyCi = cleanCi ? `%${cleanCi.split('').join('%')}%` : null;
 
   // Handle Month (could be number or name)
   const monthMap: Record<string, string> = {
@@ -22,11 +26,16 @@ export async function GET(request: Request) {
 
   const cleanMonth = birthMonth ? (monthMap[birthMonth.toUpperCase()] || birthMonth.padStart(2, '0')) : null;
 
-  // 1. Verify credentials (allow multiple worker records for the same CI)
+  // 1. Verify credentials
   let workerQuery = supabase
     .from("toe_workers")
-    .select("*, companies(*, tenants(name))")
-    .eq("ci", cleanCi);
+    .select("*, companies(*, tenants(name))");
+
+  if (fuzzyCi) {
+    workerQuery = workerQuery.ilike("ci", fuzzyCi);
+  } else {
+    workerQuery = workerQuery.eq("ci", ci);
+  }
   
   if (birthYear && birthDay && cleanMonth) {
     const formattedDate = `${birthYear}-${cleanMonth}-${birthDay.padStart(2, '0')}`;
@@ -43,13 +52,16 @@ export async function GET(request: Request) {
   }
 
   // 2. Get all doses for this CI (across all companies)
+  // We use the worker IDs found in the previous step to get their doses accurately
+  const workerIdsFound = workers.map(w => w.id);
+  
   const { data: allDoses } = await supabase
     .from("doses")
     .select(`
       *,
       toe_workers!inner(id, ci, company_id, companies(id, name, company_code, tax_id))
     `)
-    .eq("toe_workers.ci", cleanCi)
+    .in("toe_worker_id", workerIdsFound)
     .eq("status", "approved")
     .order("year", { ascending: false })
     .order("month", { ascending: false });
