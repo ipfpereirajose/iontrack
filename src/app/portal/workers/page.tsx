@@ -71,7 +71,7 @@ export default async function WorkersPage() {
             gap: "0.5rem",
             padding: "0.75rem 1.5rem",
             background: "var(--primary)",
-            color: "white",
+            color: "var(--primary-dark)",
             borderRadius: "12px",
             fontWeight: 700,
             textDecoration: "none",
