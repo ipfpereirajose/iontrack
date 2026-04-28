@@ -229,22 +229,25 @@ export default function NewPortalWorkerPage() {
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <select required name="birth_day" style={{ ...selectStyle, flex: 1, padding: "0.875rem 0.5rem" }}>
                 <option value="">Día</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="15">15</option>
-                <option value="30">30</option>
+                {Array.from({ length: 31 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                ))}
               </select>
               <select required name="birth_month" style={{ ...selectStyle, flex: 2, padding: "0.875rem 0.5rem" }}>
                 <option value="">Mes</option>
-                <option value="1">Enero</option>
-                <option value="2">Febrero</option>
-                <option value="12">Diciembre</option>
+                {[
+                  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                ].map((m, i) => (
+                  <option key={i + 1} value={i + 1}>{m}</option>
+                ))}
               </select>
               <select required name="birth_year" style={{ ...selectStyle, flex: 1, padding: "0.875rem 0.5rem" }}>
                 <option value="">Año</option>
-                <option value="1990">1990</option>
-                <option value="1980">1980</option>
-                <option value="2000">2000</option>
+                {Array.from({ length: 70 }, (_, i) => {
+                  const y = 2026 - 18 - i; // Fixed year for SSR safety
+                  return <option key={y} value={y}>{y}</option>;
+                })}
               </select>
             </div>
           </div>
