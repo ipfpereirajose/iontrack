@@ -1,25 +1,12 @@
 import { Suspense } from "react";
 import { getServiceSupabase } from "@/lib/supabase";
 import {
-  ShieldCheck,
-  UserCog,
-  Mail,
-  Calendar,
   Shield,
-  Trash2,
   UserPlus,
-  Lock,
-  Activity,
-  Edit3,
 } from "lucide-react";
-import {
-  updateUserRole,
-  deleteUser,
-  updateUserStatus,
-  resetUserPassword,
-} from "./actions";
 import Link from "next/link";
 import EditUserModal from "./EditUserModal";
+import UserManager from "@/components/admin/UserManager";
 
 export const dynamic = "force-dynamic";
 
@@ -105,185 +92,12 @@ export default async function AdminManagement() {
         </Link>
       </div>
 
-      <div className="clean-panel" style={{ padding: 0, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Rol / Privilegio</th>
-              <th>Entidad / Laboratorio</th>
-              <th>Estatus</th>
-              <th>Último Acceso</th>
-              <th style={{ textAlign: "right" }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "1rem",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        background: "rgba(0,0,0,0.05)",
-                        borderRadius: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      <UserCog size={20} />
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
-                        {user.first_name} {user.last_name}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.25rem",
-                        }}
-                      >
-                        <Mail size={12} />
-                        {user.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span
-                    className={`badge ${user.role === "superadmin" ? "badge-danger" : "badge-success"}`}
-                  >
-                    {user.role.replace("_", " ").toUpperCase()}
-                  </span>
-                </td>
-                <td>
-                  {user.tenants?.name || (
-                    <span
-                      style={{
-                        color: "var(--text-muted)",
-                        fontStyle: "italic",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      Acceso Global (SaaS)
-                    </span>
-                  )}
-                </td>
-                <td>
-                  <span
-                    className={`badge ${user.status === "inactive" ? "badge-warning" : "badge-success"}`}
-                  >
-                    {user.status?.toUpperCase() || "ACTIVE"}
-                  </span>
-                </td>
-                <td>
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    <Calendar size={14} />
-                    {user.lastSignIn
-                      ? new Date(user.lastSignIn).toLocaleDateString()
-                      : "Nunca"}
-                  </div>
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <Link
-                      href={`/admin/users?edit=${user.id}`}
-                      className="btn btn-secondary"
-                      style={{ padding: "0.5rem" }}
-                      title="Editar Usuario"
-                    >
-                      <Edit3 size={18} />
-                    </Link>
-
-                    <form
-                      action={async () => {
-                        "use server";
-                        await resetUserPassword(user.email);
-                      }}
-                    >
-                      <button
-                        className="btn btn-secondary"
-                        style={{ padding: "0.5rem" }}
-                        title="Reiniciar Contraseña"
-                      >
-                        <Lock size={18} />
-                      </button>
-                    </form>
-
-                    <form
-                      action={async () => {
-                        "use server";
-                        await updateUserStatus(
-                          user.id,
-                          user.status === "inactive" ? "active" : "inactive",
-                        );
-                      }}
-                    >
-                      <button
-                        className="btn btn-secondary"
-                        style={{
-                          padding: "0.5rem",
-                          color:
-                            user.status === "inactive" ? "#10b981" : "#f59e0b",
-                        }}
-                        title="Cambiar Estatus"
-                      >
-                        <Activity size={18} />
-                      </button>
-                    </form>
-
-                    <form
-                      action={async () => {
-                        "use server";
-                        await deleteUser(user.id);
-                      }}
-                    >
-                      <button
-                        className="btn btn-secondary"
-                        style={{ padding: "0.5rem", color: "#ef4444" }}
-                        title="Eliminar Acceso"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <UserManager users={users} />
 
       <div
         style={{
           background: "rgba(245, 158, 11, 0.05)",
-          border: "1px border var(--state-warning)",
+          border: "1px solid rgba(245, 158, 11, 0.2)",
           borderRadius: "16px",
           padding: "1.5rem",
           display: "flex",
