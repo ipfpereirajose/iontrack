@@ -85,7 +85,7 @@ export default async function LabHomePage({
       .eq("year", targetYear)
       .gte("hp10", 1.6)
       .order("hp10", { ascending: false })
-      .limit(5),
+      .limit(10),
     adminSupabase
       .from("audit_logs")
       .select("*")
@@ -189,10 +189,15 @@ export default async function LabHomePage({
         {/* SIDEBAR: CRITICAL NOTIFICATIONS */}
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           <section>
-            <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "1.1rem", fontWeight: 800, marginBottom: "1.25rem" }}>
-              <ShieldAlert size={20} color="var(--state-danger)" />
-              Notificaciones Críticas
-            </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+              <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "1.1rem", fontWeight: 800 }}>
+                <ShieldAlert size={20} color="var(--state-danger)" />
+                Notificaciones Críticas
+              </h3>
+              <Link href={`/lab/alerts?year=${targetYear}`} style={{ fontSize: "0.8rem", color: "var(--primary-teal)", fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                Ver Todas <ArrowRight size={14} />
+              </Link>
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {!criticalDoses || criticalDoses.length === 0 ? (
                 <div className="clean-panel" style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.875rem" }}>
