@@ -212,23 +212,54 @@ export async function syncAllCompanyUsers() {
           }
         });
 
-        if (authError) {
-          console.error(`Error creating auth for ${company.name}:`, authError.message);
-          errors++;
-          continue;
-        }
+          if (authError) {
+            if (authError.message.includes("already registered") || authError.message.includes("already exists")) {
+              // User exists in Auth, let's see if we can find their ID to create the profile
+              const { data: existingUser } = await supabase.auth.admin.listUsers();
+              const foundUser = existingUser.users.find(u => u.email === company.rep_email);
+              
+              if (foundUser) {
+                // Check if they already have a profile
+                const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", foundUser.id).single();
+                
+                if (!existingProfile) {
+                   // Create Profile if it doesn't exist
+                   await supabase.from("profiles").insert({
+                    id: foundUser.id,
+                    company_id: company.id,
+                    tenant_id: company.tenant_id,
+                    role: "company_manager",
+                    first_name: company.rep_first_name || "Manager",
+                    last_name: company.rep_last_name || company.name,
+                    status: "active"
+                  });
+                  created++;
+                } else {
+                  // Profile exists. We can't link to a second company in this schema easily.
+                  console.warn(`Email ${company.rep_email} is already managing another company.`);
+                  errors++;
+                }
+              } else {
+                errors++;
+              }
+            } else {
+              console.error(`Error creating auth for ${company.name}:`, authError.message);
+              errors++;
+            }
+            continue;
+          }
 
-        if (authData.user) {
-          // Create Profile
-          const { error: profError } = await supabase.from("profiles").insert({
-            id: authData.user.id,
-            company_id: company.id,
-            tenant_id: company.tenant_id,
-            role: "company_manager",
-            first_name: company.rep_first_name || "Manager",
-            last_name: company.rep_last_name || company.name,
-            status: "active"
-          });
+          if (authData.user) {
+            // Create Profile
+            const { error: profError } = await supabase.from("profiles").insert({
+              id: authData.user.id,
+              company_id: company.id,
+              tenant_id: company.tenant_id,
+              role: "company_manager",
+              first_name: company.rep_first_name || "Manager",
+              last_name: company.rep_last_name || company.name,
+              status: "active"
+            });
 
           if (profError) {
             console.error(`Error creating profile for ${company.name}:`, profError.message);

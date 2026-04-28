@@ -26,8 +26,8 @@ export default async function UsersManagementPage() {
     .eq("tenant_id", tenantId)
     .eq("role", "company_manager");
 
-  const uniqueCompaniesWithAccess = new Set(users.map(u => u.company_id)).size;
-  const totalCompanies = companies.length;
+  const uniqueCompaniesWithAccess = new Set((users || []).map(u => u.company_id)).size;
+  const totalCompanies = (companies || []).length;
   const coveragePercent = totalCompanies > 0 ? (uniqueCompaniesWithAccess / totalCompanies) * 100 : 0;
 
   return (
