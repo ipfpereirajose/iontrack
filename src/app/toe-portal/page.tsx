@@ -223,7 +223,7 @@ export default function ToePortal() {
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Fecha de Nacimiento:</td>
-                    <td style={reportValueTd}>{day}/{month}/{year}</td>
+                    <td style={reportValueTd}>{day.padStart(2, '0')}/{month.padStart(2, '0')}/{year}</td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Código Patronal:</td>

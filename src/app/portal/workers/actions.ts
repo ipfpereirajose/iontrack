@@ -27,7 +27,10 @@ export async function createPortalWorker(formData: FormData) {
   const last_name = formData.get("last_name") as string;
   const ci = formData.get("ci") as string;
   const sex = formData.get("sex") as string;
+  const birth_day = formData.get("birth_day") as string;
+  const birth_month = formData.get("birth_month") as string;
   const birth_year = parseInt(formData.get("birth_year") as string);
+  const birth_date = `${birth_year}-${birth_month.padStart(2, '0')}-${birth_day.padStart(2, '0')}`;
   const position = formData.get("position") as string;
   const practice = formData.get("practice") as string;
 
@@ -56,6 +59,7 @@ export async function createPortalWorker(formData: FormData) {
     ci,
     sex,
     birth_year,
+    birth_date,
     position,
     practice,
     worker_code,

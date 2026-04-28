@@ -80,7 +80,8 @@ CREATE TABLE IF NOT EXISTS public.toe_workers (
     last_name VARCHAR(100) NOT NULL, -- Apellido
     ci VARCHAR(20) NOT NULL, -- CI
     sex VARCHAR(10), -- Sexo (M/F)
-    birth_year INTEGER, -- Año de nacimiento
+    birth_year INTEGER, -- Año de nacimiento (DEPRECATED: Use birth_date)
+    birth_date DATE, -- Fecha de nacimiento (DD/MM/AAAA)
     position VARCHAR(100), -- Cargo
     practice VARCHAR(255), -- Práctica que realiza
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'on_leave')),
@@ -179,6 +180,7 @@ SELECT
     w.last_name,
     w.sex,
     w.birth_year,
+    w.birth_date,
     COUNT(d.id) as total_reports,
     SUM(d.hp10) as total_hp10,
     SUM(d.hp007) as total_hp007,
@@ -194,7 +196,7 @@ JOIN
 WHERE 
     d.status = 'approved'
 GROUP BY 
-    w.ci, w.first_name, w.last_name, w.sex, w.birth_year;
+    w.ci, w.first_name, w.last_name, w.sex, w.birth_year, w.birth_date;
 
 -- 11. ROW LEVEL SECURITY (RLS) POLICIES
 

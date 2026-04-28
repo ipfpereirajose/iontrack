@@ -1,6 +1,7 @@
 import { Download, TrendingUp, Calendar, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
+import ExportButton from "./ExportButton";
 
 export default async function HistoryPage() {
   const supabase = await createClient();
@@ -8,6 +9,13 @@ export default async function HistoryPage() {
   if (!user) return null;
 
   const companyId = profile?.company_id;
+
+  // 1. Fetch Company Info
+  const { data: company } = await supabase
+    .from("companies")
+    .select("name")
+    .eq("id", companyId)
+    .single();
 
   // 2. Fetch approved doses for workers of this company
   const { data: doses, error } = await supabase
@@ -70,24 +78,10 @@ export default async function HistoryPage() {
             Registro histórico de lecturas validadas para todo el personal.
           </p>
         </div>
-        <button
-          className="btn btn-primary"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            background: "#a855f7",
-            color: "white",
-            border: "none",
-            padding: "0.75rem 1.5rem",
-            borderRadius: "12px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <Download size={18} />
-          Exportar Historial (Excel)
-        </button>
+        <ExportButton 
+          data={doses || []} 
+          companyName={company?.name || "Empresa"} 
+        />
       </header>
 
       <div

@@ -51,7 +51,7 @@ function SubmitButton() {
         gap: "0.5rem",
         padding: "0.875rem 2.5rem",
         background: "var(--primary)",
-        color: "white",
+        color: "var(--primary-dark)",
         border: "none",
         borderRadius: "12px",
         fontWeight: 700,
@@ -85,7 +85,7 @@ export default function NewPortalWorkerPage() {
   const labelStyle: React.CSSProperties = {
     fontSize: "0.75rem",
     fontWeight: 700,
-    color: "var(--text-muted)",
+    color: "var(--text-main)",
     textTransform: "uppercase",
     letterSpacing: "0.05em",
     marginBottom: "0.5rem",
@@ -225,16 +225,31 @@ export default function NewPortalWorkerPage() {
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Año de Nacimiento *</label>
-            <input
-              required
-              name="birth_year"
-              type="number"
-              min={1940}
-              max={2005}
-              placeholder="Ej: 1985"
-              style={inputStyle}
-            />
+            <label style={labelStyle}>Fecha de Nacimiento *</label>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <select required name="birth_day" style={{ ...selectStyle, flex: 1, padding: "0.875rem 0.5rem" }}>
+                <option value="">Día</option>
+                {Array.from({ length: 31 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                ))}
+              </select>
+              <select required name="birth_month" style={{ ...selectStyle, flex: 2, padding: "0.875rem 0.5rem" }}>
+                <option value="">Mes</option>
+                {[
+                  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                ].map((m, i) => (
+                  <option key={i + 1} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <select required name="birth_year" style={{ ...selectStyle, flex: 1, padding: "0.875rem 0.5rem" }}>
+                <option value="">Año</option>
+                {Array.from({ length: 70 }, (_, i) => {
+                  const y = new Date().getFullYear() - 18 - i;
+                  return <option key={y} value={y}>{y}</option>;
+                })}
+              </select>
+            </div>
           </div>
         </div>
 

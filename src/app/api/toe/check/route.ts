@@ -16,8 +16,11 @@ export async function GET(request: Request) {
     .select("*, companies(*, tenants(name))")
     .eq("ci", ci);
   
-  // If we have birth_date in DB, use it, otherwise use birth_year
-  if (birthYear) {
+  // Prefer birth_date if all components are present, otherwise fallback to birth_year
+  if (birthYear && birthDay && birthMonth) {
+    const formattedDate = `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`;
+    workerQuery = workerQuery.eq("birth_date", formattedDate);
+  } else if (birthYear) {
     workerQuery = workerQuery.eq("birth_year", birthYear);
   }
 
@@ -52,6 +55,7 @@ export async function GET(request: Request) {
         ci: w.ci,
         sex: w.sex,
         birth_year: w.birth_year,
+        birth_date: w.birth_date,
         position: w.position,
       },
       company: w.companies,

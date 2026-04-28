@@ -102,18 +102,29 @@ export async function bulkImportAction(type: string, data: any[]) {
         const companyCode = getVal(["CÓDIGO EMPRESA", "codigo_empresa", "CODIGO_INSTALACION", "CODIGO", "company_code"]);
         const rif = getVal(["RIF EMPRESA", "rif_empresa", "RIF", "rif"]);
         const monthInput = getVal(["Mes", "month", "mes"]) || item.month || "0";
-        let month = parseInt(monthInput);
-
-        if (isNaN(month)) {
+        const parseMonth = (val: any): number => {
+          if (!val) return 0;
+          const n = parseInt(val);
+          if (!isNaN(n) && n >= 1 && n <= 12) return n;
+          
           const monthsMap: Record<string, number> = {
-            enero: 1, january: 1, ene: 1, jan: 1, febrero: 2, february: 2, feb: 2,
-            marzo: 3, march: 3, mar: 3, abril: 4, april: 4, abr: 4, mayo: 5, may: 5,
-            junio: 6, june: 6, jun: 6, julio: 7, july: 7, jul: 7, agosto: 8, august: 8, ago: 8,
-            septiembre: 9, september: 9, sep: 9, octubre: 10, october: 10, oct: 10,
-            noviembre: 11, november: 11, nov: 11, diciembre: 12, december: 12, dic: 12
+            enero: 1, january: 1, ene: 1, jan: 1, "01": 1,
+            febrero: 2, february: 2, feb: 2, "02": 2,
+            marzo: 3, march: 3, mar: 3, "03": 3,
+            abril: 4, april: 4, abr: 4, "04": 4,
+            mayo: 5, may: 5, "05": 5,
+            junio: 6, june: 6, jun: 6, "06": 6,
+            julio: 7, july: 7, jul: 7, "07": 7,
+            agosto: 8, august: 8, ago: 8, "08": 8,
+            septiembre: 9, september: 9, sep: 9, "09": 9,
+            octubre: 10, october: 10, oct: 10, "10": 10,
+            noviembre: 11, november: 11, nov: 11, "11": 11,
+            diciembre: 12, december: 12, dic: 12, "12": 12
           };
-          month = monthsMap[monthInput.toString().toLowerCase().trim()] || 0;
-        }
+          return monthsMap[val.toString().toLowerCase().trim()] || 0;
+        };
+
+        let month = parseMonth(monthInput);
 
         const year = parseInt(getVal(["Año", "año", "year"]) || "0");
         const hp10 = parseFloat(getVal(["Hp10", "HP10"]) || "0");
@@ -187,7 +198,29 @@ export async function bulkImportAction(type: string, data: any[]) {
           first_name: getVal(["Nombre", "nombre", "first_name"]),
           last_name: getVal(["Apellido", "apellido", "last_name"]),
           sex: getVal(["Sexo", "sex"]),
-          birth_year: parseInt(getVal(["Año de nacimiento", "birth_year"]) || "0"),
+          birth_year: parseInt(getVal(["Año de nacimiento", "birth_year", "birth_year", "año"]) || "0"),
+          birth_date: (() => {
+            const fullDate = getVal(["Fecha de nacimiento", "birth_date", "fecha_nacimiento"]);
+            if (fullDate) return fullDate;
+            
+            // Try to construct from components if full date is missing
+            const d = getVal(["Día", "dia", "day", "birth_day"]);
+            const m = getVal(["Mes", "mes", "month", "birth_month"]);
+            const y = getVal(["Año", "año", "year", "birth_year"]);
+            
+            if (d && m && y) {
+              const monthsMap: Record<string, number> = {
+                enero: 1, ene: 1, febrero: 2, feb: 2, marzo: 3, mar: 3, abril: 4, abr: 4,
+                mayo: 5, may: 5, junio: 6, jun: 6, julio: 7, jul: 7, agosto: 8, ago: 8,
+                septiembre: 9, sep: 9, octubre: 10, oct: 10, noviembre: 11, nov: 11, diciembre: 12, dic: 12
+              };
+              const monthNum = isNaN(parseInt(m)) ? (monthsMap[m.toString().toLowerCase().trim()] || 0) : parseInt(m);
+              if (monthNum > 0) {
+                return `${y}-${monthNum.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+              }
+            }
+            return null;
+          })(),
           position: (getVal(["Cargo", "position"]) || "").trim(),
           practice: (getVal(["Practica", "practice"]) || "").trim(),
           worker_code: getVal(["worker_code", "codigo_toe"]) || `TOE-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,

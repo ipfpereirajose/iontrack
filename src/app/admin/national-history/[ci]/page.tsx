@@ -20,7 +20,7 @@ export default async function WorkerDetailPage({
   // 1. Get Worker Info (from any of their records)
   const { data: workerInfo } = await supabase
     .from("toe_workers")
-    .select("first_name, last_name, ci, sex, birth_year")
+    .select("first_name, last_name, ci, sex, birth_year, birth_date")
     .eq("ci", ci)
     .limit(1)
     .single();
@@ -128,7 +128,7 @@ export default async function WorkerDetailPage({
               </div>
               <div>
                 <label style={miniLabelStyle}>Nacimiento</label>
-                <div style={{ fontWeight: 800 }}>{workerInfo.birth_year}</div>
+                <div style={{ fontWeight: 800 }}>{workerInfo.birth_date ? workerInfo.birth_date.split('-').reverse().join('/') : workerInfo.birth_year}</div>
               </div>
             </div>
           </div>

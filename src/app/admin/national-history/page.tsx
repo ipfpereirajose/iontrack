@@ -18,7 +18,7 @@ export default async function NationalHistoryPage({
   const supabase = getServiceSupabase();
   const { ci, birth_year, year } = await searchParams;
 
-  let query = supabase.from("national_dose_history").select("*");
+  let query = supabase.from("national_dose_history").select("first_name, last_name, ci, sex, birth_year, birth_date, total_reports, total_hp10, total_hp3, last_report_month, last_report_year");
 
   if (ci) query = query.ilike("ci", `%${ci}%`);
   if (birth_year) query = query.eq("birth_year", birth_year);
@@ -153,7 +153,7 @@ export default async function NationalHistoryPage({
                     </div>
                   </td>
                   <td>{record.sex}</td>
-                  <td>{record.birth_year}</td>
+                  <td>{record.birth_date ? record.birth_date.split('-').reverse().join('/') : record.birth_year}</td>
                   <td style={{ fontWeight: 700 }}>{record.total_reports}</td>
                   <td>
                     <span
