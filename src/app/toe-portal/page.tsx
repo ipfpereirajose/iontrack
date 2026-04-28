@@ -127,7 +127,7 @@ export default function ToePortal() {
                   </select>
                   <select style={modalSelect} value={month} onChange={e => setMonth(e.target.value)}>
                     {["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"].map((m, i) => (
-                      <option key={i+1} value={i+1}>{m}</option>
+                      <option key={i+1} value={m}>{m}</option>
                     ))}
                   </select>
                   <select style={modalSelect} value={year} onChange={e => setYear(e.target.value)}>
@@ -275,10 +275,38 @@ export default function ToePortal() {
             </tbody>
         </table>
 
-        {/* Relación Mensual - Last 15 records (simulating the 15 years table) */}
+        {/* Relación Mensual */}
+        <div style={{ marginBottom: "1rem", fontWeight: 700, textAlign: "center", background: "#dbeafe", padding: "0.3rem", border: "1px solid #bfdbfe", fontSize: "0.8rem" }}>
+            Relación de Dosis registradas en los últimos periodos
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+            {[0, 1].map(colIdx => (
+                <table key={colIdx} style={reportTableSmall}>
+                    <thead>
+                        <tr style={{ background: "#f1f5f9" }}>
+                            <th style={reportThSmall}>AÑO</th>
+                            <th style={reportThSmall}>MES</th>
+                            <th style={reportThSmall}>DOSIS (mSv)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Array.from({length: 8}).map((_, i) => {
+                            const idx = i + (colIdx * 8);
+                            const d = selectedAccount.history[idx];
+                            return (
+                                <tr key={i}>
+                                    <td style={reportTdSmall}>{d ? d.year : '-'}</td>
+                                    <td style={reportTdSmall}>{d ? d.month : '-'}</td>
+                                    <td style={reportTdSmall}>{d ? d.hp10.toFixed(3) : '0.000'}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            ))}
         </div>
 
-        {/* Verification Section (Added for professional look) */}
+        {/* Verification Section */}
         <div style={{ marginTop: "2rem", display: "grid", gridTemplateColumns: "2fr 1fr", gap: "2rem", borderTop: "2px solid #eee", paddingTop: "1.5rem" }}>
           <div>
             <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", marginBottom: "0.5rem" }}>Sello Digital de Verificación</div>

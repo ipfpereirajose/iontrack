@@ -10,16 +10,28 @@ export async function GET(request: Request) {
 
   const supabase = getServiceSupabase();
 
+  // Clean CI (remove dots or spaces)
+  const cleanCi = ci?.replace(/\D/g, "");
+
+  // Handle Month (could be number or name)
+  const monthMap: Record<string, string> = {
+    "ENERO": "01", "FEBRERO": "02", "MARZO": "03", "ABRIL": "04", "MAYO": "05", "JUNIO": "06",
+    "JULIO": "07", "AGOSTO": "08", "SEPTIEMBRE": "09", "OCTUBRE": "10", "NOVIEMBRE": "11", "DICIEMBRE": "12",
+    "1": "01", "2": "02", "3": "03", "4": "04", "5": "05", "6": "06", "7": "07", "8": "08", "9": "09", "10": "10", "11": "11", "12": "12"
+  };
+
+  const cleanMonth = birthMonth ? (monthMap[birthMonth.toUpperCase()] || birthMonth.padStart(2, '0')) : null;
+
   // 1. Verify credentials (allow multiple worker records for the same CI)
   let workerQuery = supabase
     .from("toe_workers")
     .select("*, companies(*, tenants(name))")
-    .eq("ci", ci);
+    .eq("ci", cleanCi);
   
-  // Prefer birth_date if all components are present, otherwise fallback to birth_year
-  if (birthYear && birthDay && birthMonth) {
-    const formattedDate = `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`;
-    workerQuery = workerQuery.eq("birth_date", formattedDate);
+  if (birthYear && birthDay && cleanMonth) {
+    const formattedDate = `${birthYear}-${cleanMonth}-${birthDay.padStart(2, '0')}`;
+    // Intelligent fallback: Try full date first, if not found or if birth_date is null in DB, check birth_year
+    workerQuery = workerQuery.or(`birth_date.eq.${formattedDate},and(birth_date.is.null,birth_year.eq.${birthYear})`);
   } else if (birthYear) {
     workerQuery = workerQuery.eq("birth_year", birthYear);
   }
@@ -37,7 +49,7 @@ export async function GET(request: Request) {
       *,
       toe_workers!inner(id, ci, company_id, companies(id, name, company_code, tax_id))
     `)
-    .eq("toe_workers.ci", ci)
+    .eq("toe_workers.ci", cleanCi)
     .eq("status", "approved")
     .order("year", { ascending: false })
     .order("month", { ascending: false });
