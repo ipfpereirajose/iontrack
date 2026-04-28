@@ -26,6 +26,10 @@ export default async function UsersManagementPage() {
     .eq("tenant_id", tenantId)
     .eq("role", "company_manager");
 
+  const uniqueCompaniesWithAccess = new Set(users.map(u => u.company_id)).size;
+  const totalCompanies = companies.length;
+  const coveragePercent = totalCompanies > 0 ? (uniqueCompaniesWithAccess / totalCompanies) * 100 : 0;
+
   return (
     <div style={{ padding: "1.5rem", maxWidth: "1600px", margin: "0 auto" }}>
       <header style={{ marginBottom: "2.5rem" }}>
@@ -44,9 +48,42 @@ export default async function UsersManagementPage() {
 
         {/* RIGHT: LIST */}
         <div className="clean-panel">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
-            <Shield size={20} color="var(--primary-teal)" />
-            <h3 style={{ fontWeight: 800 }}>Cuentas Activas</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Shield size={20} color="var(--primary-teal)" />
+              <h3 style={{ fontWeight: 800 }}>Cuentas Activas</h3>
+            </div>
+            
+            <div style={{ 
+              background: 'rgba(6, 182, 212, 0.1)', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
+            }}>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cobertura de Acceso</p>
+                <p style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--primary-teal)' }}>
+                  {uniqueCompaniesWithAccess} <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCompanies}</span>
+                </p>
+              </div>
+              <div style={{ 
+                width: '40px', 
+                height: '40px', 
+                borderRadius: '50%', 
+                border: '3px solid var(--border)',
+                borderTopColor: 'var(--primary-teal)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.7rem',
+                fontWeight: 900,
+                color: 'var(--primary-teal)'
+              }}>
+                {Math.round(coveragePercent)}%
+              </div>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
