@@ -109,32 +109,7 @@ export default function Sidebar() {
           Cerrar Sesión
         </button>
 
-        <div
-          className="glass-panel"
-          style={{ 
-            padding: "0.85rem", 
-            marginTop: "1rem", 
-            background: "rgba(255,255,255,0.03)", 
-            border: "1px solid rgba(255,255,255,0.05)" 
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              marginBottom: "0.25rem",
-            }}
-          >
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--state-safe)" }} />
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>
-              AGENTE LOCAL
-            </span>
-          </div>
-          <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
-            Sincronizado: hace 2m
-          </div>
-        </div>
+
       </div>
     </aside>
   );

@@ -86,14 +86,18 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
       </section>
 
       {/* RESOLVED JUSTIFICATIONS */}
-      {closedIncidents && closedIncidents.length > 0 && (
-        <section>
-          <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "1.1rem", fontWeight: 800, marginBottom: "1.25rem" }}>
-            <FileText size={20} color="var(--state-safe)" />
-            Justificaciones de Clínicas
-          </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {closedIncidents.map((inc: any) => (
+      <section>
+        <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "1.1rem", fontWeight: 800, marginBottom: "1.25rem" }}>
+          <FileText size={20} color="var(--state-safe)" />
+          Justificaciones de Clínicas
+        </h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {!closedIncidents || closedIncidents.length === 0 ? (
+            <div className="clean-panel" style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.875rem", background: "rgba(255,255,255,0.02)" }}>
+              No hay justificaciones recientes.
+            </div>
+          ) : (
+            closedIncidents.map((inc: any) => (
               <div key={inc.id} className="clean-panel" style={{ 
                 padding: "1rem", 
                 borderLeft: "4px solid var(--state-safe)", 
@@ -119,10 +123,10 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
                   "{inc.corrective_action_text}"
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            ))
+          )}
+        </div>
+      </section>
 
       {/* AGENT DOWNLOAD */}
       <div className="clean-panel" style={{ background: "var(--primary-dark)", color: "white", border: "none" }}>
