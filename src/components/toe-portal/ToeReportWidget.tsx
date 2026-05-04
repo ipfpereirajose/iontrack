@@ -71,26 +71,12 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
                     <td style={reportValueTd}>V-{selectedAccount.worker.ci}</td>
                 </tr>
                 <tr>
-                    <td style={reportLabelTd}>ID Único Trazabilidad:</td>
-                    <td style={{ ...reportValueTd, fontWeight: 900, color: "#1e40af" }}>
-                        {selectedAccount.company.company_code}-{selectedAccount.worker.ci}
-                    </td>
-                </tr>
-                <tr>
                     <td style={reportLabelTd}>Nombre y Apellido:</td>
                     <td style={reportValueTd}>{selectedAccount.worker.first_name} {selectedAccount.worker.last_name}</td>
                 </tr>
                 <tr>
-                    <td style={reportLabelTd}>Sexo:</td>
-                    <td style={reportValueTd}>{selectedAccount.worker.sex === 'M' ? 'MASCULINO' : 'FEMENINO'}</td>
-                </tr>
-                <tr>
                     <td style={reportLabelTd}>Fecha de Nacimiento:</td>
                     <td style={reportValueTd}>{day.padStart(2, '0')}/{month.padStart(2, '0')}/{year}</td>
-                </tr>
-                <tr>
-                    <td style={reportLabelTd}>Código Patronal:</td>
-                    <td style={reportValueTd}>{selectedAccount.company.tax_id}</td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Nombre Empresa:</td>
@@ -106,50 +92,77 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
             </thead>
             <tbody>
                 <tr style={{ background: "#f8fafc" }}>
-                    <td style={reportLabelTd}>Dosis Último Mes:</td>
+                    <td style={reportLabelTd}>Última Dosis:</td>
                     <td style={reportValueTd}>{Number(selectedAccount.history[0]?.hp10 || 0).toFixed(3)} mSv</td>
-                    <td style={reportLabelTd}>Estatus Vigilancia:</td>
-                    <td style={reportValueTd}>ACTIVO</td>
+                    <td style={reportLabelTd}>Dosis Acum. Empresa:</td>
+                    <td style={reportValueTd}>{Number(selectedAccount.lifeDose || 0).toFixed(3)} mSv</td>
                 </tr>
                 <tr>
-                    <td style={reportLabelTd}>Dosis Acumulada Empresa:</td>
-                    <td style={reportValueTd}>{Number(selectedAccount.lifeDose || 0).toFixed(3)} mSv</td>
                     <td style={reportLabelTd}>Dosis Vida Global:</td>
-                    <td style={{ ...reportValueTd, fontWeight: 900 }}>{Number(data.globalLifeDose || 0).toFixed(3)} mSv</td>
+                    <td style={{ ...reportValueTd, fontWeight: 900, color: "#1e40af" }}>{Number(data.globalLifeDose || 0).toFixed(3)} mSv</td>
+                    <td style={reportLabelTd}>Estatus:</td>
+                    <td style={reportValueTd}>VIGILANCIA ACTIVA</td>
                 </tr>
             </tbody>
         </table>
 
-        {/* Relación Mensual */}
-        <div style={{ marginBottom: "1rem", fontWeight: 700, textAlign: "center", background: "#dbeafe", padding: "0.3rem", border: "1px solid #bfdbfe", fontSize: "0.8rem" }}>
-            Relación de Dosis registradas en los últimos periodos
+        {/* Relación Mensual (Últimos 15 Meses) */}
+        <div style={{ marginBottom: "0.5rem", fontWeight: 700, textAlign: "center", background: "#f1f5f9", padding: "0.3rem", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
+            Historial Detallado (Últimos 15 Periodos)
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-            {[0, 1].map(colIdx => (
-                <table key={colIdx} style={reportTableSmall}>
-                    <thead>
-                        <tr style={{ background: "#f1f5f9" }}>
-                            <th style={reportThSmall}>AÑO</th>
-                            <th style={reportThSmall}>MES</th>
-                            <th style={reportThSmall}>DOSIS (mSv)</th>
+        <table style={reportTableSmall}>
+            <thead>
+                <tr style={{ background: "#f1f5f9" }}>
+                    <th style={reportThSmall}>AÑO</th>
+                    <th style={reportThSmall}>MES</th>
+                    <th style={reportThSmall}>Hp10 (mSv)</th>
+                    <th style={reportThSmall}>Hp3 (mSv)</th>
+                    <th style={reportThSmall}>Hp0.07 (mSv)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {Array.from({length: 15}).map((_, i) => {
+                    const d = selectedAccount.history[i];
+                    return (
+                        <tr key={i}>
+                            <td style={reportTdSmall}>{d ? d.year : '-'}</td>
+                            <td style={reportTdSmall}>{d ? d.month : '-'}</td>
+                            <td style={reportTdSmall}>{d ? Number(d.hp10 || 0).toFixed(3) : '0.000'}</td>
+                            <td style={reportTdSmall}>{d ? Number(d.hp3 || 0).toFixed(3) : '0.000'}</td>
+                            <td style={reportTdSmall}>{d ? Number(d.hp007 || 0).toFixed(3) : '0.000'}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {Array.from({length: 8}).map((_, i) => {
-                            const idx = i + (colIdx * 8);
-                            const d = selectedAccount.history[idx];
-                            return (
-                                <tr key={i}>
-                                    <td style={reportTdSmall}>{d ? d.year : '-'}</td>
-                                    <td style={reportTdSmall}>{d ? d.month : '-'}</td>
-                                    <td style={reportTdSmall}>{d ? Number(d.hp10 || 0).toFixed(3) : '0.000'}</td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            ))}
+                    );
+                })}
+            </tbody>
+        </table>
+
+        {/* Resumen Anual */}
+        <div style={{ marginTop: "1rem", marginBottom: "0.5rem", fontWeight: 700, textAlign: "center", background: "#f1f5f9", padding: "0.3rem", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
+            Resumen de Dosis por Año
         </div>
+        <table style={reportTableSmall}>
+            <thead>
+                <tr style={{ background: "#f1f5f9" }}>
+                    <th style={reportThSmall}>AÑO FISCAL</th>
+                    <th style={reportThSmall}>Nº REPORTES</th>
+                    <th style={reportThSmall}>DOSIS TOTAL (mSv)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {Object.entries(
+                  selectedAccount.history.reduce((acc: any, d: any) => {
+                    acc[d.year] = (acc[d.year] || 0) + Number(d.hp10 || 0);
+                    return acc;
+                  }, {})
+                ).sort((a: any, b: any) => b[0] - a[0]).slice(0, 5).map(([year, dose]: any) => (
+                  <tr key={year}>
+                    <td style={reportTdSmall}>{year}</td>
+                    <td style={reportTdSmall}>{selectedAccount.history.filter((d: any) => d.year == year).length}</td>
+                    <td style={reportTdSmall}>{Number(dose).toFixed(3)}</td>
+                  </tr>
+                ))}
+            </tbody>
+        </table>
 
         {/* Incidents Section */}
         {selectedAccount.incidents && selectedAccount.incidents.length > 0 && (
@@ -249,11 +262,13 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
 
 // STYLES
 const reportContainer = {
-  maxWidth: "800px",
+  width: "210mm",
+  maxWidth: "100%",
   margin: "0 auto",
   border: "1px solid #ccc",
-  padding: "2rem",
+  padding: "1.5rem",
   boxShadow: "0 0 20px rgba(0,0,0,0.05)",
+  background: "white",
 } as any;
 
 const reportHeader = {
