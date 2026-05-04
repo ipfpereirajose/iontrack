@@ -52,7 +52,6 @@ export async function GET(request: Request) {
   }
 
   // 2. Get all doses for this CI (across all companies)
-  // We use the worker IDs found in the previous step to get their doses accurately
   const workerIdsFound = workers.map(w => w.id);
   
   const { data: allDoses } = await supabase
@@ -66,9 +65,17 @@ export async function GET(request: Request) {
     .order("year", { ascending: false })
     .order("month", { ascending: false });
 
-  // 3. Group data by company (ID Unico: CompanyID + CI)
+  // 3. Get incidents for these workers
+  const { data: allIncidents } = await supabase
+    .from("incidents")
+    .select("*")
+    .in("toe_worker_id", workerIdsFound)
+    .order("created_at", { ascending: false });
+
+  // 4. Group data by company
   const accounts = workers.map(w => {
     const companyDoses = allDoses?.filter(d => d.toe_worker_id === w.id) || [];
+    const companyIncidents = allIncidents?.filter(i => i.toe_worker_id === w.id) || [];
     const lifeDose = companyDoses.reduce((sum, d) => sum + Number(d.hp10), 0);
     
     return {
@@ -91,6 +98,7 @@ export async function GET(request: Request) {
         hp3: d.hp3,
         hp007: d.hp007,
       })),
+      incidents: companyIncidents,
       lifeDose
     };
   });

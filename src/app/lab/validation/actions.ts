@@ -21,15 +21,32 @@ export async function approveDose(doseId: string) {
     throw new Error("No tienes permiso para validar esta dosis");
   }
 
-  // Threshold Check (80% of 1.6mSv monthly limit = 1.28mSv)
-  const THRESHOLD = 1.28;
-  if (dose.hp10 >= THRESHOLD) {
+  // Threshold Check (Warning: 1.328mSv, Critical: 1.66mSv)
+  const WARNING_THRESHOLD = 1.328;
+  const CRITICAL_THRESHOLD = 1.66;
+  
+  if (dose.hp10 >= WARNING_THRESHOLD) {
+    const severity = dose.hp10 >= CRITICAL_THRESHOLD ? "critical" : "warning";
+    
+    // Create formal Incident for investigation and justification
+    await supabase.from("incidents").insert([
+      {
+        tenant_id: profile.tenant_id,
+        company_id: dose.toe_workers.company_id,
+        toe_worker_id: dose.toe_worker_id,
+        dose_id: doseId,
+        severity,
+        status: "open"
+      },
+    ]);
+
+    // Create Notification for immediate visibility
     await supabase.from("notifications").insert([
       {
         tenant_id: profile.tenant_id,
         company_id: dose.toe_workers.company_id,
         type: "threshold_alert",
-        message: `ALERTA CRÍTICA: El trabajador ha superado el 80% del límite mensual permitido (${dose.hp10} mSv).`,
+        message: `${severity === "critical" ? "ALERTA CRÍTICA" : "ADVERTENCIA"}: Dosis de ${dose.hp10} mSv detectada. Se requiere investigación y justificación.`,
       },
     ]);
   }
@@ -45,7 +62,7 @@ export async function approveDose(doseId: string) {
 
   if (error) throw new Error(error.message);
 
-  // Audit Log (Immutable record)
+  // Audit Log (Lab internal record)
   await supabase.from("audit_logs").insert([
     {
       tenant_id: profile.tenant_id,
@@ -54,7 +71,7 @@ export async function approveDose(doseId: string) {
       table_name: "doses",
       record_id: doseId,
       new_data: { status: "approved", value: dose.hp10 },
-      justification: "Validación manual por Oficial de Seguridad",
+      justification: "Validación manual y apertura de incidencia si aplica",
     },
   ]);
 
@@ -127,20 +144,39 @@ export async function approveBatch(month?: number, year?: number) {
 
     if (updateError) throw new Error(`Error al aprobar lote: ${updateError.message}`);
 
-    // 3. Handle notifications for this batch (Threshold check)
-    const THRESHOLD = 1.28;
-    const criticalDoses = batch.filter(d => d.hp10 >= THRESHOLD);
-    if (criticalDoses.length > 0) {
-      const notifications = criticalDoses.map((d: any) => {
+    // 3. Handle incidents and notifications for this batch (Threshold check)
+    const WARNING_THRESHOLD = 1.328;
+    const CRITICAL_THRESHOLD = 1.66;
+    
+    const highDoses = batch.filter(d => d.hp10 >= WARNING_THRESHOLD);
+    
+    if (highDoses.length > 0) {
+      const incidents = highDoses.map((d: any) => {
         const worker = Array.isArray(d.toe_workers) ? d.toe_workers[0] : d.toe_workers;
         return {
           tenant_id: profile.tenant_id,
           company_id: worker?.company_id,
+          toe_worker_id: d.toe_worker_id || worker?.id,
+          dose_id: d.id,
+          severity: d.hp10 >= CRITICAL_THRESHOLD ? "critical" : "warning",
+          status: "open"
+        };
+      }).filter((i: any) => i.company_id);
+
+      const notifications = highDoses.map((d: any) => {
+        const worker = Array.isArray(d.toe_workers) ? d.toe_workers[0] : d.toe_workers;
+        const severity = d.hp10 >= CRITICAL_THRESHOLD ? "CRÍTICA" : "ADVERTENCIA";
+        return {
+          tenant_id: profile.tenant_id,
+          company_id: worker?.company_id,
           type: "threshold_alert",
-          message: `ALERTA: Dosis alta (${d.hp10} mSv) detectada en procesamiento por lotes.`,
+          message: `ALERTA ${severity}: Dosis alta (${d.hp10} mSv) detectada en lote. Se requiere justificación.`,
         };
       }).filter((n: any) => n.company_id);
 
+      if (incidents.length > 0) {
+        await supabase.from("incidents").insert(incidents);
+      }
       if (notifications.length > 0) {
         await supabase.from("notifications").insert(notifications);
       }

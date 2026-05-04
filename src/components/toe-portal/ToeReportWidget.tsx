@@ -151,6 +151,43 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
             ))}
         </div>
 
+        {/* Incidents Section */}
+        {selectedAccount.incidents && selectedAccount.incidents.length > 0 && (
+          <div style={{ marginTop: "2rem" }}>
+            <div style={{ background: "#fee2e2", border: "1px solid #ef4444", padding: "1rem", borderRadius: "8px" }}>
+              <h4 style={{ color: "#b91c1c", margin: "0 0 1rem 0", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
+                ⚠️ Notificaciones de Investigación y Justificación
+              </h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {selectedAccount.incidents.map((incident: any) => (
+                  <div key={incident.id} style={{ background: "white", padding: "0.75rem", borderRadius: "4px", borderLeft: "4px solid #ef4444" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ fontWeight: 800, fontSize: "0.7rem", color: "#b91c1c" }}>
+                        EVENTO {incident.severity.toUpperCase()} - STATUS: {incident.status.toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: "0.7rem", color: "#666" }}>
+                        {new Date(incident.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: "0.75rem", margin: "0", color: "#333" }}>
+                      Se ha detectado una dosis que requiere justificación técnica por parte del trabajador y el OSR de la clínica.
+                    </p>
+                    {incident.corrective_action_text ? (
+                      <div style={{ marginTop: "0.5rem", padding: "0.5rem", background: "#f8fafc", fontSize: "0.7rem", fontStyle: "italic", border: "1px solid #e2e8f0" }}>
+                        <strong>Justificación/Acción:</strong> {incident.corrective_action_text}
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: "0.5rem", color: "#b91c1c", fontWeight: 700, fontSize: "0.7rem" }}>
+                        * PENDIENTE DE JUSTIFICACIÓN TÉCNICA
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Verification Section */}
         <div style={{ marginTop: "2rem", display: "grid", gridTemplateColumns: "2fr 1fr", gap: "2rem", borderTop: "2px solid #eee", paddingTop: "1.5rem" }}>
           <div>
