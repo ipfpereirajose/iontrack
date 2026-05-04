@@ -82,6 +82,38 @@ export async function bulkImportAction(type: string, data: any[]) {
     return monthsMap[val.toString().toLowerCase().trim()] || 0;
   };
 
+  const parseDate = (val: any): string | null => {
+    if (!val) return null;
+    
+    // Si ya es un objeto Date
+    if (val instanceof Date) return val.toISOString().split('T')[0];
+
+    // Si es un número (Excel serial date)
+    if (typeof val === 'number') {
+      const date = new Date(Math.round((val - 25569) * 86400 * 1000));
+      return date.toISOString().split('T')[0];
+    }
+
+    const str = val.toString().trim();
+    
+    // Intentar formato DD/MM/AAAA
+    const parts = str.split(/[\/\-]/);
+    if (parts.length === 3) {
+      // Caso DD/MM/AAAA o AAAA/MM/DD
+      if (parts[0].length === 4) { // AAAA/MM/DD
+        return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+      } else if (parts[2].length === 4) { // DD/MM/AAAA
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+    }
+
+    // Fallback al constructor de Date
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+
+    return null;
+  };
+
   // 2. Procesamiento de filas
   for (const [index, item] of data.entries()) {
     try {
@@ -148,7 +180,7 @@ export async function bulkImportAction(type: string, data: any[]) {
           sex: (getVal(["Sexo", "sex", "SEXO"]) || "M").toString().toUpperCase().charAt(0), 
           position: (getVal(["Cargo", "CARGO"]) || "").trim(),
           practice: (getVal(["Practica", "PRACTICA", "Práctica"]) || "").trim(), 
-          birth_date: getVal(["Fecha de nacimiento", "a de nacim", "nacimiento", "birth_date"]),
+          birth_date: parseDate(getVal(["Fecha de nacimiento", "a de nacim", "nacimiento", "birth_date"])),
           status: "active"
         });
       }
