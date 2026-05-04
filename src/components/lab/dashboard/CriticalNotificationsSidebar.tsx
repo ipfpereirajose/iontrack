@@ -5,14 +5,27 @@ import { getServiceSupabase } from "@/lib/supabase";
 export default async function CriticalNotificationsSidebar({ tenantId, targetYear }: { tenantId: string, targetYear: number }) {
   const adminSupabase = getServiceSupabase();
   
-  const { data: criticalDoses = [] } = await adminSupabase
-    .from("doses")
-    .select("id, hp10, month, year, status, toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))")
-    .eq("toe_workers.companies.tenant_id", tenantId)
-    .eq("year", targetYear)
-    .gte("hp10", 1.328)
-    .order("hp10", { ascending: false })
+  const { data: openIncidents = [] } = await adminSupabase
+    .from("incidents")
+    .select(`
+      id,
+      status,
+      doses!inner(id, hp10, month, year),
+      toe_workers!inner(id, first_name, last_name, companies!inner(name))
+    `)
+    .eq("tenant_id", tenantId)
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
     .limit(10);
+
+  // Map the incidents back to the format expected by the render logic
+  const criticalDoses = openIncidents.map((inc: any) => ({
+    id: inc.doses.id,
+    hp10: inc.doses.hp10,
+    month: inc.doses.month,
+    year: inc.doses.year,
+    toe_workers: inc.toe_workers
+  }));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>

@@ -5,11 +5,10 @@ export default async function CriticalAlertsWidget({ tenantId, targetYear }: { t
   const adminSupabase = getServiceSupabase();
   
   const { count: criticalCount = 0 } = await adminSupabase
-    .from("doses")
-    .select("id, toe_workers!inner(companies!inner(tenant_id))", { count: "exact", head: true })
-    .eq("toe_workers.companies.tenant_id", tenantId)
-    .eq("year", targetYear)
-    .gte("hp10", 1.328);
+    .from("incidents")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId)
+    .eq("status", "open");
 
   return (
     <div className="clean-panel" style={{ borderLeft: `4px solid ${criticalCount && criticalCount > 0 ? "var(--state-danger)" : "var(--state-safe)"}` }}>
