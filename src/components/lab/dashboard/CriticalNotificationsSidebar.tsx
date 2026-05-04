@@ -11,7 +11,6 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
     .select("id, hp10, month, year, toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))")
     .eq("toe_workers.companies.tenant_id", tenantId)
     .eq("status", "pending")
-    .eq("year", targetYear)
     .gte("hp10", 1.328)
     .order("hp10", { ascending: false });
 
@@ -22,9 +21,9 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
       id,
       status,
       doses!inner(id, hp10, month, year),
-      toe_workers!inner(id, first_name, last_name, companies!inner(name))
+      toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))
     `)
-    .eq("tenant_id", tenantId)
+    .eq("toe_workers.companies.tenant_id", tenantId)
     .eq("status", "open")
     .order("created_at", { ascending: false });
 
@@ -56,9 +55,9 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
       corrective_action_text,
       closed_at,
       doses!inner(id, hp10, month, year),
-      toe_workers!inner(id, first_name, last_name, companies!inner(name))
+      toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))
     `)
-    .eq("tenant_id", tenantId)
+    .eq("toe_workers.companies.tenant_id", tenantId)
     .eq("status", "closed")
     .order("closed_at", { ascending: false })
     .limit(5);

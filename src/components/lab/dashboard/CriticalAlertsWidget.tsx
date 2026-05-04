@@ -10,14 +10,13 @@ export default async function CriticalAlertsWidget({ tenantId, targetYear }: { t
     .select("id, toe_workers!inner(companies!inner(tenant_id))", { count: "exact", head: true })
     .eq("toe_workers.companies.tenant_id", tenantId)
     .eq("status", "pending")
-    .eq("year", targetYear)
     .gte("hp10", 1.328);
 
   // 2. Count open incidents (Validated but not yet justified/closed)
   const { count: openIncidentsCount = 0 } = await adminSupabase
     .from("incidents")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", tenantId)
+    .select("id, toe_workers!inner(companies!inner(tenant_id))", { count: "exact", head: true })
+    .eq("toe_workers.companies.tenant_id", tenantId)
     .eq("status", "open");
 
   const criticalCount = (pendingHighDoses || 0) + (openIncidentsCount || 0);
