@@ -1,7 +1,7 @@
 import { ShieldAlert } from "lucide-react";
 import { getServiceSupabase } from "@/lib/supabase";
 
-export default async function CriticalAlertsListWidget({ tenantId }: { tenantId: string }) {
+export default async function CriticalAlertsListWidget({ tenantId, targetYear }: { tenantId: string, targetYear: number }) {
   const adminSupabase = getServiceSupabase();
   
   const { data: alerts } = await adminSupabase
@@ -14,8 +14,9 @@ export default async function CriticalAlertsListWidget({ tenantId }: { tenantId:
       )
     `)
     .eq("toe_workers.companies.tenant_id", tenantId)
+    .eq("year", targetYear)
     .gte("hp10", 1.328)
-    .order("created_at", { ascending: false })
+    .order("hp10", { ascending: false })
     .limit(5);
 
   return (

@@ -51,7 +51,7 @@ export default async function CompaniesPage({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem", marginBottom: "3rem" }}>
         <Suspense fallback={<div className="clean-panel">Cargando alertas críticas...</div>}>
-          <CriticalAlertsListWidget tenantId={tenantId} />
+          <CriticalAlertsListWidget tenantId={tenantId} targetYear={targetYear} />
         </Suspense>
       </div>
 
