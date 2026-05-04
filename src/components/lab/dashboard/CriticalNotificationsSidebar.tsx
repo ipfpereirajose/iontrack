@@ -19,7 +19,7 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
     .limit(10);
 
   // Map the incidents back to the format expected by the render logic
-  const criticalDoses = openIncidents.map((inc: any) => ({
+  const criticalDoses = (openIncidents || []).map((inc: any) => ({
     id: inc.doses.id,
     hp10: inc.doses.hp10,
     month: inc.doses.month,
