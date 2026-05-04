@@ -15,6 +15,7 @@ import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 
 export default function Sidebar() {
+  const pathname = usePathname();
   const [incidentCount, setIncidentCount] = useState(0);
 
   useEffect(() => {
