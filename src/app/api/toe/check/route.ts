@@ -57,7 +57,6 @@ export async function GET(request: Request) {
       .from("doses")
       .select("*")
       .in("toe_worker_id", workerIdsFound)
-      .eq("status", "approved")
       .order("year", { ascending: false })
       .order("month", { ascending: false });
 
