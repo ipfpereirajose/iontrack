@@ -1,4 +1,4 @@
-import { ShieldAlert, ArrowRight, Download } from "lucide-react";
+import { ShieldAlert, ArrowRight, Download, FileText } from "lucide-react";
 import Link from "next/link";
 import { getServiceSupabase } from "@/lib/supabase";
 
