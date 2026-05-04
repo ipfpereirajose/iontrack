@@ -8,9 +8,9 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
     const exportData = account.history.map((d: any) => ({
       Año: d.year,
       Mes: d.month,
-      'Hp10 (mSv)': d.hp10.toFixed(4),
-      'Hp3 (mSv)': (d.hp3 || 0).toFixed(4),
-      'Hp0.07 (mSv)': (d.hp007 || 0).toFixed(4),
+      'Hp10 (mSv)': Number(d.hp10 || 0).toFixed(4),
+      'Hp3 (mSv)': Number(d.hp3 || 0).toFixed(4),
+      'Hp0.07 (mSv)': Number(d.hp007 || 0).toFixed(4),
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -107,15 +107,15 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
             <tbody>
                 <tr style={{ background: "#f8fafc" }}>
                     <td style={reportLabelTd}>Dosis Último Mes:</td>
-                    <td style={reportValueTd}>{selectedAccount.history[0]?.hp10.toFixed(3) || "0.000"} mSv</td>
+                    <td style={reportValueTd}>{Number(selectedAccount.history[0]?.hp10 || 0).toFixed(3)} mSv</td>
                     <td style={reportLabelTd}>Estatus Vigilancia:</td>
                     <td style={reportValueTd}>ACTIVO</td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Dosis Acumulada Empresa:</td>
-                    <td style={reportValueTd}>{selectedAccount.lifeDose.toFixed(3)} mSv</td>
+                    <td style={reportValueTd}>{Number(selectedAccount.lifeDose || 0).toFixed(3)} mSv</td>
                     <td style={reportLabelTd}>Dosis Vida Global:</td>
-                    <td style={{ ...reportValueTd, fontWeight: 900 }}>{data.globalLifeDose.toFixed(3)} mSv</td>
+                    <td style={{ ...reportValueTd, fontWeight: 900 }}>{Number(data.globalLifeDose || 0).toFixed(3)} mSv</td>
                 </tr>
             </tbody>
         </table>
@@ -142,7 +142,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
                                 <tr key={i}>
                                     <td style={reportTdSmall}>{d ? d.year : '-'}</td>
                                     <td style={reportTdSmall}>{d ? d.month : '-'}</td>
-                                    <td style={reportTdSmall}>{d ? d.hp10.toFixed(3) : '0.000'}</td>
+                                    <td style={reportTdSmall}>{d ? Number(d.hp10 || 0).toFixed(3) : '0.000'}</td>
                                 </tr>
                             );
                         })}
