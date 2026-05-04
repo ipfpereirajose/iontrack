@@ -73,7 +73,7 @@ export default function Sidebar() {
                 <Icon size={20} />
                 {item.name}
               </div>
-              {item.badge > 0 && (
+              {item.badge && item.badge > 0 && (
                 <span style={{ 
                   background: "#ef4444", 
                   color: "white", 
