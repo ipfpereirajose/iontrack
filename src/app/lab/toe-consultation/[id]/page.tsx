@@ -24,7 +24,7 @@ export default async function WorkerHistoryPage({
   const adminSupabase = getServiceSupabase();
 
   // Fetch Worker Info
-  const { data: worker } = await adminSupabase
+  const { data: worker, error: workerError } = await adminSupabase
     .from("toe_workers")
     .select(`
       *,
@@ -34,7 +34,17 @@ export default async function WorkerHistoryPage({
     .eq("companies.tenant_id", tenantId)
     .single();
 
-  if (!worker) return <div style={{ color: "white", padding: "2rem" }}>Trabajador no encontrado o no autorizado.</div>;
+  if (workerError || !worker) {
+    return (
+      <div style={{ color: "white", padding: "2rem", textAlign: "center" }}>
+        <h3>Error al acceder al trabajador</h3>
+        <p>{workerError?.message || "Trabajador no encontrado o no autorizado."}</p>
+        <Link href="/lab/toe-consultation" className="btn btn-primary" style={{ marginTop: "1rem" }}>Volver</Link>
+      </div>
+    );
+  }
+
+  const company = Array.isArray(worker.companies) ? worker.companies[0] : worker.companies;
 
   // Fetch Dose History (all approved and pending)
   const { data: doses } = await adminSupabase
@@ -89,7 +99,7 @@ export default async function WorkerHistoryPage({
                 <User size={16} /> CI: {worker.ci}
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                <Building2 size={16} /> {worker.companies.name}
+                <Building2 size={16} /> {company?.name || 'S/N'}
               </span>
             </div>
           </div>

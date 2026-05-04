@@ -30,9 +30,20 @@ export default async function ToeWorkersList({ tenantId, query, company }: { ten
     workersQuery = workersQuery.eq("company_id", company);
   }
 
-  const { data: workers } = await workersQuery.limit(100);
+  const { data: workers, error: fetchError } = await workersQuery.limit(100);
+
+  if (fetchError) {
+    console.error("Error fetching workers:", fetchError);
+    return (
+      <div className="clean-panel" style={{ padding: "4rem", textAlign: "center", color: "var(--state-danger)" }}>
+        <p>Error al cargar trabajadores: {fetchError.message}</p>
+      </div>
+    );
+  }
 
   const processedWorkers = workers?.map(w => {
+    // Handle potential array/object return from join
+    const company = Array.isArray(w.companies) ? w.companies[0] : w.companies;
     const approvedDoses = w.doses?.filter((d: any) => d.status === 'approved') || [];
     
     const totals = {
@@ -47,6 +58,7 @@ export default async function ToeWorkersList({ tenantId, query, company }: { ten
     
     return {
       ...w,
+      company: company || { name: 'S/N' },
       totals,
       lastDose: lastDose?.hp10 || 0,
       lastDate: lastDose ? `${lastDose.month}/${lastDose.year}` : 'N/A'
@@ -87,7 +99,7 @@ export default async function ToeWorkersList({ tenantId, query, company }: { ten
                 <td style={tdStyle}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <Building2 size={14} color="var(--primary-teal)" />
-                    <span style={{ fontWeight: 600 }}>{(w.companies as any).name}</span>
+                    <span style={{ fontWeight: 600 }}>{w.company.name}</span>
                   </div>
                 </td>
                 <td style={tdStyle}>
@@ -142,7 +154,7 @@ export default async function ToeWorkersList({ tenantId, query, company }: { ten
                     <RegisterDoseModal 
                       workerId={w.id} 
                       workerName={`${w.first_name} ${w.last_name}`}
-                      companyName={(w.companies as any).name}
+                      companyName={w.company.name}
                     />
                   </div>
                 </td>
