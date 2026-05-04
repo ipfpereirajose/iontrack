@@ -69,20 +69,20 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
                 <tr>
                     <td style={reportLabelTd}>Cédula de Identidad:</td>
                     <td style={reportValueTd}>
-                        V-{selectedAccount.worker.ci.replace(/^[Vv]-?/, '')}
+                        V-{String(selectedAccount?.worker?.ci || "").replace(/^[Vv]-?/, '')}
                     </td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Nombre y Apellido:</td>
-                    <td style={reportValueTd}>{selectedAccount.worker.first_name} {selectedAccount.worker.last_name}</td>
+                    <td style={reportValueTd}>{selectedAccount?.worker?.first_name || 'N/A'} {selectedAccount?.worker?.last_name || ''}</td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Fecha de Nacimiento:</td>
-                    <td style={reportValueTd}>{day.padStart(2, '0')}/{month.padStart(2, '0')}/{year}</td>
+                    <td style={reportValueTd}>{(day || "01").padStart(2, '0')}/{(month || "01").padStart(2, '0')}/{year || "----"}</td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Nombre Empresa:</td>
-                    <td style={reportValueTd}>{selectedAccount.company.name}</td>
+                    <td style={reportValueTd}>{selectedAccount?.company?.name || 'EMPRESA NO REGISTRADA'}</td>
                 </tr>
             </tbody>
         </table>
@@ -95,13 +95,13 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
             <tbody>
                 <tr style={{ background: "#f8fafc" }}>
                     <td style={reportLabelTd}>Última Dosis:</td>
-                    <td style={reportValueTd}>{Number(selectedAccount.history[0]?.hp10 || 0).toFixed(3)} mSv</td>
+                    <td style={reportValueTd}>{Number(selectedAccount?.history?.[0]?.hp10 || 0).toFixed(3)} mSv</td>
                     <td style={reportLabelTd}>Dosis Acum. Empresa:</td>
-                    <td style={reportValueTd}>{Number(selectedAccount.lifeDose || 0).toFixed(3)} mSv</td>
+                    <td style={reportValueTd}>{Number(selectedAccount?.lifeDose || 0).toFixed(3)} mSv</td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Dosis Vida Global:</td>
-                    <td style={{ ...reportValueTd, fontWeight: 900, color: "#1e40af" }}>{Number(data.globalLifeDose || 0).toFixed(3)} mSv</td>
+                    <td style={{ ...reportValueTd, fontWeight: 900, color: "#1e40af" }}>{Number(data?.globalLifeDose || 0).toFixed(3)} mSv</td>
                     <td style={reportLabelTd}>Estatus:</td>
                     <td style={reportValueTd}>VIGILANCIA ACTIVA</td>
                 </tr>
@@ -124,7 +124,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
             </thead>
             <tbody>
                 {Array.from({length: 15}).map((_, i) => {
-                    const d = selectedAccount.history[i];
+                    const d = selectedAccount?.history?.[i];
                     return (
                         <tr key={i}>
                             <td style={reportTdSmall}>{d ? d.year : '-'}</td>
@@ -152,14 +152,15 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
             </thead>
             <tbody>
                 {Object.entries(
-                  selectedAccount.history.reduce((acc: any, d: any) => {
-                    acc[d.year] = (acc[d.year] || 0) + Number(d.hp10 || 0);
+                  (selectedAccount?.history || []).reduce((acc: any, d: any) => {
+                    const y = d?.year || 'S/N';
+                    acc[y] = (acc[y] || 0) + Number(d?.hp10 || 0);
                     return acc;
                   }, {})
-                ).sort((a: any, b: any) => b[0] - a[0]).slice(0, 5).map(([year, dose]: any) => (
+                ).sort((a: any, b: any) => Number(b[0]) - Number(a[0])).slice(0, 5).map(([year, dose]: any) => (
                   <tr key={year}>
                     <td style={reportTdSmall}>{year}</td>
-                    <td style={reportTdSmall}>{selectedAccount.history.filter((d: any) => d.year == year).length}</td>
+                    <td style={reportTdSmall}>{(selectedAccount?.history || []).filter((d: any) => d.year == year).length}</td>
                     <td style={reportTdSmall}>{Number(dose).toFixed(3)}</td>
                   </tr>
                 ))}
@@ -167,7 +168,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
         </table>
 
         {/* Incidents Section */}
-        {selectedAccount.incidents && selectedAccount.incidents.length > 0 && (
+        {selectedAccount?.incidents && selectedAccount.incidents.length > 0 && (
           <div style={{ marginTop: "2rem" }}>
             <div style={{ background: "#fee2e2", border: "1px solid #ef4444", padding: "1rem", borderRadius: "8px" }}>
               <h4 style={{ color: "#b91c1c", margin: "0 0 1rem 0", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
@@ -178,7 +179,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
                   <div key={incident.id} style={{ background: "white", padding: "0.75rem", borderRadius: "4px", borderLeft: "4px solid #ef4444" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                       <span style={{ fontWeight: 800, fontSize: "0.7rem", color: "#b91c1c" }}>
-                        EVENTO {incident.severity.toUpperCase()} - STATUS: {incident.status.toUpperCase()}
+                        EVENTO {String(incident.severity || 'ALERTA').toUpperCase()} - STATUS: {String(incident.status || 'OPEN').toUpperCase()}
                       </span>
                       <span style={{ fontSize: "0.7rem", color: "#666" }}>
                         {new Date(incident.created_at).toLocaleDateString()}
@@ -252,7 +253,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
                 <button onClick={() => window.print()} style={actionButton}>
                     <FileText size={14} /> Imprimir Reporte (PDF)
                 </button>
-                <button onClick={() => data.accounts.length > 1 ? setStep("accounts") : setStep("login")} style={{ ...actionButton, background: "#64748b" }}>
+                <button onClick={() => (data?.accounts?.length || 0) > 1 ? setStep("accounts") : setStep("login")} style={{ ...actionButton, background: "#64748b" }}>
                     <ArrowLeft size={14} /> Volver
                 </button>
             </div>
