@@ -3,9 +3,24 @@ import Link from "next/link";
 import { getServiceSupabase } from "@/lib/supabase";
 import RegisterDoseModal from "@/components/lab/RegisterDoseModal";
 
-export default async function ToeWorkersList({ tenantId, query, company }: { tenantId: string, query?: string, company?: string }) {
+export default async function ToeWorkersList({ tenantId, query, company: companyFilter }: { tenantId: string, query?: string, company?: string }) {
   const adminSupabase = getServiceSupabase();
   
+  // 1. Fetch companies for this tenant to ensure isolation and get names
+  const { data: tenantCompanies, error: companiesError } = await adminSupabase
+    .from("companies")
+    .select("id, name")
+    .eq("tenant_id", tenantId);
+
+  if (companiesError) {
+    console.error("Error fetching companies:", companiesError);
+    return <div className="clean-panel" style={{ padding: "4rem", textAlign: "center" }}>Error al cargar datos de empresas.</div>;
+  }
+
+  const companyIds = tenantCompanies?.map(c => c.id) || [];
+  if (companyIds.length === 0) return null;
+
+  // 2. Fetch workers limited by these companies
   let workersQuery = adminSupabase
     .from("toe_workers")
     .select(`
@@ -15,10 +30,9 @@ export default async function ToeWorkersList({ tenantId, query, company }: { ten
       ci,
       worker_code,
       company_id,
-      companies!inner(name, tenant_id),
       doses(hp10, hp3, hp007, hp007_ext, hp10_neu, month, year, status)
     `)
-    .eq("companies.tenant_id", tenantId);
+    .in("company_id", companyIds);
 
   if (query) {
     const cleanQuery = query.replace(/\./g, "").replace(/\s/g, "");
@@ -26,25 +40,21 @@ export default async function ToeWorkersList({ tenantId, query, company }: { ten
       `first_name.ilike.%${query}%,last_name.ilike.%${query}%,ci.ilike.%${query}%,ci.ilike.%${cleanQuery}%`
     );
   }
-  if (company) {
-    workersQuery = workersQuery.eq("company_id", company);
+  
+  if (companyFilter) {
+    workersQuery = workersQuery.eq("company_id", companyFilter);
   }
 
-  const { data: workers, error: fetchError } = await workersQuery.limit(100);
+  const { data: workers, error: workersError } = await workersQuery.limit(50);
 
-  if (fetchError) {
-    console.error("Error fetching workers:", fetchError);
-    return (
-      <div className="clean-panel" style={{ padding: "4rem", textAlign: "center", color: "var(--state-danger)" }}>
-        <p>Error al cargar trabajadores: {fetchError.message}</p>
-      </div>
-    );
+  if (workersError) {
+    console.error("Error fetching workers:", workersError);
+    return <div className="clean-panel" style={{ padding: "4rem", textAlign: "center" }}>Error al cargar trabajadores.</div>;
   }
 
   const processedWorkers = workers?.map(w => {
-    // Handle potential array/object return from join
-    const company = Array.isArray(w.companies) ? w.companies[0] : w.companies;
-    const approvedDoses = w.doses?.filter((d: any) => d.status === 'approved') || [];
+    const company = tenantCompanies.find(c => c.id === w.company_id);
+    const approvedDoses = (w.doses as any[])?.filter((d: any) => d.status === 'approved') || [];
     
     const totals = {
       hp10: approvedDoses.reduce((acc: number, curr: any) => acc + (Number(curr.hp10) || 0), 0),

@@ -23,30 +23,42 @@ export default async function WorkerHistoryPage({
   const tenantId = profile?.tenant_id;
   const adminSupabase = getServiceSupabase();
 
-  // Fetch Worker Info
+  // 1. Fetch Worker first
   const { data: worker, error: workerError } = await adminSupabase
     .from("toe_workers")
-    .select(`
-      *,
-      companies!inner(name, tenant_id, company_code)
-    `)
+    .select("*")
     .eq("id", workerId)
-    .eq("companies.tenant_id", tenantId)
     .single();
 
   if (workerError || !worker) {
     return (
       <div style={{ color: "white", padding: "2rem", textAlign: "center" }}>
         <h3>Error al acceder al trabajador</h3>
-        <p>{workerError?.message || "Trabajador no encontrado o no autorizado."}</p>
+        <p>{workerError?.message || "Trabajador no encontrado."}</p>
         <Link href="/lab/toe-consultation" className="btn btn-primary" style={{ marginTop: "1rem" }}>Volver</Link>
       </div>
     );
   }
 
-  const company = Array.isArray(worker.companies) ? worker.companies[0] : worker.companies;
+  // 2. Fetch and verify Company ownership
+  const { data: company, error: companyError } = await adminSupabase
+    .from("companies")
+    .select("name, tenant_id, company_code")
+    .eq("id", worker.company_id)
+    .eq("tenant_id", tenantId)
+    .single();
 
-  // Fetch Dose History (all approved and pending)
+  if (companyError || !company) {
+    return (
+      <div style={{ color: "white", padding: "2rem", textAlign: "center" }}>
+        <h3>Acceso denegado</h3>
+        <p>No tienes permiso para ver este registro o la empresa no existe.</p>
+        <Link href="/lab/toe-consultation" className="btn btn-primary" style={{ marginTop: "1rem" }}>Volver</Link>
+      </div>
+    );
+  }
+
+  // 3. Fetch Dose History
   const { data: doses } = await adminSupabase
     .from("doses")
     .select("*")
