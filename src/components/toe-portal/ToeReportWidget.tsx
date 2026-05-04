@@ -68,7 +68,9 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
             <tbody>
                 <tr>
                     <td style={reportLabelTd}>Cédula de Identidad:</td>
-                    <td style={reportValueTd}>V-{selectedAccount.worker.ci}</td>
+                    <td style={reportValueTd}>
+                        V-{selectedAccount.worker.ci.replace(/^[Vv]-?/, '')}
+                    </td>
                 </tr>
                 <tr>
                     <td style={reportLabelTd}>Nombre y Apellido:</td>
