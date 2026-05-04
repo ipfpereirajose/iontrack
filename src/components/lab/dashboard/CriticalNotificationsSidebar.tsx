@@ -5,6 +5,17 @@ import { getServiceSupabase } from "@/lib/supabase";
 export default async function CriticalNotificationsSidebar({ tenantId, targetYear }: { tenantId: string, targetYear: number }) {
   const adminSupabase = getServiceSupabase();
   
+  // 1. Fetch pending doses above threshold (New alerts)
+  const { data: pendingDoses = [] } = await adminSupabase
+    .from("doses")
+    .select("id, hp10, month, year, toe_workers!inner(id, first_name, last_name, companies!inner(name, tenant_id))")
+    .eq("toe_workers.companies.tenant_id", tenantId)
+    .eq("status", "pending")
+    .eq("year", targetYear)
+    .gte("hp10", 1.328)
+    .order("hp10", { ascending: false });
+
+  // 2. Fetch open incidents (Validated alerts)
   const { data: openIncidents = [] } = await adminSupabase
     .from("incidents")
     .select(`
@@ -15,17 +26,27 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
     `)
     .eq("tenant_id", tenantId)
     .eq("status", "open")
-    .order("created_at", { ascending: false })
-    .limit(10);
+    .order("created_at", { ascending: false });
 
-  // Map the incidents back to the format expected by the render logic
-  const criticalDoses = (openIncidents || []).map((inc: any) => ({
-    id: inc.doses.id,
-    hp10: inc.doses.hp10,
-    month: inc.doses.month,
-    year: inc.doses.year,
-    toe_workers: inc.toe_workers
-  }));
+  // Combine and format
+  const criticalDoses = [
+    ...(pendingDoses || []).map((d: any) => ({
+      id: d.id,
+      hp10: d.hp10,
+      month: d.month,
+      year: d.year,
+      toe_workers: d.toe_workers,
+      isPendingValidation: true
+    })),
+    ...(openIncidents || []).map((inc: any) => ({
+      id: inc.doses.id,
+      hp10: inc.doses.hp10,
+      month: inc.doses.month,
+      year: inc.doses.year,
+      toe_workers: inc.toe_workers,
+      isPendingValidation: false
+    }))
+  ].sort((a, b) => b.hp10 - a.hp10).slice(0, 10);
 
   const { data: closedIncidents = [] } = await adminSupabase
     .from("incidents")
@@ -70,6 +91,9 @@ export default async function CriticalNotificationsSidebar({ tenantId, targetYea
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
                   <span style={{ fontSize: "0.7rem", fontWeight: 900, color: alert.hp10 >= 1.66 ? "var(--state-danger)" : "#f59e0b" }}>
                     {alert.hp10 >= 1.66 ? "SOBRE-EXPOSICIÓN" : "ADVERTENCIA 80%"}
+                    <span style={{ marginLeft: "0.5rem", opacity: 0.6, fontSize: "0.6rem" }}>
+                      ({alert.isPendingValidation ? "PENDIENTE VALIDACIÓN" : "EN INVESTIGACIÓN"})
+                    </span>
                   </span>
                   <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{alert.month}/{alert.year}</span>
                 </div>

@@ -4,11 +4,23 @@ import { getServiceSupabase } from "@/lib/supabase";
 export default async function CriticalAlertsWidget({ tenantId, targetYear }: { tenantId: string, targetYear: number }) {
   const adminSupabase = getServiceSupabase();
   
-  const { count: criticalCount = 0 } = await adminSupabase
+  // 1. Count pending doses above threshold (Not yet validated)
+  const { count: pendingHighDoses = 0 } = await adminSupabase
+    .from("doses")
+    .select("id, toe_workers!inner(companies!inner(tenant_id))", { count: "exact", head: true })
+    .eq("toe_workers.companies.tenant_id", tenantId)
+    .eq("status", "pending")
+    .eq("year", targetYear)
+    .gte("hp10", 1.328);
+
+  // 2. Count open incidents (Validated but not yet justified/closed)
+  const { count: openIncidentsCount = 0 } = await adminSupabase
     .from("incidents")
     .select("id", { count: "exact", head: true })
     .eq("tenant_id", tenantId)
     .eq("status", "open");
+
+  const criticalCount = (pendingHighDoses || 0) + (openIncidentsCount || 0);
 
   return (
     <div className="clean-panel" style={{ borderLeft: `4px solid ${criticalCount && criticalCount > 0 ? "var(--state-danger)" : "var(--state-safe)"}` }}>
