@@ -241,7 +241,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
 
         <div style={{ marginTop: "2rem", textAlign: "center", borderTop: "1px solid #eee", paddingTop: "1rem" }}>
             <div style={{ fontSize: "0.75rem", color: "red", fontWeight: 700 }}>
-                Información Actualizada al: {new Date().toLocaleDateString('es-VE', { day: '2-digit', month: 'long', year: 'numeric' })} a las {new Date().toLocaleTimeString()}
+                Información Actualizada al: {new Date().toLocaleDateString()} a las {new Date().toLocaleTimeString()}
             </div>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", marginTop: "1rem" }} className="no-print">
                 <button onClick={() => exportToExcel(selectedAccount)} style={actionButton}>

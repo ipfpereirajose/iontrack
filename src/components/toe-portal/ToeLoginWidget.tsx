@@ -18,7 +18,7 @@ export default function ToeLoginWidget({
   const formatCI = (val: string) => {
     const clean = val.replace(/\D/g, "");
     if (!clean) return "";
-    return new Intl.NumberFormat("es-VE").format(parseInt(clean));
+    return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   const handleCIChange = (e: React.ChangeEvent<HTMLInputElement>) => {
