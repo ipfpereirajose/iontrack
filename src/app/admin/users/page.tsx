@@ -1,46 +1,11 @@
 import { Suspense } from "react";
-import { getServiceSupabase } from "@/lib/supabase";
-import {
-  Shield,
-  UserPlus,
-} from "lucide-react";
+import { Shield, UserPlus, ShieldAlert } from "lucide-react";
 import Link from "next/link";
-import EditUserModal from "./EditUserModal";
-import UserManager from "@/components/admin/UserManager";
+import AdminUsersListWidget from "@/components/admin/users/AdminUsersListWidget";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminManagement() {
-  const supabase = getServiceSupabase();
-
-  // Fetch all profiles
-  const { data: profiles, error: pError } = await supabase
-    .from("profiles")
-    .select("*, tenants(name)")
-    .order("created_at", { ascending: false });
-
-  // Fetch all auth users to get emails
-  const {
-    data: { users: authUsers },
-    error: aError,
-  } = await supabase.auth.admin.listUsers();
-
-  if (pError || aError) {
-    return (
-      <div className="p-8 text-red-500">Error al cargar administradores.</div>
-    );
-  }
-
-  // Combine data
-  const users = profiles.map((profile) => {
-    const authUser = authUsers.find((u) => u.id === profile.id);
-    return {
-      ...profile,
-      email: authUser?.email || "N/A",
-      lastSignIn: authUser?.last_sign_in_at,
-    };
-  });
-
   return (
     <div className="space-y-8">
       <div
@@ -78,21 +43,18 @@ export default async function AdminManagement() {
             Gestión de <span className="text-gradient">Administradores</span>
           </h1>
           <p style={{ color: "var(--text-muted)", marginTop: "0.5rem" }}>
-            Administre los niveles de privilegio y acceso de los usuarios del
-            sistema.
+            Administre los niveles de privilegio y acceso de los usuarios del sistema.
           </p>
         </div>
-        <Link
-          href="?new=true"
-          className="btn btn-primary"
-          style={{ background: "#f59e0b" }}
-        >
+        <Link href="?new=true" className="btn btn-primary" style={{ background: "#f59e0b" }}>
           <UserPlus size={20} />
           Nuevo Administrador
         </Link>
       </div>
 
-      <UserManager users={users} />
+      <Suspense fallback={<div className="clean-panel" style={{ padding: "4rem", textAlign: "center" }}>Cargando usuarios administradores...</div>}>
+        <AdminUsersListWidget />
+      </Suspense>
 
       <div
         style={{
@@ -131,30 +93,6 @@ export default async function AdminManagement() {
           </p>
         </div>
       </div>
-      <Suspense fallback={null}>
-        <EditUserModal users={users} />
-      </Suspense>
     </div>
-  );
-}
-
-// Simple Alert Icons
-function ShieldAlert({ size }: { size: number }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-      <path d="M12 8v4" />
-      <path d="M12 16h.01" />
-    </svg>
   );
 }

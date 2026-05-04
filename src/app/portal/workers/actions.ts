@@ -33,6 +33,8 @@ export async function createPortalWorker(formData: FormData) {
   const birth_date = `${birth_year}-${birth_month.padStart(2, '0')}-${birth_day.padStart(2, '0')}`;
   const position = formData.get("position") as string;
   const practice = formData.get("practice") as string;
+  const phone = formData.get("phone") as string;
+  const worker_code = formData.get("worker_code") as string;
 
   // Validate against standards
   const isValidPosition = standards.cargos.includes(position);
@@ -51,8 +53,6 @@ export async function createPortalWorker(formData: FormData) {
   if (existing)
     throw new Error(`Ya existe un TOE con CI "${ci}" en su empresa.`);
 
-  const worker_code = `TOE-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
   const { error } = await adminSupabase.from("toe_workers").insert({
     first_name,
     last_name,
@@ -62,6 +62,7 @@ export async function createPortalWorker(formData: FormData) {
     birth_date,
     position,
     practice,
+    phone,
     worker_code,
     company_id: profile.company_id,
     status: "active",

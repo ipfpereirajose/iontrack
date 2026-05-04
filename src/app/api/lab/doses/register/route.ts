@@ -42,8 +42,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Ya existe una lectura para este periodo" }, { status: 400 });
     }
 
-    // 3. Insert Dose
-    const { error: insertError } = await adminSupabase
+    // 3. Insert Dose and get the ID
+    const { data: newDose, error: insertError } = await adminSupabase
       .from("doses")
       .insert({
         toe_worker_id: workerId,
@@ -55,14 +55,35 @@ export async function POST(req: Request) {
         hp007,
         hp007_ext,
         hp10_neu,
-        status: "approved" // Manual entry by lab is approved by default or needs validation?
-        // Usually, manual lab entry is considered "official"
-      });
+        status: "approved"
+      })
+      .select()
+      .single();
 
     if (insertError) throw new Error(insertError.message);
 
+    // 4. AUTOMATIC INCIDENT DETECTION
+    // Threshold: 1.6 mSv according to common radiological safety standards
+    if (parseFloat(hp10.toString()) > 1.6) {
+      const { error: incidentError } = await adminSupabase
+        .from("incidents")
+        .insert({
+          company_id: worker.company_id,
+          toe_worker_id: workerId,
+          dose_id: newDose.id,
+          status: "open"
+        });
+      
+      if (incidentError) {
+        console.error("Error creating incident ticket:", incidentError);
+        // We don't fail the whole request because the dose is already saved,
+        // but we log the error.
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    console.error("Dose Registration Error:", err);
     return NextResponse.json({ message: err.message }, { status: 500 });
   }
 }

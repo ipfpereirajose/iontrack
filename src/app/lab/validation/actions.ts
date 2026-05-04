@@ -90,96 +90,91 @@ export async function rejectDose(doseId: string) {
 
 import { getServiceSupabase } from "@/lib/supabase";
 
-export async function approveAllForMonth(month?: number, year?: number) {
+export async function approveBatch(month?: number, year?: number) {
   const supabase = getServiceSupabase();
   const { user, profile } = await getCurrentProfile();
   if (!user) throw new Error("No autenticado");
   if (!profile?.tenant_id) throw new Error("Usuario sin laboratorio asignado");
 
+  const BATCH_SIZE = 100; // Micro-batch for safety
+
   try {
-    // 1. Get all company IDs for this tenant
-  const { data: companies } = await supabase
-    .from("companies")
-    .select("id")
-    .eq("tenant_id", profile.tenant_id);
-  
-  const companyIds = companies?.map(c => c.id) || [];
-  if (companyIds.length === 0) return { success: 0 };
+    // 1. Fetch next batch of 100 pending doses
+    let query = supabase
+      .from("doses")
+      .select("id, hp10, toe_workers!inner(company_id, companies!inner(tenant_id))")
+      .eq("status", "pending")
+      .eq("toe_workers.companies.tenant_id", profile.tenant_id)
+      .limit(BATCH_SIZE);
 
-  // 2. Get all worker IDs for these companies
-  const { data: workers } = await supabase
-    .from("toe_workers")
-    .select("id")
-    .in("company_id", companyIds);
-    
-  const workerIds = workers?.map(w => w.id) || [];
-  if (workerIds.length === 0) return { success: 0 };
+    if (month) query = query.eq("month", month);
+    if (year) query = query.eq("year", year);
 
-  // 3. Build query for pending doses
-  let query = supabase
-    .from("doses")
-    .select("id, hp10, toe_workers(company_id)")
-    .eq("status", "pending")
-    .in("toe_worker_id", workerIds);
+    const { data: batch, error: fetchError } = await query;
+    if (fetchError) throw new Error(`Error al recuperar lote: ${fetchError.message}`);
+    if (!batch || batch.length === 0) return { success: 0, remaining: 0 };
 
-  if (month) query = query.eq("month", month);
-  if (year) query = query.eq("year", year);
+    const ids = batch.map(d => d.id);
 
-  const { data: pendingDoses } = await query;
-
-  if (!pendingDoses || pendingDoses.length === 0) return { success: 0 };
-
-  const ids = pendingDoses.map(d => d.id);
-
-  // 4. Bulk Update Status (Batching to avoid URL length limits)
-  const CHUNK_SIZE = 100;
-  for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
-    const chunk = ids.slice(i, i + CHUNK_SIZE);
+    // 2. Approve this specific batch
     const { error: updateError } = await supabase
       .from("doses")
       .update({
         status: "approved",
         approved_at: new Date().toISOString(),
       })
-      .in("id", chunk);
+      .in("id", ids);
 
-    if (updateError) throw new Error(`Error actualizando bloque ${i / CHUNK_SIZE + 1}: ${updateError.message}`);
-  }
+    if (updateError) throw new Error(`Error al aprobar lote: ${updateError.message}`);
 
-  // 5. Threshold check & Notifications (Bulk)
-  const THRESHOLD = 1.28;
-  const criticalDoses = pendingDoses.filter(d => d.hp10 >= THRESHOLD);
-  if (criticalDoses.length > 0) {
-    const notifications = criticalDoses.map((d: any) => {
-      // Handle toe_workers as object or array
-      const worker = Array.isArray(d.toe_workers) ? d.toe_workers[0] : d.toe_workers;
-      return {
-        tenant_id: profile.tenant_id,
-        company_id: worker?.company_id,
-        type: "threshold_alert",
-        message: `ALERTA CRÍTICA: Se detectó una dosis alta (${d.hp10} mSv). Por favor verifique el historial del trabajador.`,
-      };
-    }).filter((n: any) => n.company_id); // Ensure we have a company_id
+    // 3. Handle notifications for this batch (Threshold check)
+    const THRESHOLD = 1.28;
+    const criticalDoses = batch.filter(d => d.hp10 >= THRESHOLD);
+    if (criticalDoses.length > 0) {
+      const notifications = criticalDoses.map((d: any) => {
+        const worker = Array.isArray(d.toe_workers) ? d.toe_workers[0] : d.toe_workers;
+        return {
+          tenant_id: profile.tenant_id,
+          company_id: worker?.company_id,
+          type: "threshold_alert",
+          message: `ALERTA: Dosis alta (${d.hp10} mSv) detectada en procesamiento por lotes.`,
+        };
+      }).filter((n: any) => n.company_id);
 
-    if (notifications.length > 0) {
+      if (notifications.length > 0) {
         await supabase.from("notifications").insert(notifications);
+      }
     }
-  }
 
-  // 6. Audit Log (Bulk)
+    // 4. Audit Log for this batch
+    await supabase.from("audit_logs").insert({
+      tenant_id: profile.tenant_id,
+      user_id: profile.id,
+      action: "APPROVE_BATCH",
+      table_name: "doses",
+      new_data: { count: ids.length, ids_sample: ids.slice(0, 3) },
+      justification: "Procesamiento por lotes automático",
+    });
+
+    return { success: ids.length, remaining: batch.length === BATCH_SIZE ? -1 : 0 }; // -1 indicates maybe more
+  } catch (err: any) {
+    console.error("Error in approveBatch:", err);
+    throw err;
+  }
+}
+
+export async function finishBulkApproval(month?: number, year?: number, totalCount?: number) {
+  const { profile } = await getCurrentProfile();
+  const supabase = getServiceSupabase();
+  
   await supabase.from("audit_logs").insert({
-    tenant_id: profile.tenant_id,
-    user_id: profile.id,
-    action: "APPROVE_ALL_MONTH",
+    tenant_id: profile?.tenant_id,
+    user_id: profile?.id,
+    action: "FINISH_BULK_APPROVAL",
     table_name: "doses",
-    new_data: { month, year, count: ids.length },
-    justification: "Validación masiva mensual por Oficial de Seguridad",
+    new_data: { month, year, total_count: totalCount },
+    justification: "Finalización de procesamiento masivo por lotes",
   });
 
   revalidatePath("/lab/validation");
-  return { success: ids.length };
-} catch (err: any) {
-  console.error("Error in approveAllForMonth:", err);
-  return { error: err.message };
-}
 }

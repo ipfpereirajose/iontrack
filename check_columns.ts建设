@@ -1,0 +1,14 @@
+import { getServiceSupabase } from './src/lib/supabase';
+
+async function check() {
+  const supabase = getServiceSupabase();
+  const { data, error } = await supabase.from('toe_workers').select('*').limit(1);
+  if (error) {
+    console.error('Error:', error);
+  } else {
+    console.log('COLUMNAS:', Object.keys(data[0] || {}));
+  }
+}
+
+check();
+建设

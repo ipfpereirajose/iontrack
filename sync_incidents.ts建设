@@ -1,0 +1,51 @@
+import { getServiceSupabase } from './src/lib/supabase.ts';
+
+async function sync() {
+  const supabase = getServiceSupabase();
+  console.log('Buscando dosis > 1.6 mSv sin incidentes...');
+
+  // 1. Get all doses > 1.6
+  const { data: doses, error: dError } = await supabase
+    .from('doses')
+    .select('id, toe_worker_id, hp10, toe_workers(company_id)')
+    .gt('hp10', 1.6);
+
+  if (dError) {
+    console.error('Error al buscar dosis:', dError);
+    return;
+  }
+
+  console.log(`Encontradas ${doses?.length || 0} dosis altas.`);
+
+  for (const dose of doses || []) {
+    // 2. Check if incident already exists
+    const { data: existing } = await supabase
+      .from('incidents')
+      .select('id')
+      .eq('dose_id', dose.id)
+      .single();
+
+    if (!existing) {
+      console.log(`Creando incidente para dosis ${dose.id} (${dose.hp10} mSv)...`);
+      const { error: iError } = await supabase
+        .from('incidents')
+        .insert({
+          company_id: (dose.toe_workers as any).company_id,
+          toe_worker_id: dose.toe_worker_id,
+          dose_id: dose.id,
+          status: 'open'
+        });
+
+      if (iError) {
+        console.error(`Error al crear incidente para dosis ${dose.id}:`, iError);
+      }
+    } else {
+      console.log(`El incidente para la dosis ${dose.id} ya existe.`);
+    }
+  }
+
+  console.log('Sincronización completada.');
+}
+
+sync();
+建设

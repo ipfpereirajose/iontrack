@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS public.toe_workers (
     sex VARCHAR(10), -- Sexo (M/F)
     birth_year INTEGER, -- Año de nacimiento (DEPRECATED: Use birth_date)
     birth_date DATE, -- Fecha de nacimiento (DD/MM/AAAA)
+    phone VARCHAR(20), -- Teléfono de contacto
     position VARCHAR(100), -- Cargo
     practice VARCHAR(255), -- Práctica que realiza
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'on_leave')),
