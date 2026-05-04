@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -14,13 +15,29 @@ import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const [incidentCount, setIncidentCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const res = await fetch("/api/portal/incidents/count");
+        const data = await res.json();
+        setIncidentCount(data.count || 0);
+      } catch (e) {
+        console.error("Error fetching incident count:", e);
+      }
+    };
+    fetchCount();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchCount, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navItems = [
     { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
     { name: "Mi Personal (TOE)", href: "/portal/workers", icon: Users },
     { name: "Historial de Dosis", href: "/portal/history", icon: History },
-    { name: "Incidencias", href: "/portal/incidents", icon: ShieldCheck },
+    { name: "Incidencias", href: "/portal/incidents", icon: ShieldCheck, badge: incidentCount },
     { name: "Descargas", href: "/portal/downloads", icon: Download },
   ];
 
@@ -49,9 +66,25 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={`nav-link ${isActive ? "active" : ""}`}
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
             >
-              <Icon size={20} />
-              {item.name}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <Icon size={20} />
+                {item.name}
+              </div>
+              {item.badge > 0 && (
+                <span style={{ 
+                  background: "#ef4444", 
+                  color: "white", 
+                  fontSize: "0.7rem", 
+                  fontWeight: 900, 
+                  padding: "2px 6px", 
+                  borderRadius: "20px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                }}>
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
