@@ -39,8 +39,8 @@ export async function GET(request: Request) {
   
   if (birthYear && birthDay && cleanMonth) {
     const formattedDate = `${birthYear}-${cleanMonth}-${birthDay.padStart(2, '0')}`;
-    // Intelligent fallback: Try full date first, if not found or if birth_date is null in DB, check birth_year
-    workerQuery = workerQuery.or(`birth_date.eq.${formattedDate},and(birth_date.is.null,birth_year.eq.${birthYear})`);
+    // Search by full date or year fallback (more robust for varied data states)
+    workerQuery = workerQuery.or(`birth_date.eq.${formattedDate},birth_year.eq.${birthYear}`);
   } else if (birthYear) {
     workerQuery = workerQuery.eq("birth_year", birthYear);
   }

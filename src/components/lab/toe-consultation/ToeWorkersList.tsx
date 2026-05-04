@@ -35,9 +35,11 @@ export default async function ToeWorkersList({ tenantId, query, company: company
     .in("company_id", companyIds);
 
   if (query) {
-    const cleanQuery = query.replace(/\./g, "").replace(/\s/g, "");
+    const cleanQuery = query.replace(/\D/g, "");
+    const fuzzyQuery = cleanQuery ? `%${cleanQuery.split('').join('%')}%` : `%${query}%`;
+    
     workersQuery = workersQuery.or(
-      `first_name.ilike.%${query}%,last_name.ilike.%${query}%,ci.ilike.%${query}%,ci.ilike.%${cleanQuery}%`
+      `first_name.ilike.%${query}%,last_name.ilike.%${query}%,ci.ilike.${fuzzyQuery}`
     );
   }
   
