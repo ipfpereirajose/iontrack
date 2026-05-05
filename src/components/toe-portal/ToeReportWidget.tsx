@@ -144,33 +144,31 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
           </table>
 
           {/* FOOTER: LEYENDA Y FIRMA (Landscape version) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "15px", marginTop: "15px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: "15px", marginTop: "15px" }}>
             {/* LEYENDA TECNICA */}
             <div style={{ border: "0.5px solid #000", borderRadius: "8px", overflow: "hidden" }}>
               <div className="box-header" style={{ background: "#eb8991" }}>LEYENDA TÉCNICA</div>
-              <div style={{ padding: "10px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", fontSize: "7pt" }}>
+              <div style={{ padding: "10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", fontSize: "6.5pt" }}>
                 <div>
-                  <p><strong>INCERTIDUMBRE:</strong> 4%</p>
-                  <p><strong>VALOR REF. MENSUAL Hp(10):</strong> 1.67 mSv</p>
+                  <p style={{ margin: "2px 0" }}><strong>VALOR REF. MENSUAL Hp(10):</strong> 1.67 mSv</p>
+                  <p style={{ margin: "2px 0" }}><strong>VALOR REF. MENSUAL Hp(0.07):</strong> 42 mSv</p>
+                  <p style={{ margin: "2px 0" }}><strong>LIMITE DETECCIÓN SISTEMA:</strong> 0.10 mSv</p>
                 </div>
                 <div>
-                  <p><strong>AUTORIZACIÓN MPPS:</strong> 0012-2022</p>
-                  <p><strong>NIVEL INVESTIGACIÓN:</strong> 0.50 mSv</p>
-                </div>
-                <div>
-                  <p><strong>SISTEMA:</strong> OSL (Harshaw)</p>
-                  <p><strong>LIMITE DETECCIÓN:</strong> 0.10 mSv</p>
+                  <p style={{ margin: "2px 0" }}><strong>NIVEL INVESTIGACIÓN (NI) Hp(10):</strong> 0.50 mSv</p>
+                  <p style={{ margin: "2px 0" }}><strong>AUTORIZACIÓN MPPS:</strong> 0012-2022</p>
+                  <p style={{ margin: "2px 0" }}><strong>INCERTIDUMBRE:</strong> 4% | <strong>SISTEMA:</strong> OSL</p>
                 </div>
               </div>
             </div>
 
-            {/* FIRMA DEL PRESIDENTE */}
+            {/* FIRMA DEL DIRECTOR */}
             <div style={{ border: "0.5px solid #000", borderRadius: "8px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div className="box-header" style={{ background: "#f8fafc" }}>VALIDACIÓN INSTITUCIONAL</div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "8px" }}>
                 <div style={{ width: "80%", borderTop: "0.5px solid #000", marginBottom: "4px" }}></div>
-                <p style={{ fontSize: "8.5pt", fontWeight: "bold", margin: 0 }}>M.Sc. Jose M. Pereira F.</p>
-                <p style={{ fontSize: "7.5pt", margin: 0 }}>Presidente / Director</p>
+                <p style={{ fontSize: "8.5pt", fontWeight: "bold", margin: 0 }}>Ing. Jose Enrique Pereira Morles</p>
+                <p style={{ fontSize: "7.5pt", margin: 0 }}>Director</p>
                 <p style={{ fontSize: "6.5pt", margin: 0, color: "#666" }}>Laboratorio Physion</p>
               </div>
             </div>
