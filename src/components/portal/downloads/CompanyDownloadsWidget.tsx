@@ -1,6 +1,11 @@
-import { Download, FileText, ShieldCheck, Archive, Search, FileDown } from "lucide-react";
+import { Download, FileText, ShieldCheck, Search } from "lucide-react";
+import MonthlyReportSection from "./MonthlyReportSection";
 
-export default function CompanyDownloadsWidget() {
+interface Props {
+  companyId: string;
+}
+
+export default function CompanyDownloadsWidget({ companyId }: Props) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "2rem" }}>
       {/* CERTIFICADOS */}
@@ -21,23 +26,8 @@ export default function CompanyDownloadsWidget() {
         </button>
       </div>
 
-      {/* REPORTES MENSUALES */}
-      <div className="clean-panel" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        <div style={{ padding: "1rem", background: "rgba(168, 85, 247, 0.1)", borderRadius: "15px", width: "fit-content" }}>
-          <Archive size={28} color="#a855f7" />
-        </div>
-        <div>
-          <h3 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>
-            Históricos Mensuales
-          </h3>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.5" }}>
-            Reportes consolidados de la empresa por mes y año en formato Excel/PDF.
-          </p>
-        </div>
-        <button className="btn" style={{ marginTop: "auto", background: "#f1f5f9", gap: "0.75rem" }}>
-          <FileDown size={18} /> Ver Archivo Histórico
-        </button>
-      </div>
+      {/* REPORTES MENSUALES (FORMATO PHYSION) */}
+      <MonthlyReportSection companyId={companyId} />
 
       {/* DOCUMENTACION TECNICA */}
       <div className="clean-panel" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

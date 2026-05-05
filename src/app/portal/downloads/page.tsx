@@ -20,7 +20,7 @@ export default async function CompanyDownloadsPage() {
       </header>
 
       <Suspense fallback={<div className="clean-panel" style={{ padding: "4rem", textAlign: "center" }}>Cargando centro de descargas...</div>}>
-        <CompanyDownloadsWidget />
+        <CompanyDownloadsWidget companyId={profile?.company_id || ""} />
       </Suspense>
 
       <div
