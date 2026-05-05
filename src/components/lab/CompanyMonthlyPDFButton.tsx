@@ -222,11 +222,10 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
           doc.roundedRect(sx, footerY, sigW, footerH, 2, 2, "S");
           doc.line(sx + 5, footerY + 20, sx + sigW - 5, footerY + 20);
           doc.setFontSize(7.5); doc.setFont("helvetica", "bold");
-          const rep = `${lab.rep_title || "Ing."} ${lab.rep_first_name || ""} ${lab.rep_last_name || ""}`;
-          doc.text(rep, sx + sigW / 2, footerY + 24, { align: "center" });
+          doc.text("Ing. Ernesto López", sx + sigW / 2, footerY + 24, { align: "center" });
           doc.setFontSize(6.5); doc.setFont("helvetica", "normal");
           doc.text("Firma", sx + 8, footerY + 28);
-          doc.text(lab.rep_cargo || "Presidente", sx + sigW / 2 + 5, footerY + 28, { align: "center" });
+          doc.text("Presidente / Director", sx + sigW / 2 + 5, footerY + 28, { align: "center" });
         }
       });
 

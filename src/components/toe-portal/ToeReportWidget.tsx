@@ -167,7 +167,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
               <div className="box-header" style={{ background: "#f8fafc" }}>VALIDACIÓN INSTITUCIONAL</div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "6px" }}>
                 <div style={{ width: "70%", borderTop: "0.5px solid #000", marginBottom: "3px" }}></div>
-                <p style={{ fontSize: "8pt", fontWeight: "bold", margin: 0 }}>Ing. Jose Enrique Pereira Morles</p>
+                <p style={{ fontSize: "8pt", fontWeight: "bold", margin: 0 }}>Ing. Ernesto López</p>
                 <p style={{ fontSize: "7pt", margin: 0 }}>Presidente / Director</p>
                 <p style={{ fontSize: "6pt", margin: 0, color: "#666" }}>Laboratorio Physion</p>
               </div>
