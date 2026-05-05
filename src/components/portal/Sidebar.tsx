@@ -14,7 +14,11 @@ import {
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 
-export default function Sidebar() {
+interface SidebarProps {
+  logoUrl?: string | null;
+}
+
+export default function Sidebar({ logoUrl }: SidebarProps) {
   const pathname = usePathname();
   const [incidentCount, setIncidentCount] = useState(0);
 
@@ -44,15 +48,23 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <Link
-        href="/portal"
-        className="brand"
-        style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+      <Link 
+        href="https://www.physiontec.com/" 
+        target="_blank"
+        className="brand" 
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}
       >
         <img 
-          src="/logo.png" 
-          alt="IONTRACK" 
-          style={{ width: "110px", height: "auto" }} 
+          src={logoUrl || "/logo.png"} 
+          alt="LAB LOGO" 
+          style={{ 
+            width: "100%", 
+            maxWidth: "140px", 
+            height: "auto",
+            maxHeight: "60px",
+            objectFit: "contain",
+            filter: logoUrl ? "none" : "brightness(0) invert(1)"
+          }} 
         />
       </Link>
 

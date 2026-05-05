@@ -1,6 +1,7 @@
 import Sidebar from "@/components/portal/Sidebar";
 import { getCurrentProfile } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getServiceSupabase } from "@/lib/supabase";
 
 export const metadata = {
   title: "I.O.N.T.R.A.C.K. | Portal Empresas",
@@ -24,6 +25,24 @@ export default async function PortalLayout({
     redirect("/");
   }
 
+  const supabase = getServiceSupabase();
+  // Fetch tenant info via company
+  const { data: company } = await supabase
+    .from("companies")
+    .select("tenant_id")
+    .eq("id", profile.company_id)
+    .single();
+
+  let logoUrl = null;
+  if (company?.tenant_id) {
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("logo_url")
+      .eq("id", company.tenant_id)
+      .single();
+    logoUrl = tenant?.logo_url;
+  }
+
   const showSidebar = true;
 
   return (
@@ -36,7 +55,7 @@ export default async function PortalLayout({
         minHeight: "100vh"
       } as any}
     >
-      <Sidebar />
+      <Sidebar logoUrl={logoUrl} />
       <main className="main-content">{children}</main>
     </div>
   );

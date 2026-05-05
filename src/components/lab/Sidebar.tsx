@@ -17,7 +17,11 @@ import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import NotificationBell from "./NotificationBell";
 
-export default function Sidebar() {
+interface SidebarProps {
+  logoUrl?: string | null;
+}
+
+export default function Sidebar({ logoUrl }: SidebarProps) {
   const pathname = usePathname();
 
   const navItems = [
@@ -41,20 +45,33 @@ export default function Sidebar() {
           marginBottom: "1.5rem",
         }}
       >
-        <Link href="/lab" className="brand" style={{ marginBottom: 0, padding: 0 }}>
+        <Link 
+          href="https://www.physiontec.com/" 
+          target="_blank" 
+          className="brand" 
+          style={{ marginBottom: 0, padding: "0.5rem" }}
+        >
           <img 
-            src="/logo.png" 
-            alt="IONTRACK" 
-            style={{ width: "110px", height: "auto" }} 
+            src={logoUrl || "/logo.png"} 
+            alt="LAB LOGO" 
+            style={{ 
+              width: "100%", 
+              maxWidth: "140px", 
+              height: "auto",
+              maxHeight: "60px",
+              objectFit: "contain",
+              filter: logoUrl ? "none" : "brightness(0) invert(1)" 
+            }} 
           />
           <div
             style={{
-              fontSize: "0.65rem",
+              fontSize: "0.6rem",
               color: "rgba(255,255,255,0.4)",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.1em",
               marginTop: "0.5rem",
+              textAlign: "center"
             }}
           >
             Módulo Laboratorio

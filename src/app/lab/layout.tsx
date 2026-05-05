@@ -1,6 +1,7 @@
 import Sidebar from "@/components/lab/Sidebar";
 import { getCurrentProfile } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getServiceSupabase } from "@/lib/supabase";
 
 export const metadata = {
   title: "I.O.N.T.R.A.C.K. | Lab Manager",
@@ -21,6 +22,13 @@ export default async function LabLayout({ children }: { children: React.ReactNod
     redirect("/"); // Fallback
   }
 
+  const supabase = getServiceSupabase();
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("logo_url, name")
+    .eq("id", profile.tenant_id)
+    .single();
+
   const showSidebar = true;
 
   return (
@@ -30,7 +38,7 @@ export default async function LabLayout({ children }: { children: React.ReactNod
         "--primary": "var(--color-lab)",
       } as any}
     >
-      <Sidebar />
+      <Sidebar logoUrl={tenant?.logo_url} />
       <main className="main-content">{children}</main>
     </div>
   );
