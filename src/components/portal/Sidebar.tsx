@@ -52,7 +52,14 @@ export default function Sidebar({ logoUrl }: SidebarProps) {
         href="https://www.physiontec.com/" 
         target="_blank"
         className="brand" 
-        style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}
+        style={{ 
+          display: "flex", 
+          flexDirection: "column",
+          alignItems: "center", 
+          justifyContent: "center", 
+          padding: "1rem",
+          width: "100%"
+        }}
       >
         <img 
           src={logoUrl || "/physion-logo.png"} 

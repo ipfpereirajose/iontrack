@@ -40,16 +40,29 @@ export default function Sidebar({ logoUrl }: SidebarProps) {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
+          flexDirection: "column",
+          alignItems: "center",
           marginBottom: "1.5rem",
+          position: "relative",
+          width: "100%"
         }}
       >
+        <div style={{ position: "absolute", top: 0, right: 0 }}>
+          <NotificationBell />
+        </div>
+        
         <Link 
           href="https://www.physiontec.com/" 
           target="_blank" 
           className="brand" 
-          style={{ marginBottom: 0, padding: "0.5rem" }}
+          style={{ 
+            marginBottom: 0, 
+            padding: "0.5rem",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%"
+          }}
         >
           <img 
             src={logoUrl || "/physion-logo.png"} 
@@ -79,7 +92,6 @@ export default function Sidebar({ logoUrl }: SidebarProps) {
             Módulo Laboratorio
           </div>
         </Link>
-        <NotificationBell />
       </div>
 
       <nav className="nav-group">
