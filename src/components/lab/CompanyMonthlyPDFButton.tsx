@@ -225,7 +225,7 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
           doc.text("Ing. Ernesto López", sx + sigW / 2, footerY + 24, { align: "center" });
           doc.setFontSize(6.5); doc.setFont("helvetica", "normal");
           doc.text("Firma", sx + 8, footerY + 28);
-          doc.text("Presidente / Director", sx + sigW / 2 + 5, footerY + 28, { align: "center" });
+          doc.text("Presidente", sx + sigW / 2 + 5, footerY + 28, { align: "center" });
         }
       });
 
