@@ -89,14 +89,13 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
       // ─────────────────────────────────────────────
       // LOGO (left side under header)
       // ─────────────────────────────────────────────
-      if (lab.logo_url) {
-        const base64 = await loadImageAsBase64(lab.logo_url);
-        if (base64) {
-          try {
-            doc.addImage(base64, "PNG", 2, 13, 30, 18);
-          } catch {
-            // If image fails, skip it gracefully
-          }
+      const logoToUse = lab.logo_url || "/physion-logo.png";
+      const base64 = await loadImageAsBase64(logoToUse);
+      if (base64) {
+        try {
+          doc.addImage(base64, "PNG", 2, 13, 30, 18);
+        } catch (e) {
+          console.error("Error adding image to PDF:", e);
         }
       }
 

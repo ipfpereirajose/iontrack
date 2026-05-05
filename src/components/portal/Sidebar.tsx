@@ -55,15 +55,17 @@ export default function Sidebar({ logoUrl }: SidebarProps) {
         style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}
       >
         <img 
-          src={logoUrl || "/logo.png"} 
+          src={logoUrl || "/physion-logo.png"} 
           alt="LAB LOGO" 
           style={{ 
             width: "100%", 
-            maxWidth: "140px", 
+            maxWidth: "160px", 
             height: "auto",
-            maxHeight: "60px",
+            maxHeight: "80px",
             objectFit: "contain",
-            filter: logoUrl ? "none" : "brightness(0) invert(1)"
+            backgroundColor: logoUrl ? "transparent" : "white",
+            padding: logoUrl ? "0" : "5px",
+            borderRadius: "8px"
           }} 
         />
       </Link>
