@@ -117,9 +117,9 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
                 <tr style={{ background: "#f1f5f9" }}>
                     <th style={reportThSmall}>AÑO</th>
                     <th style={reportThSmall}>MES</th>
-                    <th style={reportThSmall}>Hp10 (mSv)</th>
-                    <th style={reportThSmall}>Hp3 (mSv)</th>
-                    <th style={reportThSmall}>Hp0.07 (mSv)</th>
+                    <th style={reportThSmall}>Hp10 (<span style={{ textTransform: "none" }}>mSv</span>)</th>
+                    <th style={reportThSmall}>Hp3 (<span style={{ textTransform: "none" }}>mSv</span>)</th>
+                    <th style={reportThSmall}>Hp0.07 (<span style={{ textTransform: "none" }}>mSv</span>)</th>
                 </tr>
             </thead>
             <tbody>
@@ -147,7 +147,7 @@ export default function ToeReportWidget({ selectedAccount, data, day, month, yea
                 <tr style={{ background: "#f1f5f9" }}>
                     <th style={reportThSmall}>AÑO FISCAL</th>
                     <th style={reportThSmall}>Nº REPORTES</th>
-                    <th style={reportThSmall}>DOSIS TOTAL (mSv)</th>
+                    <th style={reportThSmall}>DOSIS TOTAL (<span style={{ textTransform: "none" }}>mSv</span>)</th>
                 </tr>
             </thead>
             <tbody>

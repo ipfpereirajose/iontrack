@@ -91,7 +91,7 @@ export default async function PortalDashboardWidget({ companyId }: { companyId: 
                   <th style={{ padding: "1rem 1.5rem", color: "var(--text-muted)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase" }}>Trabajador</th>
                   <th style={{ padding: "1rem 1.5rem", color: "var(--text-muted)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase" }}>Cédula / ID</th>
                   <th style={{ padding: "1rem 1.5rem", color: "var(--text-muted)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase" }}>Estatus</th>
-                  <th style={{ padding: "1rem 1.5rem", color: "var(--text-muted)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase" }}>Dosis (mSv)</th>
+                  <th style={{ padding: "1rem 1.5rem", color: "var(--text-muted)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase" }}>Dosis (<span style={{ textTransform: "none" }}>mSv</span>)</th>
                 </tr>
               </thead>
               <tbody>

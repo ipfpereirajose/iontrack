@@ -170,7 +170,7 @@ export default async function CompanyDetailsPage({
           <div style={{ fontSize: "3rem", fontWeight: 900, color: "var(--primary)", margin: "0.5rem 0" }}>
             {(chartData.reduce((acc, curr) => acc + (curr.approved || 0) + (curr.pending || 0), 0)).toFixed(2)}
           </div>
-          <span style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-muted)" }}>mSv Totales</span>
+          <span style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-muted)" }}><span style={{ textTransform: "none" }}>mSv</span> Totales</span>
         </div>
       </div>
 

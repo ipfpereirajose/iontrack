@@ -69,7 +69,7 @@ export default function InteractiveCompanyTrendChart({ workerIds, targetYear }: 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <TrendingUp size={20} color="var(--primary-teal)" />
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 800 }}>Carga Dosimétrica Total (mSv)</h2>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 800 }}>Carga Dosimétrica Total (<span style={{ textTransform: "none" }}>mSv</span>)</h2>
         </div>
         <button 
           onClick={loadData} 
