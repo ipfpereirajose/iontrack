@@ -59,7 +59,7 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
       const PINK_RED = [235, 137, 145] as [number, number, number];
 
       // ─────────────────────────────────────────────
-      // 1. TOP HEADER (Blue)
+      // 1. TOP HEADER
       // ─────────────────────────────────────────────
       doc.setFillColor(...DARK_BLUE);
       doc.rect(0, 0, PW, 10, "F");
@@ -71,9 +71,6 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
       doc.setFontSize(8);
       doc.text("SERVICIO DE MONITORIZACIÓN DE LA RADIACIÓN EXTERNA POR OSL. DOSIS EQUIVALENTE PERSONAL Hp (d) EN mSv INFORME MENSUAL", PW - 4, 6.5, { align: "right" });
 
-      // ─────────────────────────────────────────────
-      // 2. LOGO ONLY (Moved up)
-      // ─────────────────────────────────────────────
       const logoToUse = lab.logo_url || "/physion-logo.png";
       const base64 = await loadImageAsBase64(logoToUse);
       if (base64) {
@@ -81,28 +78,25 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
       }
 
       // ─────────────────────────────────────────────
-      // 3. MAIN CONTENT BOXES (Y adjusted)
+      // 2. TOP BOXES
       // ─────────────────────────────────────────────
       const BOX_Y = 32;
-      const BOX_H = 48;
-      const C1_W = 90;
-      const C2_W = 120;
+      const BOX_H = 45;
+      const C1_W = 95;
+      const C2_W = 125;
       const C3_W = PW - C1_W - C2_W - 12;
 
-      // BOX 1: CLIENTE
       doc.setDrawColor(...BLACK); doc.setLineWidth(0.3);
       doc.roundedRect(4, BOX_Y, C1_W, BOX_H, 3, 3, "S");
       doc.setFillColor(...PINK_RED); doc.rect(4.3, BOX_Y + 6, C1_W - 0.6, 2.5, "F");
-      doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...BLACK);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(...BLACK);
       doc.text("DATOS DEL CLIENTE", 4 + C1_W / 2, BOX_Y + 4.5, { align: "center" });
 
       const drawF = (l: string, v: string, x: number, y: number) => {
-        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.text(l + ":", x, y);
-        doc.setFont("helvetica", "normal"); doc.setFontSize(7);
-        const offset = l.length > 30 ? 55 : 45;
-        doc.text(v, x + offset, y);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.text(l + ":", x, y);
+        doc.setFont("helvetica", "normal"); doc.text(v, x + 48, y);
       };
-      let fy = BOX_Y + 13;
+      let fy = BOX_Y + 12;
       drawF("CÓDIGO", company.company_code || "0153", 8, fy); fy += 4.5;
       drawF("DOSIMETRÍA CORRESPONDIENTE AL MES", `${MONTH_NAMES_ES[month]} ${year}`, 8, fy); fy += 4.5;
       drawF("RIF", company.tax_id || "J-00294315-7", 8, fy); fy += 4.5;
@@ -113,7 +107,6 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
       drawF("TIPO DE RADIACIÓN", (company.tipo_radiacion || "PENETRANTE Y NO PENETRANTE").toUpperCase(), 8, fy); fy += 4.5;
       drawF("UBICACIÓN DEL DOSIMETRO", (company.ubicacion_dosimetro || "TORAX").toUpperCase(), 8, fy);
 
-      // BOX 2: LEYENDA OSL
       const C2_X = 4 + C1_W + 2;
       doc.roundedRect(C2_X, BOX_Y, C2_W, BOX_H, 3, 3, "S");
       doc.setFillColor(...DARK_RED); doc.rect(C2_X + 0.3, BOX_Y + 6, C2_W - 0.6, 2.5, "F");
@@ -129,35 +122,33 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
         ["Hp(10):", "DOSIS EQUIV. PERSON. A LA PROFUNDIDAD DE 10mm"], ["Hp(0,07):", "DOSIS EQUIV. PERSON. A LA PROFUNDIDAD DE 0,07mm"],
         ["Hp*(10):", "DOSIS EQUIV. AMBIENTAL"], ["DE:", "DOSÍMETRO EXTRAVIADO"], ["SS:", "SERVICIO SUSPENDIDO"]
       ];
-      let ly = BOX_Y + 13;
+      let ly = BOX_Y + 12;
       L1.forEach(([k, v]) => {
-        doc.setFont("helvetica", "bold"); doc.setFontSize(6.5); doc.text(k, C2_X + 4, ly);
-        doc.setFont("helvetica", "normal"); doc.text(v, C2_X + 16, ly); ly += 4.8;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.text(k, C2_X + 4, ly);
+        doc.setFont("helvetica", "normal"); doc.text(v, C2_X + 16, ly); ly += 4.2;
       });
-      ly = BOX_Y + 13;
+      ly = BOX_Y + 12;
       L2.forEach(([k, v]) => {
-        doc.setFont("helvetica", "bold"); doc.setFontSize(6.5); doc.text(k, C2_X + 64, ly);
-        doc.setFont("helvetica", "normal"); doc.text(v, C2_X + 78, ly, { maxWidth: 38 }); ly += 4.8;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.text(k, C2_X + 64, ly);
+        doc.setFont("helvetica", "normal"); doc.text(v, C2_X + 78, ly, { maxWidth: 45 }); ly += 4.2;
       });
 
-      // BOX 3: NVC
       const C3_X = C2_X + C2_W + 2;
-      doc.roundedRect(C3_X, BOX_Y, C3_W, 28, 3, 3, "S");
-      doc.setFillColor(...PINK_RED); doc.rect(C3_X + 0.3, BOX_Y + 6, C3_W - 0.6, 2, "F");
-      doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
-      doc.text("LIM. DE DOSIS NVC 2259 VIGENTE", C3_X + C3_W / 2, BOX_Y + 4.5, { align: "center" });
+      doc.roundedRect(C3_X, BOX_Y, C3_W, BOX_H, 3, 3, "S");
+      doc.setFillColor(...PINK_RED); doc.rect(C3_X + 0.3, BOX_Y + 6, C3_W - 0.6, 2.5, "F");
+      doc.setFont("helvetica", "bold"); doc.text("LIM. DE DOSIS NVC 2259 VIGENTE", C3_X + C3_W / 2, BOX_Y + 4.5, { align: "center" });
 
       autoTable(doc, {
-        startY: BOX_Y + 10, margin: { left: C3_X + 2 }, tableWidth: C3_W - 4,
+        startY: BOX_Y + 9, margin: { left: C3_X + 2 }, tableWidth: C3_W - 4,
         head: [["", "TOE", "Pub."]],
         body: [["DOSIS EFECTIVA mSv/a", "20", "1"], ["DOSIS EQUIVALENTE (mSv/a) para:", "", ""], ["CRISTALINO", "20", "15"], ["PIEL", "500", "50"]],
-        theme: "grid", styles: { fontSize: 6, fontStyle: "bold", textColor: [0, 0, 0], cellPadding: 0.5 },
+        theme: "grid", styles: { fontSize: 6.5, fontStyle: "bold", textColor: [0, 0, 0], cellPadding: 0.5 },
         headStyles: { fillColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1, halign: "center" },
         columnStyles: { 0: { cellWidth: "auto" }, 1: { cellWidth: 8, halign: "center" }, 2: { cellWidth: 8, halign: "center" } }
       });
 
       // ─────────────────────────────────────────────
-      // 4. MAIN TABLE (75% Width)
+      // 3. WORKERS TABLE (Full Width)
       // ─────────────────────────────────────────────
       const tableBody = workers.map((w: any) => {
         const isAmb = w.first_name.toUpperCase().startsWith("AMBIENTE");
@@ -169,15 +160,14 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
         ];
       });
 
-      const TABLE_W = 220; 
       autoTable(doc, {
-        startY: BOX_Y + BOX_H + 5, margin: { left: 4 }, tableWidth: TABLE_W,
+        startY: BOX_Y + BOX_H + 3, margin: { left: 4, right: 4 },
         head: [["#", "Cedula", "Nombre", "SEXO", "Fecha de\nnacimiento", "Mes Actual.\nHp(0,07)", "Mes Actual.\nHp(10)", "Total en el\naño (Hp 0,07)", "Total en el\naño (Hp 10)", "Dosis Vida\nHp(0,07)", "Dosis Vida\nHp(10)", "Observacion"]],
         body: tableBody,
-        theme: "grid", styles: { fontSize: 6.5, textColor: [0, 0, 0], halign: "center", cellPadding: 1 },
-        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200], fontSize: 6 },
+        theme: "grid", styles: { fontSize: 7, textColor: [0, 0, 0], halign: "center", cellPadding: 1 },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200], fontSize: 6.5 },
         columnStyles: {
-          2: { halign: "left", cellWidth: 42 },
+          2: { halign: "left", cellWidth: 45 },
           9: { fillColor: [153, 204, 255], fontStyle: "bold" },
           10: { fillColor: [153, 204, 255], fontStyle: "bold" },
         },
@@ -189,17 +179,21 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
         }
       });
 
-      // ─────────────────────────────────────────────
-      // 5. RIGHT SIDE BOXES (Moved up)
-      // ─────────────────────────────────────────────
-      const RX = 226;
-      const RW = PW - RX - 4;
-      const RY_S = BOX_Y + BOX_H + 5;
+      const finalY = (doc as any).lastAutoTable.finalY || BOX_Y + BOX_H + 10;
 
-      doc.roundedRect(RX, RY_S, RW, 52, 3, 3, "S");
-      doc.setFillColor(...PINK_RED); doc.rect(RX + 0.3, RY_S + 6, RW - 0.6, 2, "F");
+      // ─────────────────────────────────────────────
+      // 4. FOOTER (Leyenda Tecnica & Signature) - Horizontal
+      // ─────────────────────────────────────────────
+      const FOOTER_Y = Math.max(finalY + 5, PH - 45);
+      const FOOTER_H = 35;
+      const LEGEND_W = 190;
+      const SIG_W = PW - LEGEND_W - 12;
+
+      // BOX: LEYENDA TECNICA
+      doc.roundedRect(4, FOOTER_Y, LEGEND_W, FOOTER_H, 3, 3, "S");
+      doc.setFillColor(...PINK_RED); doc.rect(4.2, FOOTER_Y + 6, LEGEND_W - 0.4, 2, "F");
       doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-      doc.text("LEYENDA", RX + RW / 2, RY_S + 4.5, { align: "center" });
+      doc.text("LEYENDA", 4 + LEGEND_W / 2, FOOTER_Y + 4.5, { align: "center" });
 
       const SL = [
         ["INCERTIDUMBRE:", "4%"], ["VALOR DE REFERENCIA DOSIS\nMENSUAL Hp (10):", "1.67 mSv"],
@@ -208,31 +202,40 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
       ];
       const SR = [
         ["NIVEL DE INVESTIGACIÓN\nSUGERIDO (NI) PARA\nHp(10):", "0.50 mSv"],
-        ["NIVEL DE INVESTIGACIÓN\nSUGERIDO (NI) PARA\nHp(0.07):", "12 mSv"],
+        ["NIVEL DE INVESTIGACIÓN\nSUGERIDO (NI) PARA\nHp(0,07):", "12 mSv"],
         ["AUTORIZACIÓN MPPS:", lab.mpps_auth || "0012-2022"]
       ];
-      let ry = RY_S + 11;
-      SL.forEach(([k, v]) => {
-        doc.setFontSize(6); doc.text(k, RX + 2, ry); doc.text(v, RX + 32, ry);
-        ry += k.includes("\n") ? 7.5 : 4.5;
+
+      let ry = FOOTER_Y + 11;
+      SL.forEach(([k, v], i) => {
+        doc.setFontSize(6.5);
+        const colX = 7 + (i % 3) * 60;
+        const rowY = ry + Math.floor(i / 3) * 10;
+        const lines = k.split("\n");
+        lines.forEach((line, li) => doc.text(line, colX, rowY + li * 3.5));
+        doc.text(v, colX + 40, rowY);
       });
-      ry = RY_S + 11;
-      SR.forEach(([k, v]) => {
-        doc.setFontSize(6); doc.text(k, RX + 44, ry); doc.text(v, RX + 44, ry + 6.5);
-        ry += 11;
+      SR.forEach(([k, v], i) => {
+        doc.setFontSize(6.5);
+        const colX = 7 + (i % 3) * 60;
+        const rowY = ry + 20; // Third row for technical levels
+        const lines = k.split("\n");
+        lines.forEach((line, li) => doc.text(line, colX, rowY + li * 3.5));
+        doc.text(v, colX + 40, rowY);
       });
 
-      const SIG_Y = RY_S + 55;
-      doc.roundedRect(RX, SIG_Y, RW, 30, 3, 3, "S");
-      doc.line(RX + 5, SIG_Y + 18, RX + RW - 25, SIG_Y + 18);
-      doc.setFontSize(8.5); doc.setFont("helvetica", "bold");
+      // BOX: SIGNATURE
+      const SX = 4 + LEGEND_W + 4;
+      doc.roundedRect(SX, FOOTER_Y, SIG_W, FOOTER_H, 3, 3, "S");
+      doc.line(SX + 10, FOOTER_Y + 22, SX + SIG_W - 10, FOOTER_Y + 22);
+      doc.setFontSize(9); doc.setFont("helvetica", "bold");
       const rep = `${lab.rep_title || "Ing."} ${lab.rep_first_name || ""} ${lab.rep_last_name || ""}`;
-      doc.text(rep, RX + RW - 10, SIG_Y + 22, { align: "right" });
-      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
-      doc.text("Firma", RX + 7, SIG_Y + 26);
-      doc.text(lab.rep_cargo || "Presidente", RX + RW - 10, SIG_Y + 26, { align: "right" });
+      doc.text(rep, SX + SIG_W / 2, FOOTER_Y + 27, { align: "center" });
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+      doc.text("Firma", SX + 12, FOOTER_Y + 31);
+      doc.text(lab.rep_cargo || "Presidente", SX + SIG_W / 2 + 10, FOOTER_Y + 31, { align: "center" });
 
-      doc.save(`Informe_Mensual_${company.name}_${MONTH_NAMES_ES[month]}_${year}.pdf`);
+      doc.save(`Informe_Mensual_Physion_${company.name}_${MONTH_NAMES_ES[month]}_${year}.pdf`);
       setStatus("done");
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: any) {
