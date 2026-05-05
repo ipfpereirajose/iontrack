@@ -52,246 +52,216 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
       const PW = doc.internal.pageSize.getWidth();
       const PH = doc.internal.pageSize.getHeight();
 
-      const DARK_RED = [180, 0, 0] as [number, number, number];
       const BLACK = [0, 0, 0] as [number, number, number];
       const WHITE = [255, 255, 255] as [number, number, number];
       const DARK_BLUE = [0, 68, 124] as [number, number, number];
+      const BORDER_GRAY = [180, 180, 180] as [number, number, number];
 
       // ─────────────────────────────────────────────
-      // HEADER (Blue top bar)
+      // 1. TOP BLUE BAR (Header)
       // ─────────────────────────────────────────────
       doc.setFillColor(...DARK_BLUE);
-      doc.rect(0, 0, PW, 12, "F");
+      doc.rect(0, 0, PW, 10, "F");
 
-      doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
       doc.setTextColor(...WHITE);
-      doc.text((lab.name || "PHYSION TECNOLOGÍA NUCLEAR").toUpperCase() + ".", 4, 8);
+      doc.text("PHYSION TECNOLOGÍA NUCLEAR.", 4, 7);
 
-      doc.setFontSize(7.5);
-      doc.setFont("helvetica", "bold");
-      const subtitle = "SERVICIO DE MONITORIZACIÓN DE LA RADIACIÓN EXTERNA POR OSL.  DOSIS EQUIVALENTE  PERSONAL  Hp (d) EN mSv  INFORME MENSUAL";
-      doc.text(subtitle, PW - 5, 7.5, { align: "right" });
+      doc.setFont("helvetica", "bolditalic");
+      doc.setFontSize(8);
+      const sub = "SERVICIO DE MONITORIZACIÓN DE LA RADIACIÓN EXTERNA POR OSL. DOSIS EQUIVALENTE PERSONAL Hp (d) EN mSv INFORME MENSUAL";
+      doc.text(sub, PW - 5, 6.5, { align: "right" });
 
       // ─────────────────────────────────────────────
-      // LOGO
+      // 2. LOGO & DASHBOARD MOCK AREA
       // ─────────────────────────────────────────────
       const logoToUse = lab.logo_url || "/physion-logo.png";
       const base64 = await loadImageAsBase64(logoToUse);
       if (base64) {
         try {
-          doc.addImage(base64, "PNG", 4, 14, 30, 20);
+          doc.addImage(base64, "PNG", 4, 11, 28, 18);
         } catch (e) { console.error(e); }
       }
 
-      // ─────────────────────────────────────────────
-      // DASHBOARD MOCKS (Optional, but included for fidelity to screenshot if desired)
-      // ─────────────────────────────────────────────
+      // Selectors Mocks
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
       doc.setTextColor(...BLACK);
+      doc.text("Nombre", 35, 15);
+      doc.text("VER MES", 100, 15);
+
       doc.setFont("helvetica", "normal");
-      doc.text("Nombre", 40, 17);
-      doc.text("Todas", 40, 23);
-      doc.setDrawColor(200);
-      doc.line(40, 24, 110, 24);
-
-      doc.text("VER MES", 120, 17);
-      doc.setFont("helvetica", "bold");
-      doc.text(`${MONTH_NAMES_ES[month]} ${year}`, 120, 23);
-      doc.line(120, 24, 180, 24);
-
-      const COL_START_Y = 38;
-      const COL1_X = 4;   const COL1_W = 95;
-      const COL2_X = 103; const COL2_W = 118;
-      const COL3_X = 225; const COL3_W = PW - 225 - 4;
-
-      // ─────────────────────────────────────────────
-      // COL 1: DATOS DEL CLIENTE
-      // ─────────────────────────────────────────────
-      doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(150);
-      doc.roundedRect(COL1_X, COL_START_Y, COL1_W, 58, 3, 3, "S");
+      doc.setTextColor(100, 100, 100);
+      doc.setDrawColor(...BORDER_GRAY);
+      doc.roundedRect(35, 17, 60, 6, 1, 1, "S");
+      doc.text("Todas", 37, 21);
       
-      doc.setFillColor(235, 137, 145); // Pinkish red bar as per image
-      doc.rect(COL1_X + 0.3, COL_START_Y + 7, COL1_W - 0.6, 3, "F");
+      doc.roundedRect(100, 17, 60, 6, 1, 1, "S");
+      doc.text(`${MONTH_NAMES_ES[month]} ${year}`, 102, 21);
 
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text("DATOS DEL CLIENTE", COL1_X + COL1_W / 2, COL_START_Y + 5, { align: "center" });
+      // Buttons Mocks
+      doc.roundedRect(PW - 55, 14, 25, 10, 2, 2, "S");
+      doc.setFontSize(7);
+      doc.setTextColor(80, 80, 80);
+      doc.text("REGRESAR", PW - 40, 20.5, { align: "center" });
+      
+      doc.roundedRect(PW - 28, 14, 25, 10, 2, 2, "S");
+      doc.text("IMPRIMIR", PW - 13, 20.5, { align: "center" });
+
+      // ─────────────────────────────────────────────
+      // 3. MAIN CONTENT BOXES
+      // ─────────────────────────────────────────────
+      const COL_START_Y = 32;
+      const COL_H = 55;
+      const COL1_W = 90;
+      const COL2_W = 120;
+      const COL3_W = PW - COL1_W - COL2_W - 12;
+
+      // BOX 1: DATOS DEL CLIENTE
+      doc.setDrawColor(...BLACK);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(4, COL_START_Y, COL1_W, COL_H, 3, 3, "S");
+      doc.setFillColor(235, 137, 145); // Pinkish red bar
+      doc.rect(4.3, COL_START_Y + 6, COL1_W - 0.6, 2.5, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(...BLACK);
+      doc.text("DATOS DEL CLIENTE", 4 + COL1_W / 2, COL_START_Y + 4.5, { align: "center" });
 
       const drawField = (label: string, value: string, x: number, y: number) => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.5);
-        doc.text(label + ":", x, y);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.text(value, x + 42, y);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.text(label + ":", x, y);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.text(value, x + 42, y);
       };
 
-      let fy = COL_START_Y + 15;
-      drawField("CÓDIGO", company.company_code || "0153", COL1_X + 4, fy); fy += 5.5;
-      drawField("DOSIMETRÍA CORRESPONDIENTE AL MES", `${MONTH_NAMES_ES[month]} ${year}`, COL1_X + 4, fy); fy += 5.5;
-      drawField("RIF", company.tax_id || "J-00294315-7", COL1_X + 4, fy); fy += 5.5;
-      drawField("EMPRESA", company.name || "EMPRESA", COL1_X + 4, fy); fy += 5.5;
-      drawField("DEPARTAMENTO", company.departamento || "RADIOLOGIA", COL1_X + 4, fy); fy += 5.5;
-      const fechaInicio = company.fecha_inicio_servicio ? new Date(company.fecha_inicio_servicio + "T00:00:00").toLocaleDateString("es-VE") : "N/A";
-      drawField("FECHA DE INICIO DEL SERVICIO", fechaInicio, COL1_X + 4, fy); fy += 5.5;
-      drawField("TIPO DE RADIACIÓN", company.tipo_radiacion || "PENETRANTE Y NO PENETRANTE", COL1_X + 4, fy); fy += 5.5;
-      drawField("UBICACIÓN DEL DOSIMETRO", company.ubicacion_dosimetro || "TORAX", COL1_X + 4, fy);
+      let fy = COL_START_Y + 13;
+      drawField("CÓDIGO", company.company_code || "0153", 8, fy); fy += 5;
+      drawField("DOSIMETRÍA CORRESPONDIENTE AL MES", `${MONTH_NAMES_ES[month]} ${year}`, 8, fy); fy += 5;
+      drawField("RIF", company.tax_id || "J-00294315-7", 8, fy); fy += 5;
+      drawField("EMPRESA", (company.name || "CENTRO MEDICO PASO REAL, S.A.").toUpperCase(), 8, fy); fy += 5;
+      drawField("DEPARTAMENTO", (company.departamento || "RADIOLOGIA").toUpperCase(), 8, fy); fy += 5;
+      const fIn = company.fecha_inicio_servicio ? new Date(company.fecha_inicio_servicio + "T00:00:00").toLocaleDateString("es-VE") : "9/1/2023";
+      drawField("FECHA DE INICIO DEL SERVICIO", fIn, 8, fy); fy += 5;
+      drawField("TIPO DE RADIACIÓN", (company.tipo_radiacion || "PENETRANTE Y NO PENETRANTE").toUpperCase(), 8, fy); fy += 5;
+      drawField("UBICACIÓN DEL DOSIMETRO", (company.ubicacion_dosimetro || "TORAX").toUpperCase(), 8, fy);
 
-      // ─────────────────────────────────────────────
-      // COL 2: LEYENDA
-      // ─────────────────────────────────────────────
-      doc.roundedRect(COL2_X, COL_START_Y, COL2_W, 58, 3, 3, "S");
+      // BOX 2: LEYENDA
+      const C2X = 4 + COL1_W + 2;
+      doc.roundedRect(C2X, COL_START_Y, COL2_W, COL_H, 3, 3, "S");
       doc.setFillColor(180, 0, 0); // Solid red bar
-      doc.rect(COL2_X + 0.3, COL_START_Y + 7, COL2_W - 0.6, 3, "F");
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("LEYENDA", COL2_X + COL2_W / 2, COL_START_Y + 5, { align: "center" });
+      doc.rect(C2X + 0.3, COL_START_Y + 6, COL2_W - 0.6, 2.5, "F");
+      doc.setFont("helvetica", "bold"); doc.text("LEYENDA", C2X + COL2_W / 2, COL_START_Y + 4.5, { align: "center" });
 
       const L1 = [
-        ["ND:", "NO DETECTABLE"],
-        ["DD:", "DOSIMETRO OSL DETERIORADO:"],
-        ["DR:", "DOSIMETRO OSL RETRASADO"],
-        ["V:", "VACACIONES / AUSENTE"],
-        ["DNU:", "DOSIMETRO OSL NO UTILIZADO"],
-        ["SLD:", "SUPERÓ LÍMITE DE DOSIS"],
-        ["DE:", "DOSÍMETRO EXTRAVIADO"],
+        ["ND:", "NO DETECTABLE"], ["DD:", "DOSIMETRO OSL DETERIORADO:"], ["DR:", "DOSIMETRO OSL RETRASADO"],
+        ["V:", "VACACIONES / AUSENTE"], ["DNU:", "DOSIMETRO OSL NO UTILIZADO"], ["SLD:", "SUPERÓ LÍMITE DE DOSIS"],
+        ["DE:", "DOSÍMETRO EXTRAVIADO"]
       ];
       const L2 = [
-        ["SRM:", "SUPERÓ NIVEL DE REFERENCIA MENSUAL"],
-        ["SNI:", "SUPERÓ NIVEL DE INVESTIGACIÓN"],
-        ["A:", "AMBIENTE H*10 MENSUAL"],
-        ["Hp(10):", "DOSIS EQUIV. PERSON. A LA PROFUNDIDAD DE 10mm"],
-        ["Hp(0,07):", "DOSIS EQUIV. PERSON. A LA PROFUNDIDAD DE 0,07mm"],
-        ["Hp*(10):", "DOSIS EQUIV. AMBIENTAL"],
-        ["DE:", "DOSÍMETRO EXTRAVIADO"],
-        ["SS:", "SERVICIO SUSPENDIDO"],
+        ["SRM:", "SUPERÓ NIVEL DE REFERENCIA MENSUAL"], ["SNI:", "SUPERÓ NIVEL DE INVESTIGACIÓN"], ["A:", "AMBIENTE H*10 MENSUAL"],
+        ["Hp(10):", "DOSIS EQUIV. PERSON. A LA PROFUNDIDAD DE 10mm"], ["Hp(0,07):", "DOSIS EQUIV. PERSON. A LA PROFUNDIDAD DE 0,07mm"],
+        ["Hp*(10):", "DOSIS EQUIV. AMBIENTAL"], ["DE:", "DOSÍMETRO EXTRAVIADO"], ["SS:", "SERVICIO SUSPENDIDO"]
       ];
 
-      let ly = COL_START_Y + 16;
+      let ly = COL_START_Y + 14;
       L1.forEach(([k, v]) => {
-        doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.text(k, COL2_X + 4, ly);
-        doc.setFont("helvetica", "normal"); doc.text(v, COL2_X + 15, ly);
-        ly += 5.2;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.text(k, C2X + 4, ly);
+        doc.setFont("helvetica", "normal"); doc.text(v, C2X + 14, ly); ly += 5.2;
       });
-      ly = COL_START_Y + 16;
+      ly = COL_START_Y + 14;
       L2.forEach(([k, v]) => {
-        doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.text(k, COL2_X + 60, ly);
-        doc.setFont("helvetica", "normal"); doc.text(v, COL2_X + 75, ly, { maxWidth: 40 });
-        ly += 5.2;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.text(k, C2X + 64, ly);
+        doc.setFont("helvetica", "normal"); doc.text(v, C2X + 78, ly, { maxWidth: 40 }); ly += 5.2;
       });
 
-      // ─────────────────────────────────────────────
-      // COL 3: LIMITES NVC
-      // ─────────────────────────────────────────────
-      doc.roundedRect(COL3_X, COL_START_Y, COL3_W, 35, 3, 3, "S");
+      // BOX 3: NVC & SECONDARY LEYENDA
+      const C3X = C2X + COL2_W + 2;
+      doc.roundedRect(C3X, COL_START_Y, COL3_W, 30, 3, 3, "S");
       doc.setFillColor(235, 137, 145);
-      doc.rect(COL3_X + 0.3, COL_START_Y + 7, COL3_W - 0.6, 2, "F");
-      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-      doc.text("LIM. DE DOSIS NVC 2259 VIGENTE", COL3_X + COL3_W / 2, COL_START_Y + 5, { align: "center" });
+      doc.rect(C3X + 0.3, COL_START_Y + 6, COL3_W - 0.6, 2, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+      doc.text("LIM. DE DOSIS NVC 2259 VIGENTE", C3X + COL3_W / 2, COL_START_Y + 4.5, { align: "center" });
 
       autoTable(doc, {
-        startY: COL_START_Y + 11,
-        margin: { left: COL3_X + 2 },
-        tableWidth: COL3_W - 4,
+        startY: COL_START_Y + 9, margin: { left: C3X + 2 }, tableWidth: COL3_W - 4,
         head: [["", "TOE", "Pub."]],
-        body: [
-          ["DOSIS EFECTIVA mSv/a", "20", "1"],
-          ["DOSIS EQUIVALENTE (mSv/a) para:", "", ""],
-          ["CRISTALINO", "20", "15"],
-          ["PIEL", "500", "50"],
-        ],
-        theme: "grid",
-        styles: { fontSize: 7, fontStyle: "bold", textColor: [0, 0, 0] },
+        body: [["DOSIS EFECTIVA mSv/a", "20", "1"], ["DOSIS EQUIVALENTE (mSv/a) para:", "", ""], ["CRISTALINO", "20", "15"], ["PIEL", "500", "50"]],
+        theme: "grid", styles: { fontSize: 6.5, fontStyle: "bold", textColor: [0, 0, 0], cellPadding: 0.5 },
         headStyles: { fillColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1, halign: "center" },
-        columnStyles: { 0: { cellWidth: "auto" }, 1: { cellWidth: 10, halign: "center" }, 2: { cellWidth: 10, halign: "center" } }
+        columnStyles: { 0: { cellWidth: "auto" }, 1: { cellWidth: 8, halign: "center" }, 2: { cellWidth: 8, halign: "center" } }
       });
 
-      // ─────────────────────────────────────────────
-      // LEYENDA SECUNDARIA (Niveles)
-      // ─────────────────────────────────────────────
-      const n2y = COL_START_Y + 38;
-      doc.roundedRect(COL3_X, n2y, COL3_W, 55, 3, 3, "S");
+      const n2y = COL_START_Y + 32;
+      doc.roundedRect(C3X, n2y, COL3_W, 55, 3, 3, "S");
       doc.setFillColor(235, 137, 145);
-      doc.rect(COL3_X + 0.3, n2y + 7, COL3_W - 0.6, 2, "F");
-      doc.setFont("helvetica", "bold"); doc.setFontSize(10);
-      doc.text("LEYENDA", COL3_X + COL3_W / 2, n2y + 5, { align: "center" });
+      doc.rect(C3X + 0.3, n2y + 6, COL3_W - 0.6, 2, "F");
+      doc.text("LEYENDA", C3X + COL3_W / 2, n2y + 4.5, { align: "center" });
 
       const SL = [
-        ["INCERTIDUMBRE:", "4%"],
-        ["VALOR DE REFERENCIA DOSIS\nMENSUAL Hp (10):", "1.67 mSv"],
-        ["VALOR DE REFERENCIA DOSIS\nMENSUAL Hp (0.07):", "42 mSv"],
-        ["NIVEL DE REGISTRO\nSUGERIDO:", "0.10 mSv"],
-        ["LIMITE DE DETECCIÓN DEL\nSISTEMA:", "0.10 mSv"],
-        ["AUTORIZACIÓN DGEA:", "PIDS-DOS-COS-0001"],
+        ["INCERTIDUMBRE:", "4%"], ["VALOR DE REFERENCIA DOSIS\nMENSUAL Hp (10):", "1.67 mSv"],
+        ["VALOR DE REFERENCIA DOSIS\nMENSUAL Hp (0.07):", "42 mSv"], ["NIVEL DE REGISTRO\nSUGERIDO:", "0.10 mSv"],
+        ["LIMITE DE DETECCIÓN DEL\nSISTEMA:", "0.10 mSv"], ["AUTORIZACIÓN DGEA:", "PIDS-DOS-COS-0001"]
       ];
       const SR = [
         ["NIVEL DE INVESTIGACIÓN\nSUGERIDO (NI) PARA\nHp(10):", "0.50 mSv"],
         ["NIVEL DE INVESTIGACIÓN\nSUGERIDO (NI) PARA\nHp(0.07):", "12 mSv"],
-        ["AUTORIZACIÓN MPPS:", lab.mpps_auth || "0012-2022"],
+        ["AUTORIZACIÓN MPPS:", lab.mpps_auth || "0012-2022"]
       ];
 
-      let sy = n2y + 13;
+      let sy = n2y + 11;
       SL.forEach(([k, v]) => {
-        doc.setFontSize(6.5); doc.text(k, COL3_X + 2, sy); doc.text(v, COL3_X + 35, sy);
-        sy += k.includes("\n") ? 8 : 5;
+        doc.setFontSize(6); doc.text(k, C3X + 2, sy); doc.text(v, C3X + 33, sy);
+        sy += k.includes("\n") ? 7.5 : 4.5;
       });
-      sy = n2y + 13;
+      sy = n2y + 11;
       SR.forEach(([k, v]) => {
-        doc.setFontSize(6.5); doc.text(k, COL3_X + 45, sy); doc.text(v, COL3_X + 45, sy + 7);
-        sy += 12;
+        doc.setFontSize(6); doc.text(k, C3X + 44, sy); doc.text(v, C3X + 44, sy + 6.5);
+        sy += 11;
       });
 
       // ─────────────────────────────────────────────
-      // WORKERS TABLE
+      // 4. WORKERS TABLE
       // ─────────────────────────────────────────────
-      const workersTableY = 100;
       const tableBody = workers.map((w: any) => {
-        const isAmbient = w.first_name.toUpperCase().startsWith("AMBIENTE");
+        const isAmb = w.first_name.toUpperCase().startsWith("AMBIENTE");
         return [
-          w.num, isAmbient ? "" : w.ci, `${w.last_name} ${w.first_name}`.trim(),
-          isAmbient ? "" : w.sex, isAmbient ? "" : w.birth_date,
-          w.mes_hp007, w.mes_hp10, isAmbient ? "" : "N/D", isAmbient ? "" : "N/D",
-          isAmbient ? "" : w.vida_hp007, isAmbient ? "" : w.vida_hp10, w.observacion
+          w.num, isAmb ? "" : w.ci, `${w.last_name} ${w.first_name}`.trim(),
+          isAmb ? "" : w.sex, isAmb ? "" : w.birth_date,
+          w.mes_hp007, w.mes_hp10, isAmb ? "" : "N/D", isAmb ? "" : "N/D",
+          isAmb ? "" : w.vida_hp007, isAmb ? "" : w.vida_hp10, w.observacion
         ];
       });
 
       autoTable(doc, {
-        startY: workersTableY,
-        margin: { left: 4, right: 4 },
+        startY: 92, margin: { left: 4, right: 4 },
         head: [["#", "Cedula", "Nombre", "SEXO", "Fecha de\nnacimiento", "Mes Actual.\nHp(0,07)", "Mes Actual.\nHp(10)", "Total en el\naño (Hp 0,07)", "Total en el\naño (Hp 10)", "Dosis Vida\nHp(0,07)", "Dosis Vida\nHp(10)", "Observacion"]],
         body: tableBody,
-        theme: "grid",
-        styles: { fontSize: 7, textColor: [0, 0, 0], halign: "center" },
-        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200] },
+        theme: "grid", styles: { fontSize: 6.5, textColor: [0, 0, 0], halign: "center", cellPadding: 0.8 },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200], fontSize: 6 },
         columnStyles: {
-          2: { halign: "left", cellWidth: 45 },
+          2: { halign: "left", cellWidth: 42 },
           9: { fillColor: [153, 204, 255], fontStyle: "bold" },
           10: { fillColor: [153, 204, 255], fontStyle: "bold" },
         },
-        didParseCell: (hookData) => {
-          const isAmbient = String(hookData.row.cells[2].raw).toUpperCase().includes("AMBIENTE");
-          if (isAmbient && (hookData.column.index === 9 || hookData.column.index === 10)) {
-            hookData.cell.styles.fillColor = [255, 255, 255];
+        didParseCell: (data) => {
+          const isAmb = String(data.row.cells[2].raw).toUpperCase().includes("AMBIENTE");
+          if (isAmb && (data.column.index === 9 || data.column.index === 10)) {
+            data.cell.styles.fillColor = [255, 255, 255];
           }
         }
       });
 
       // ─────────────────────────────────────────────
-      // SIGNATURE
+      // 5. SIGNATURE
       // ─────────────────────────────────────────────
-      const sigY = PH - 30;
-      doc.line(PW - 70, sigY, PW - 10, sigY);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+      const sigY = PH - 25;
+      doc.line(PW - 65, sigY, PW - 15, sigY);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
       const rep = `${lab.rep_title || "Ing."} ${lab.rep_first_name || ""} ${lab.rep_last_name || ""}`;
       doc.text(rep, PW - 40, sigY + 5, { align: "center" });
-      doc.setFont("helvetica", "normal"); doc.setFontSize(8);
-      doc.text("Firma", PW - 60, sigY + 10);
-      doc.text(lab.rep_cargo || "Presidente", PW - 40, sigY + 10, { align: "center" });
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
+      doc.text("Firma", PW - 55, sigY + 9);
+      doc.text(lab.rep_cargo || "Presidente", PW - 40, sigY + 9, { align: "center" });
 
-      doc.save(`Informe_Mensual_Physion_${company.name}_${MONTH_NAMES_ES[month]}_${year}.pdf`);
+      doc.save(`Informe_Mensual_${company.name}_${MONTH_NAMES_ES[month]}_${year}.pdf`);
       setStatus("done");
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: any) {
