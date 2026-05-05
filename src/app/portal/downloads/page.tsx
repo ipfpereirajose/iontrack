@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 import CompanyDownloadsWidget from "@/components/portal/downloads/CompanyDownloadsWidget";
+import { getCurrentProfile } from "@/lib/auth";
 
 export default async function CompanyDownloadsPage() {
+  const { profile } = await getCurrentProfile();
+
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
       <header style={{ marginBottom: "3rem" }}>
