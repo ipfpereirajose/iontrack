@@ -11,6 +11,7 @@ import {
   User,
   Info,
   Fingerprint,
+  RadioTower,
 } from "lucide-react";
 import Link from "next/link";
 import { createCompany } from "../actions";
@@ -492,6 +493,78 @@ export default function NewCompanyPage() {
                 name="osr_email"
                 type="email"
                 placeholder="osr@correo.com"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: DATOS DOSIMÉTRICOS DEL SERVICIO */}
+        <div
+          className="glass-panel"
+          style={{ padding: "2.5rem", borderRadius: "24px" }}
+        >
+          <h2 style={sectionHeaderStyle}>
+            <RadioTower size={22} />
+            4. Datos Dosimétricos del Servicio
+          </h2>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "1.5rem" }}>
+            Información opcional para el informe mensual. Puede completarse o actualizarse posteriormente.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1.5rem",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <div>
+              <label style={labelStyle}>Departamento / Área de Uso</label>
+              <input
+                name="departamento"
+                type="text"
+                placeholder="Ej: RADIOLOGÍA, TOMOGRAFÍA, INDUSTRIAL..."
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Tipo de Radiación</label>
+              <select name="tipo_radiacion" style={inputStyle}>
+                <option value="">Seleccione... (opcional)</option>
+                <option value="PENETRANTE Y NO PENETRANTE">PENETRANTE Y NO PENETRANTE</option>
+                <option value="PENETRANTE">PENETRANTE</option>
+                <option value="NO PENETRANTE">NO PENETRANTE</option>
+                <option value="NEUTRONES">NEUTRONES</option>
+                <option value="MIXTA">MIXTA</option>
+              </select>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1.5rem",
+            }}
+          >
+            <div>
+              <label style={labelStyle}>Ubicación del Dosímetro</label>
+              <select name="ubicacion_dosimetro" style={inputStyle}>
+                <option value="">Seleccione... (opcional)</option>
+                <option value="TORAX">TORAX</option>
+                <option value="CUERPO ENTERO">CUERPO ENTERO</option>
+                <option value="MUÑECA">MUÑECA</option>
+                <option value="CINTURA">CINTURA</option>
+                <option value="CABEZA">CABEZA</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Fecha de Inicio del Servicio</label>
+              <input
+                name="fecha_inicio_servicio"
+                type="date"
                 style={inputStyle}
               />
             </div>

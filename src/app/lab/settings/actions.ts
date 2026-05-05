@@ -107,11 +107,17 @@ export async function updateLabThemeAction(formData: FormData) {
 
   const logo_url = formData.get("logo_url") as string;
   const primary_color = formData.get("primary_color") as string;
+  const rep_title = (formData.get("rep_title") as string) || null;
+  const rep_cargo = (formData.get("rep_cargo") as string) || null;
+  const mpps_auth = (formData.get("mpps_auth") as string) || null;
 
   const { error } = await supabase
     .from("tenants")
     .update({
       logo_url: logo_url || null,
+      rep_title,
+      rep_cargo,
+      mpps_auth,
       config: { primary_color: primary_color || "#06b6d4" },
     })
     .eq("id", profile.tenant_id);

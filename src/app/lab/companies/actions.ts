@@ -39,6 +39,13 @@ export async function createCompany(formData: FormData) {
   const osr_phone = formData.get("osr_phone") as string;
   const osr_email = formData.get("osr_email") as string;
 
+  // 4. Extract Dosimetric Service Data (optional)
+  const departamento = (formData.get("departamento") as string) || null;
+  const tipo_radiacion = (formData.get("tipo_radiacion") as string) || null;
+  const ubicacion_dosimetro = (formData.get("ubicacion_dosimetro") as string) || null;
+  const fecha_inicio_servicio_raw = formData.get("fecha_inicio_servicio") as string;
+  const fecha_inicio_servicio = fecha_inicio_servicio_raw ? fecha_inicio_servicio_raw : null;
+
   // Combine RIF for the standard tax_id column
   const tax_id = `${rif_type}${rif_number}`;
 
@@ -69,8 +76,13 @@ export async function createCompany(formData: FormData) {
       osr_id_number,
       osr_phone,
       osr_email,
-      company_code, // New traceability field
-      osr_code, // New traceability field
+      company_code,
+      osr_code,
+      // Dosimetric service fields
+      departamento,
+      tipo_radiacion,
+      ubicacion_dosimetro,
+      fecha_inicio_servicio,
     },
   ]);
 

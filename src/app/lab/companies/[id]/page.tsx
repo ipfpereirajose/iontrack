@@ -10,8 +10,11 @@ import {
   Phone,
   Fingerprint,
   TrendingUp,
+  FileText,
+  CalendarDays,
 } from "lucide-react";
 import DoseChart from "@/components/lab/DoseChart";
+import CompanyReportSection from "./CompanyReportSection";
 
 export const revalidate = 0;
 
@@ -133,19 +136,25 @@ export default async function CompanyDetailsPage({
               Detalles e Información de la Empresa Cliente.
             </p>
           </div>
-          <Link
-            href={`/lab/companies/${companyId}/workers`}
-            className="btn btn-primary"
-            style={{
-              padding: "0.75rem 1.5rem",
-              borderRadius: "12px",
-              fontWeight: 700,
-            }}
-          >
-            Ver Trabajadores (TOE)
-          </Link>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <Link
+              href={`/lab/companies/${companyId}/workers`}
+              className="btn"
+              style={{
+                padding: "0.75rem 1.5rem",
+                borderRadius: "12px",
+                fontWeight: 700,
+                background: "rgba(255,255,255,0.08)",
+              }}
+            >
+              Ver Trabajadores (TOE)
+            </Link>
+          </div>
         </div>
       </header>
+
+      {/* MONTHLY REPORT SECTION */}
+      <CompanyReportSection companyId={companyId} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "2rem", marginBottom: "2rem" }}>
         <div className="glass-panel" style={{ padding: "2rem" }}>

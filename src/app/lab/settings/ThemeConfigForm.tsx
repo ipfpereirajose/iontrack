@@ -1,6 +1,6 @@
 "use client";
 
-import { Save, Image as ImageIcon, Palette } from "lucide-react";
+import { Save, Image as ImageIcon, Palette, ShieldCheck, UserCheck } from "lucide-react";
 import { useState } from "react";
 import { updateLabThemeAction } from "./actions";
 
@@ -85,6 +85,81 @@ export default function ThemeConfigForm({ tenant }: Props) {
             style={{ ...inputStyle, width: "120px" }}
           />
         </div>
+      </div>
+
+      {/* Rep Title + Cargo */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1rem" }}>
+        <div className="input-group">
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <UserCheck size={14} /> Título (Ej: Ing.)
+          </label>
+          <input
+            name="rep_title"
+            defaultValue={tenant.rep_title || ""}
+            placeholder="Ing. / Lic. / Dr."
+            style={inputStyle}
+          />
+        </div>
+        <div className="input-group">
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <UserCheck size={14} /> Cargo del Representante
+          </label>
+          <input
+            name="rep_cargo"
+            defaultValue={tenant.rep_cargo || ""}
+            placeholder="Ej: Presidente, Director Técnico"
+            style={inputStyle}
+          />
+        </div>
+      </div>
+
+      {/* MPPS Auth */}
+      <div className="input-group">
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.7rem",
+            fontWeight: 800,
+            color: "var(--text-muted)",
+            textTransform: "uppercase",
+            marginBottom: "0.5rem",
+          }}
+        >
+          <ShieldCheck size={14} /> Autorización MPPS
+        </label>
+        <input
+          name="mpps_auth"
+          defaultValue={tenant.mpps_auth || ""}
+          placeholder="Ej: 0012-2022"
+          style={inputStyle}
+        />
+        <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
+          Aparece en el pie de los informes mensuales.
+        </p>
       </div>
 
       <button
