@@ -212,7 +212,7 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
         const colX = 7 + (i % 3) * 60;
         const rowY = ry + Math.floor(i / 3) * 10;
         const lines = k.split("\n");
-        lines.forEach((line, li) => doc.text(line, colX, rowY + li * 3.5));
+        lines.forEach((line: string, li: number) => doc.text(line, colX, rowY + li * 3.5));
         doc.text(v, colX + 40, rowY);
       });
       SR.forEach(([k, v], i) => {
@@ -220,7 +220,7 @@ export default function CompanyMonthlyPDFButton({ companyId, month, year }: Prop
         const colX = 7 + (i % 3) * 60;
         const rowY = ry + 20; // Third row for technical levels
         const lines = k.split("\n");
-        lines.forEach((line, li) => doc.text(line, colX, rowY + li * 3.5));
+        lines.forEach((line: string, li: number) => doc.text(line, colX, rowY + li * 3.5));
         doc.text(v, colX + 40, rowY);
       });
 
