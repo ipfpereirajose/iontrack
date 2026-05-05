@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
-import MonthlyPDFReportButton from "@/components/lab/MonthlyPDFReportButton";
+import CompanyMonthlyPDFButton from "@/components/lab/CompanyMonthlyPDFButton";
 import PortalDashboardWidget from "@/components/portal/PortalDashboardWidget";
 
 export default async function B2BHomePage() {
@@ -42,7 +42,8 @@ export default async function B2BHomePage() {
           </p>
         </div>
         <div style={{ width: "240px" }}>
-          <MonthlyPDFReportButton 
+          <CompanyMonthlyPDFButton 
+            companyId={companyId}
             month={latestDoses && latestDoses.length > 0 ? latestDoses[0].month : new Date().getMonth() + 1}
             year={latestDoses && latestDoses.length > 0 ? latestDoses[0].year : new Date().getFullYear()}
           />
